@@ -115,53 +115,56 @@ async function handleLogin(
 ) {
   const { setFieldError } = actions as FormActions<LoginFormValues>;
   const formValues = values as LoginFormValues;
-  loading.value = true;
 
-  try {
-    await auth.login(formValues.email, formValues.password);
-    toast.showSuccess("Logged in successfully");
-  } catch (error) {
-    // Handle server-side validation errors
-    if (error instanceof ValidationError && error.fields) {
-      const errorMessages: string[] = [];
-      
-      // Set field errors in VeeValidate form
-      Object.keys(error.fields).forEach((field) => {
-        const fieldErrors = error.fields![field];
-        if (fieldErrors && Array.isArray(fieldErrors) && fieldErrors.length > 0) {
-          // Map API field names to form field names
-          if (field === "email" || field === "password") {
-            setFieldError(field, fieldErrors.join(", "));
-            // Collect errors for toast
-            const fieldLabel = field.charAt(0).toUpperCase() + field.slice(1);
-            fieldErrors.forEach(errorMsg => {
-              errorMessages.push(`${fieldLabel}: ${errorMsg}`);
-            });
-          } else if (field === "non_field_errors") {
-            // Show non-field errors as toast
-            fieldErrors.forEach(errorMsg => {
-              errorMessages.push(errorMsg);
-            });
-          }
+  await useApiCall({
+    fn: () => auth.login(formValues.email, formValues.password),
+    successMessage: 'Logged in successfully',
+    errorMessage: 'Login Failed',
+    showSuccess: true,
+    loading,
+    toast,
+    onError: (error) => {
+      // Handle server-side validation errors
+      handleLoginValidationErrors(error, setFieldError);
+    },
+  });
+}
+
+function handleLoginValidationErrors(error: unknown, setFieldError: any) {
+  if (error instanceof ValidationError && error.fields) {
+    const errorMessages: string[] = [];
+    
+    // Set field errors in VeeValidate form
+    Object.keys(error.fields).forEach((field) => {
+      const fieldErrors = error.fields![field];
+      if (fieldErrors && Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+        // Map API field names to form field names
+        if (field === "email" || field === "password") {
+          setFieldError(field, fieldErrors.join(", "));
+          // Collect errors for toast
+          const fieldLabel = field.charAt(0).toUpperCase() + field.slice(1);
+          fieldErrors.forEach(errorMsg => {
+            errorMessages.push(`${fieldLabel}: ${errorMsg}`);
+          });
+        } else if (field === "non_field_errors") {
+          // Show non-field errors as toast
+          fieldErrors.forEach(errorMsg => {
+            errorMessages.push(errorMsg);
+          });
         }
-      });
-      
-      // Show all errors in toast
-      if (errorMessages.length > 0) {
-        toast.add({
-          severity: "warn",
-          summary: "Login Failed",
-          detail: errorMessages.join('\n'),
-          life: 5000,
-          closable: true,
-        });
       }
-    } else {
-      // Show general error toast
-      toast.showError(error, "Login Failed");
+    });
+    
+    // Show all errors in toast
+    if (errorMessages.length > 0) {
+      toast.add({
+        severity: "warn",
+        summary: "Login Failed",
+        detail: errorMessages.join('\n'),
+        life: 5000,
+        closable: true,
+      });
     }
-  } finally {
-    loading.value = false;
   }
 }
 </script>

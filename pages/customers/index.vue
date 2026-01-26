@@ -174,17 +174,25 @@ import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import Dialog from "primevue/dialog";
 import { until } from "@vueuse/core";
+import { storeToRefs } from "pinia";
 import type { Customer, PrimeVuePageEvent, PrimeVueRowEvent } from "~/types";
 import type { DataTableSortEvent } from "primevue/datatable";
 import { formatDate } from "~/utils/formatters";
-import { PAGINATION_DEFAULTS, DEBOUNCE_MS } from "~/utils/constants";
+import { PAGINATION_DEFAULTS, DEBOUNCE_MS, USER_ROLES } from "~/utils/constants";
+import { useProjectsStore } from "~/stores/projects";
 
 definePageMeta({ middleware: "auth" });
 
 const customersApi = useCustomers();
 const toast = useToast();
 const router = useRouter();
-const { selectedProjectId, isSuperAdmin, projects, projectsLoading } = useSelectedProject();
+const auth = useAuth();
+
+// Store management
+const projectsStore = useProjectsStore();
+const { selectedProjectId, projects, loading: projectsLoading } = storeToRefs(projectsStore);
+
+const isSuperAdmin = computed(() => auth.user.value?.role === USER_ROLES.SUPERADMIN);
 
 // URL-based state management
 const { page, pageSize, offset, setPage, resetPage } = useUrlPagination({
@@ -291,42 +299,41 @@ watch(
 );
 
 async function loadCustomers() {
-  try {
-    loading.value = true;
+  const params: any = {
+    limit: pageSize.value,
+    offset: offset.value,
+  };
 
-    const params: any = {
-      limit: pageSize.value,
-      offset: offset.value,
-    };
-
-    // Add search filter
-    if (search.value) {
-      params.search = search.value;
-    }
-
-    // Add last order date field
-    if (showLastOrderDate.value) {
-      params.fields = 'last_order_date';
-    }
-
-    // Add sorting
-    if (sortOrdering.value) {
-      params.ordering = sortOrdering.value;
-    }
-
-    // Add project_id for superadmin
-    if (isSuperAdmin.value && selectedProjectId.value !== null) {
-      params.project_id = selectedProjectId.value;
-    }
-
-    const response = await customersApi.list(params);
-    customers.value = response.results;
-    totalRecords.value = response.count;
-  } catch (error) {
-    toast.showError(error, "Failed to Load Customers");
-  } finally {
-    loading.value = false;
+  // Add search filter
+  if (search.value) {
+    params.search = search.value;
   }
+
+  // Add last order date field
+  if (showLastOrderDate.value) {
+    params.fields = 'last_order_date';
+  }
+
+  // Add sorting
+  if (sortOrdering.value) {
+    params.ordering = sortOrdering.value;
+  }
+
+  // Add project_id for superadmin
+  if (isSuperAdmin.value && selectedProjectId.value !== null) {
+    params.project_id = selectedProjectId.value;
+  }
+
+  await useApiCall({
+    fn: () => customersApi.list(params),
+    errorMessage: 'Failed to Load Customers',
+    loading,
+    toast,
+    onSuccess: (data) => {
+      customers.value = data.results;
+      totalRecords.value = data.count;
+    },
+  });
 }
 
 function onPageChange(event: PrimeVuePageEvent) {

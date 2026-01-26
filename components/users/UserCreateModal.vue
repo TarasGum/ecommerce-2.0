@@ -207,6 +207,8 @@ import { createUserSchema, editUserSchema, type CreateUserFormData } from "~/uti
 import { ValidationError } from "~/utils/errors";
 import type { Project, User } from "~/types/models";
 import { USER_ROLES, USER_ROLE_LABELS } from "~/utils/constants";
+import { storeToRefs } from "pinia";
+import { useProjectsStore } from "~/stores/projects";
 
 const props = withDefaults(
   defineProps<{
@@ -232,13 +234,13 @@ const isVisible = computed({
 
 const auth = useAuth();
 const usersApi = useUsers();
-const projectsApi = useProjects();
 const toast = useToast();
-const { selectedProjectId } = useSelectedProject();
+
+// Store management
+const projectsStore = useProjectsStore();
+const { selectedProjectId, projects, loading: projectsLoading } = storeToRefs(projectsStore);
 
 const loading = ref(false);
-const projects = ref<Project[]>([]);
-const projectsLoading = ref(false);
 const showPasswordFields = ref(false);
 const selectedRole = ref<string>("");
 
@@ -306,17 +308,8 @@ const schema = computed(() => {
 
 // Fetch projects for SuperAdmin
 onMounted(async () => {
-  if (isSuperAdmin.value) {
-    projectsLoading.value = true;
-    try {
-      const response = await projectsApi.list({ page: 1 });
-      projects.value = response.results;
-    } catch (error) {
-      console.error("Failed to load projects:", error);
-      toast.showError("Failed to load projects", "Error");
-    } finally {
-      projectsLoading.value = false;
-    }
+  if (isSuperAdmin.value && !projectsStore.hasProjects) {
+    await projectsStore.loadProjects();
   }
 });
 
@@ -347,131 +340,147 @@ async function handleSubmit(
   values: any,
   { setFieldError }: { setFieldError: (field: string, message: string) => void }
 ) {
-  loading.value = true;
+  // Parse name into first_name and last_name
+  const nameParts = values.name.trim().split(/\s+/);
+  const first_name = nameParts[0] || "";
+  const last_name = nameParts.slice(1).join(" ") || "";
 
-  try {
-    // Parse name into first_name and last_name
-    const nameParts = values.name.trim().split(/\s+/);
-    const first_name = nameParts[0] || "";
-    const last_name = nameParts.slice(1).join(" ") || "";
+  if (props.mode === "create") {
+    // Create mode: send all required fields
+    const payload: any = {
+      email: values.email,
+      password: values.password,
+      password_confirm: values.password_confirm,
+      first_name,
+      last_name,
+      role: values.role,
+    };
 
-    if (props.mode === "create") {
-      // Create mode: send all required fields
-      const payload: any = {
-        email: values.email,
-        password: values.password,
-        password_confirm: values.password_confirm,
-        first_name,
-        last_name,
-        role: values.role,
-      };
-
-      // Add project for SuperAdmin or use current user's project for Admin
-      // SuperAdmin users are not tied to a project, so skip project assignment for them
-      if (values.role === USER_ROLES.SUPERADMIN) {
-        // Don't set project field for superadmin users - omit it entirely
-        // Backend will handle superadmin users not having a project
-      } else if (isSuperAdmin.value) {
-        if (!values.project) {
-          setFieldError("project", "Project is required for admin and user roles");
-          loading.value = false;
-          return;
-        }
-        payload.project = values.project;
-      } else {
-        payload.project = auth.user.value?.project;
-      }
-
-      await usersApi.create(payload);
-      toast.showSuccess("User created successfully");
-    } else {
-      // Edit mode: only send changed fields
-      const payload: any = {};
-      const user = props.initialUser!;
-
-      // Check name changes
-      const currentName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
-      if (values.name !== currentName) {
-        payload.first_name = first_name;
-        payload.last_name = last_name;
-      }
-
-      // Check email change
-      if (values.email !== user.email) {
-        payload.email = values.email;
-      }
-
-      // Check role change
-      if (values.role !== user.role) {
-        payload.role = values.role;
-      }
-
-      // Check project change (SuperAdmin only)
-      if (isSuperAdmin.value && values.project !== user.project) {
-        payload.project = values.project;
-      }
-
-      // Add password if changing
-      if (showPasswordFields.value && values.password) {
-        payload.password = values.password;
-        payload.password_confirm = values.password_confirm;
-      }
-
-      // Only send PATCH if there are changes
-      if (Object.keys(payload).length === 0) {
-        toast.showInfo("No changes to save");
-        loading.value = false;
+    // Add project for SuperAdmin or use current user's project for Admin
+    // SuperAdmin users are not tied to a project, so skip project assignment for them
+    if (values.role === USER_ROLES.SUPERADMIN) {
+      // Don't set project field for superadmin users - omit it entirely
+      // Backend will handle superadmin users not having a project
+    } else if (isSuperAdmin.value) {
+      if (!values.project) {
+        setFieldError("project", "Project is required for admin and user roles");
         return;
       }
-
-      await usersApi.patch(user.id, payload);
-      toast.showSuccess("User updated successfully");
+      payload.project = values.project;
+    } else {
+      payload.project = auth.user.value?.project;
     }
 
-    emit("success");
-    isVisible.value = false;
-  } catch (error) {
-    // Handle validation errors
-    if (error instanceof ValidationError && error.fields) {
-      const errorMessages: string[] = [];
-      
-      Object.keys(error.fields).forEach((field) => {
-        const fieldErrors = error.fields![field];
-        if (fieldErrors && Array.isArray(fieldErrors) && fieldErrors.length > 0) {
-          // Map backend field names to form field names
-          const fieldMap: Record<string, string> = {
-            first_name: "name",
-            last_name: "name",
-            password_confirm: "password_confirm",
-          };
-          const formField = fieldMap[field] || field;
-          
-          // Set field error for inline display (join all errors)
-          setFieldError(formField, fieldErrors.join(", "));
-          
-          // Collect ALL error messages for toast
-          const fieldLabel = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-          fieldErrors.forEach(errorMsg => {
-            errorMessages.push(`${fieldLabel}: ${errorMsg}`);
-          });
-        }
-      });
-      
-      // Show all errors in a toast
-      if (errorMessages.length > 0) {
-        toast.add({
-          severity: "warn",
-          summary: "Validation Error",
-          detail: errorMessages.join('\n'),
-          life: 6000,
-          closable: true,
+    await useApiCall({
+      fn: () => usersApi.create(payload),
+      successMessage: 'User created successfully',
+      errorMessage: 'Failed to Create User',
+      showSuccess: true,
+      loading,
+      toast,
+      onSuccess: () => {
+        emit('success');
+        isVisible.value = false;
+      },
+      onError: (error) => {
+        // Handle validation errors
+        handleValidationErrors(error, setFieldError);
+      },
+    });
+  } else {
+    // Edit mode: only send changed fields
+    const payload: any = {};
+    const user = props.initialUser!;
+
+    // Check name changes
+    const currentName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
+    if (values.name !== currentName) {
+      payload.first_name = first_name;
+      payload.last_name = last_name;
+    }
+
+    // Check email change
+    if (values.email !== user.email) {
+      payload.email = values.email;
+    }
+
+    // Check role change
+    if (values.role !== user.role) {
+      payload.role = values.role;
+    }
+
+    // Check project change (SuperAdmin only)
+    if (isSuperAdmin.value && values.project !== user.project) {
+      payload.project = values.project;
+    }
+
+    // Add password if changing
+    if (showPasswordFields.value && values.password) {
+      payload.password = values.password;
+      payload.password_confirm = values.password_confirm;
+    }
+
+    // Only send PATCH if there are changes
+    if (Object.keys(payload).length === 0) {
+      toast.showInfo("No changes to save");
+      return;
+    }
+
+    await useApiCall({
+      fn: () => usersApi.patch(user.id, payload),
+      successMessage: 'User updated successfully',
+      errorMessage: 'Failed to Update User',
+      showSuccess: true,
+      loading,
+      toast,
+      onSuccess: () => {
+        emit('success');
+        isVisible.value = false;
+      },
+      onError: (error) => {
+        // Handle validation errors
+        handleValidationErrors(error, setFieldError);
+      },
+    });
+  }
+}
+
+function handleValidationErrors(error: unknown, setFieldError: (field: string, message: string) => void) {
+  if (error instanceof ValidationError && error.fields) {
+    const errorMessages: string[] = [];
+    
+    Object.keys(error.fields).forEach((field) => {
+      const fieldErrors = error.fields![field];
+      if (fieldErrors && Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+        // Map backend field names to form field names
+        const fieldMap: Record<string, string> = {
+          first_name: "name",
+          last_name: "name",
+          password_confirm: "password_confirm",
+        };
+        const formField = fieldMap[field] || field;
+        
+        // Set field error for inline display (join all errors)
+        setFieldError(formField, fieldErrors.join(", "));
+        
+        // Collect ALL error messages for toast
+        const fieldLabel = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        fieldErrors.forEach(errorMsg => {
+          errorMessages.push(`${fieldLabel}: ${errorMsg}`);
         });
       }
-    } else {
-      toast.showError(error, props.mode === "create" ? "Failed to Create User" : "Failed to Update User");
+    });
+    
+    // Show all errors in a toast
+    if (errorMessages.length > 0) {
+      toast.add({
+        severity: "warn",
+        summary: "Validation Error",
+        detail: errorMessages.join('\n'),
+        life: 6000,
+        closable: true,
+      });
     }
-  } finally {
-    loading.value = false;
   }
 }
 </script>

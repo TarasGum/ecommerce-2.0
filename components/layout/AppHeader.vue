@@ -21,16 +21,18 @@
         </div>
         
         <!-- Project Selector (SuperAdmin only) -->
-        <Dropdown
-          v-if="!!isSuperAdmin && !pageTitleParts"
-          v-model="selectedProjectId"
-          :options="projectOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Select Project"
-          class="project-dropdown"
-          :loading="projectsLoading"
-        />
+        <ClientOnly>
+          <Dropdown
+            v-if="!!isSuperAdmin && !pageTitleParts"
+            v-model="selectedProjectId"
+            :options="projectOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select Project"
+            class="project-dropdown"
+            :loading="projectsLoading"
+          />
+        </ClientOnly>
       </div>
 
       <div class="flex align-items-center gap-3">
@@ -59,32 +61,29 @@
 import Button from "primevue/button";
 import Tag from "primevue/tag";
 import Dropdown from "primevue/dropdown";
-import { getUserRoleSeverity } from "~/utils/constants";
+import { storeToRefs } from "pinia";
+import { getUserRoleSeverity, USER_ROLES } from "~/utils/constants";
+import { useProjectsStore } from "~/stores/projects";
+import { useUiStore } from "~/stores/ui";
 
 const auth = useAuth();
 const router = useRouter();
-const route = useRoute();
-const {
-  selectedProjectId,
-  projectsLoading,
-  isSuperAdmin,
-  projectOptions,
-  loadProjects,
-} = useSelectedProject();
 
-// Global state for customer name (set from customer details page)
-const customerName = useState<string | null>('customerHeaderName', () => null);
+// Store management
+const projectsStore = useProjectsStore();
+const { selectedProjectId, loading: projectsLoading, projectOptions } = storeToRefs(projectsStore);
+
+const uiStore = useUiStore();
+const { pageTitle, pageSubtitle, showBackButton } = storeToRefs(uiStore);
+
+const isSuperAdmin = computed(() => auth.user.value?.role === USER_ROLES.SUPERADMIN);
 
 // Computed properties for dynamic header
-const showBackButton = computed(() => {
-  return route.path.startsWith('/customers/') && route.params.id;
-});
-
 const pageTitleParts = computed(() => {
-  if (route.path.startsWith('/customers/') && route.params.id) {
+  if (pageTitle.value) {
     return {
-      base: `Customers / #${route.params.id}`,
-      name: customerName.value ? truncateName(customerName.value) : null
+      base: pageTitle.value,
+      name: pageSubtitle.value ? truncateName(pageSubtitle.value) : null
     };
   }
   return null;
@@ -99,7 +98,7 @@ function truncateName(name: string): string {
 
 // Load projects on mount for superadmins
 onMounted(() => {
-  loadProjects();
+  projectsStore.loadProjects();
 });
 
 async function handleLogout() {
@@ -109,8 +108,6 @@ async function handleLogout() {
 function handleBack() {
   router.push('/customers');
 }
-
-// getRoleSeverity is now imported as getUserRoleSeverity from ~/utils/constants
 </script>
 
 <style scoped>

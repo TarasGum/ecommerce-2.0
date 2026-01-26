@@ -303,27 +303,26 @@ watch(
 );
 
 async function loadUsers() {
-  loading.value = true;
-  
-  try {
-    const params: any = {
-      limit: pageSize.value,
-      offset: offset.value,
-    };
+  const params: any = {
+    limit: pageSize.value,
+    offset: offset.value,
+  };
 
-    // Add sorting
-    if (sortOrdering.value) {
-      params.ordering = sortOrdering.value;
-    }
-
-    const response = await usersApi.list(params);
-    users.value = response.results;
-    totalRecords.value = response.count;
-  } catch (error) {
-    toast.showError(error, "Failed to Load Users");
-  } finally {
-    loading.value = false;
+  // Add sorting
+  if (sortOrdering.value) {
+    params.ordering = sortOrdering.value;
   }
+
+  await useApiCall({
+    fn: () => usersApi.list(params),
+    errorMessage: 'Failed to Load Users',
+    loading,
+    toast,
+    onSuccess: (data) => {
+      users.value = data.results;
+      totalRecords.value = data.count;
+    },
+  });
 }
 
 function onPageChange(event: PrimeVuePageEvent) {
@@ -344,16 +343,20 @@ async function toggleUserState(user: User, newState: boolean) {
   // Optimistic update
   user.is_active = newState;
 
-  try {
-    await usersApi.patch(user.id, { is_active: newState });
-    toast.showSuccess(`User ${newState ? "activated" : "deactivated"}`);
-  } catch (error) {
-    // Revert on failure
-    user.is_active = previousState;
-    toast.showError(error, "Failed to Update User");
-  } finally {
-    updatingUserId.value = null;
-  }
+  await useApiCall({
+    fn: () => usersApi.patch(user.id, { is_active: newState }),
+    successMessage: `User ${newState ? 'activated' : 'deactivated'} successfully`,
+    errorMessage: `Failed to ${newState ? 'activate' : 'deactivate'} user`,
+    showSuccess: true,
+    toast,
+    onError: () => {
+      // Revert optimistic update on error
+      user.is_active = previousState;
+    },
+    onFinally: () => {
+      updatingUserId.value = null;
+    },
+  });
 }
 
 function openCreateModal() {

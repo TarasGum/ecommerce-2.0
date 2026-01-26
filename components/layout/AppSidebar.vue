@@ -81,13 +81,16 @@ import Menu from "primevue/menu";
 import InputText from "primevue/inputtext";
 import Tag from "primevue/tag";
 import type { MenuItem } from "primevue/menuitem";
+import { storeToRefs } from "pinia";
+import { useUiStore } from "~/stores/ui";
 
 const route = useRoute();
 const auth = useAuth();
 const userMenu = ref();
 
-// Collapsed state (persisted in localStorage)
-const isCollapsed = ref(false);
+// UI Store
+const uiStore = useUiStore();
+const { sidebarCollapsed: isCollapsed } = storeToRefs(uiStore);
 
 // Search query (non-functional for now)
 const searchQuery = ref("");
@@ -158,21 +161,8 @@ function toggleUserMenu(event: Event) {
 
 // Toggle collapse state
 function toggleCollapse() {
-  isCollapsed.value = !isCollapsed.value;
-  if (process.client) {
-    localStorage.setItem("sidebar-collapsed", String(isCollapsed.value));
-  }
+  uiStore.toggleSidebar();
 }
-
-// Restore collapsed state on mount
-onMounted(() => {
-  if (process.client) {
-    const saved = localStorage.getItem("sidebar-collapsed");
-    if (saved !== null) {
-      isCollapsed.value = saved === "true";
-    }
-  }
-});
 </script>
 
 <style scoped>

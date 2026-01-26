@@ -1,26 +1,7 @@
-<!-- pages/orders/index.vue -->
+<!-- components/customers/CustomerOrdersTab.vue -->
 <template>
-  <div class="page-wrapper orders-page">
-    <!-- Header -->
-    <div class="flex justify-content-between align-items-center mb-3">
-      <h1 class="page-title">Orders</h1>
-    </div>
-
-    <!-- Status Filter Tabs -->
-    <div class="tabs-container">
-      <div class="flex tabs">
-        <button
-          v-for="tab in statusTabs"
-          :key="tab.value"
-          :class="['tab', { 'tab-active': effectiveStatus === tab.value }]"
-          @click="setFilter('status', tab.value as OrderStatus | '')"
-        >
-          {{ tab.label }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Search Bar -->
+  <div class="tab-content">
+    <!-- Search -->
     <div class="search-container">
       <IconField iconPosition="left">
         <InputIcon class="pi pi-search" />
@@ -28,17 +9,18 @@
           v-model="searchInput"
           placeholder="Search by invoice number..."
           class="search-input"
+          :disabled="ordersLoading"
         />
       </IconField>
     </div>
 
-    <!-- Orders Table Card -->
+    <!-- Orders Table -->
     <div class="table-card">
       <!-- Empty State -->
-      <div v-if="!loading && orders.length === 0" class="flex flex-column align-items-center justify-content-center gap-3 empty-state">
+      <div v-if="!ordersLoading && orders.length === 0" class="flex flex-column align-items-center justify-content-center gap-3 empty-state">
         <i class="pi pi-inbox"></i>
         <p class="empty-state-text">
-          {{ search ? 'No orders match your search' : getEmptyStateMessage() }}
+          {{ search ? 'No orders match your search' : 'No orders found for this customer' }}
         </p>
         <Button
           v-if="search"
@@ -47,22 +29,14 @@
           size="small"
           @click="clearSearch"
         />
-        <Button
-          v-else-if="filters.status"
-          label="View All Orders"
-          severity="secondary"
-          size="small"
-          @click="setFilter('status', '' as OrderStatus | '')"
-        />
       </div>
 
       <!-- Orders Table -->
       <DataTable
         v-else
-        :value="loading ? skeletonRows : orders"
-        :class="['data-table orders-table', { loading: loading }]"
+        :value="ordersLoading ? orderSkeletonRows : orders"
+        :class="['data-table orders-table', { loading: ordersLoading }]"
         stripedRows
-        v-model:selection="selectedOrders"
         v-model:expandedRows="expandedRows"
         dataKey="autoid"
         :sortField="primeVueSortField || undefined"
@@ -73,7 +47,7 @@
         <Column expander :style="{ width: '50px', minWidth: '50px' }">
           <template #body="slotProps">
             <Button
-              v-if="!loading"
+              v-if="!ordersLoading"
               :icon="expandedRows[slotProps.data.autoid] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
               text
               rounded
@@ -84,21 +58,15 @@
           </template>
         </Column>
 
-        <!-- Selection Column -->
-        <Column selectionMode="multiple" :style="{ width: '50px', minWidth: '50px' }" />
-
         <!-- Invoice Column -->
         <Column
           field="invoice"
           header="Invoice"
           sortable
-          :style="{ width: '15%', minWidth: '120px' }"
-          :pt="{
-            sort: { class: 'cursor-pointer' },
-          }"
+          :style="{ width: '18%', minWidth: '120px' }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 100px;"></div>
+            <div v-if="ordersLoading" class="skeleton skeleton-text"></div>
             <span v-else class="cell-code">{{ formatInvoice(data.invoice) }}</span>
           </template>
         </Column>
@@ -108,30 +76,11 @@
           field="status"
           header="Status"
           sortable
-          :style="{ width: '12%', minWidth: '100px' }"
-          :pt="{
-            sort: { class: 'cursor-pointer' },
-          }"
+          :style="{ width: '15%', minWidth: '100px' }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-button"></div>
+            <div v-if="ordersLoading" class="skeleton skeleton-button"></div>
             <Tag v-else :value="getOrderStatusLabel(data.status)" :severity="getOrderStatusSeverity(data.status)" />
-          </template>
-        </Column>
-
-        <!-- Customer Name Column -->
-        <Column
-          field="name"
-          header="Customer"
-          sortable
-          :style="{ width: '25%', minWidth: '150px' }"
-          :pt="{
-            sort: { class: 'cursor-pointer' },
-          }"
-        >
-          <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 140px;"></div>
-            <span v-else class="customer-name">{{ data.name || '—' }}</span>
           </template>
         </Column>
 
@@ -140,14 +89,11 @@
           field="inv_date"
           header="Order Date"
           sortable
-          :style="{ width: '15%', minWidth: '110px' }"
-          :pt="{
-            sort: { class: 'cursor-pointer' },
-          }"
+          :style="{ width: '18%', minWidth: '120px' }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 90px;"></div>
-              <span v-else class="cell-date">{{ formatDate(data.inv_date) }}</span>
+            <div v-if="ordersLoading" class="skeleton skeleton-text"></div>
+            <span v-else class="cell-date">{{ formatDate(data.inv_date) }}</span>
           </template>
         </Column>
 
@@ -156,14 +102,11 @@
           field="due_date"
           header="Due Date"
           sortable
-          :style="{ width: '15%', minWidth: '110px' }"
-          :pt="{
-            sort: { class: 'cursor-pointer' },
-          }"
+          :style="{ width: '18%', minWidth: '120px' }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 90px;"></div>
-              <span v-else class="cell-date">{{ formatDate(data.due_date) }}</span>
+            <div v-if="ordersLoading" class="skeleton skeleton-text"></div>
+            <span v-else class="cell-date">{{ formatDate(data.due_date) }}</span>
           </template>
         </Column>
 
@@ -172,21 +115,18 @@
           field="total"
           header="Total"
           sortable
-          :style="{ width: '12%', minWidth: '100px' }"
-          :pt="{
-            sort: { class: 'cursor-pointer' },
-          }"
+          :style="{ width: '15%', minWidth: '100px' }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 80px;"></div>
-              <span v-else class="cell-amount">{{ formatCurrency(data.total) }}</span>
+            <div v-if="ordersLoading" class="skeleton skeleton-text"></div>
+            <span v-else class="cell-amount">{{ formatCurrency(data.total) }}</span>
           </template>
         </Column>
 
         <!-- Actions Column -->
         <Column header="Actions" :style="{ width: '8%', minWidth: '70px', textAlign: 'center' }">
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-circle"></div>
+            <div v-if="ordersLoading" class="skeleton skeleton-circle"></div>
             <Button
               v-else
               icon="pi pi-ellipsis-v"
@@ -274,18 +214,18 @@
       </DataTable>
 
       <!-- Pagination -->
-      <div class="flex align-items-center justify-content-between pagination-container">
+      <div class="flex align-items-center justify-content-between pagination-container detailed">
         <div class="flex justify-content-start align-items-center flex-1">
-          <span v-if="!loading && totalRecords > 0" class="results-text">
+          <span v-if="!ordersLoading && totalOrders > 0" class="results-text">
             {{ paginationRange.start }}–{{ paginationRange.end }} of {{ paginationRange.total.toLocaleString() }}
           </span>
         </div>
         
         <Paginator
           v-if="showPagination"
-          :rows="pageSize"
-          :totalRecords="totalRecords"
           :first="offset"
+          :rows="pageSize"
+          :totalRecords="totalOrders"
           @page="onPageChange"
           template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
           :pageLinkSize="9"
@@ -305,33 +245,31 @@
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Button from "primevue/button";
-import InputText from "primevue/inputtext";
 import Tag from "primevue/tag";
+import InputText from "primevue/inputtext";
 import Paginator from "primevue/paginator";
-import Menu from "primevue/menu";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
+import Menu from "primevue/menu";
 import ProgressSpinner from "primevue/progressspinner";
 import { until } from "@vueuse/core";
 import { storeToRefs } from "pinia";
 import type { Order, OrderItem, PrimeVuePageEvent } from "~/types";
-import type { DataTableSortEvent } from "primevue/datatable";
 import { formatDate, formatCurrency, formatQuantity } from "~/utils/formatters";
-import { useProjectsStore } from "~/stores/projects";
 import { 
   PAGINATION_DEFAULTS, 
   DEBOUNCE_MS,
-  ORDER_STATUS,
-  ORDER_STATUS_LABELS,
-  getOrderStatusLabel, 
-  getOrderStatusSeverity,
   USER_ROLES,
-  type OrderStatus
+  getOrderStatusLabel, 
+  getOrderStatusSeverity 
 } from "~/utils/constants";
+import { useProjectsStore } from "~/stores/projects";
 
-definePageMeta({
-  middleware: "auth",
-});
+interface Props {
+  customerId: string;
+}
+
+const props = defineProps<Props>();
 
 const ordersApi = useOrders();
 const toast = useToast();
@@ -339,27 +277,19 @@ const auth = useAuth();
 
 // Store management
 const projectsStore = useProjectsStore();
-const { selectedProjectId, projects, loading: projectsLoading } = storeToRefs(projectsStore);
+const { selectedProjectId, loading: projectsLoading } = storeToRefs(projectsStore);
 
 const isSuperAdmin = computed(() => auth.user.value?.role === USER_ROLES.SUPERADMIN);
 
-// URL-based state management
+// URL-based state management for orders (with prefixes to avoid conflicts)
 const { page, pageSize, offset, setPage, resetPage } = useUrlPagination({
-  defaultPageSize: PAGINATION_DEFAULTS.PAGE_SIZE_MEDIUM,
+  defaultPageSize: PAGINATION_DEFAULTS.PAGE_SIZE_DEFAULT,
+  pageParam: 'ordersPage',
 });
 
 const { searchInput, search, clearSearch } = useUrlSearch({
-  param: 'invoice',
-  debounce: DEBOUNCE_MS.SEARCH_LONG,
-});
-
-const { filters, setFilter } = useUrlFilters<{
-  status: OrderStatus | '';
-}>({
-  status: {
-    param: 'status',
-    defaultValue: '', // Empty for "All Orders"
-  },
+  param: 'ordersSearch',
+  debounce: DEBOUNCE_MS.SEARCH_DEFAULT,
 });
 
 const {
@@ -369,52 +299,33 @@ const {
   handlePrimeVueSort,
 } = useUrlSort({
   useCombinedFormat: true,
-  combinedParam: 'ordering',
+  combinedParam: 'ordersOrdering',
 });
 
-// Local UI state (not in URL)
+// Local orders state
 const orders = ref<Order[]>([]);
-const loading = ref(true); // Start with true to prevent empty state flash
-const totalRecords = ref(0);
-const selectedOrders = ref<Order[]>([]);
+const ordersLoading = ref(false);
+const totalOrders = ref(0);
 const expandedRows = ref<Record<string, boolean>>({});
 const orderItemsMap = ref<Record<string, OrderItem[]>>({});
 const loadingItems = ref<Record<string, boolean>>({});
 const menuRef = ref();
 const selectedOrder = ref<Order | null>(null);
 
-// Status tabs configuration
-const statusTabs = [
-  { 
-    label: ORDER_STATUS_LABELS[ORDER_STATUS.UNPROCESSED], 
-    value: ORDER_STATUS.UNPROCESSED 
-  },
-  { 
-    label: ORDER_STATUS_LABELS[ORDER_STATUS.OPEN], 
-    value: ORDER_STATUS.OPEN 
-  },
-  { 
-    label: ORDER_STATUS_LABELS[ORDER_STATUS.CLOSED], 
-    value: ORDER_STATUS.CLOSED 
-  },
-  { label: 'All Orders', value: '' },
-];
-
-// Computed properties
-const showPagination = computed(() => totalRecords.value > pageSize.value);
+// Computed
+const showPagination = computed(() => totalOrders.value > pageSize.value);
 
 const paginationRange = computed(() => {
-  if (totalRecords.value === 0) {
+  if (totalOrders.value === 0) {
     return { start: 0, end: 0, total: 0 };
   }
   const start = offset.value + 1;
-  const end = Math.min(offset.value + pageSize.value, totalRecords.value);
-  return { start, end, total: totalRecords.value };
+  const end = Math.min(offset.value + pageSize.value, totalOrders.value);
+  return { start, end, total: totalOrders.value };
 });
 
-// Skeleton rows for loading state
-const skeletonRows = computed(() => {
-  return Array.from({ length: Math.min(pageSize.value, 10) }, (_, i) => ({
+const orderSkeletonRows = computed(() => {
+  return Array.from({ length: pageSize.value }, (_, i) => ({
     autoid: `skeleton-${i}`,
     id: '',
     invoice: '',
@@ -422,10 +333,10 @@ const skeletonRows = computed(() => {
     inv_date: null,
     due_date: null,
     status: 'U' as const,
-    tax: '',
-    subtotal: '',
-    total: '',
-    balance: '',
+    tax: '0',
+    subtotal: '0',
+    total: '0',
+    balance: '0',
   }));
 });
 
@@ -447,77 +358,40 @@ const menuItems = computed(() => [
   },
 ]);
 
-
-// Track if we're initializing default filter to prevent race condition
-const route = useRoute();
-const shouldInitializeFilter = !route.query.status || route.query.status === '';
-const isInitializing = ref(shouldInitializeFilter);
-
-// Track if initial data load is ready (projects loaded for superadmin)
-const isReadyToLoad = ref(false);
-
-// Effective status for UI rendering (prevents flickering during initialization)
-const effectiveStatus = computed(() => {
-  // Only override during the brief initialization phase
-  if (isInitializing.value && filters.value.status === '') {
-    return ORDER_STATUS.UNPROCESSED;
-  }
-  return filters.value.status;
-});
-
-// Initialize status filter if not present in URL
-if (shouldInitializeFilter) {
-  setFilter('status', ORDER_STATUS.UNPROCESSED as OrderStatus | '');
-}
-
 // Load orders on mount
 onMounted(async () => {
-  // Wait for projects to load if user is superadmin
+  // Wait for projects to load if user is superadmin AND projects are still loading
   if (isSuperAdmin.value && projectsLoading.value) {
     await until(projectsLoading).toBe(false);
   }
   
-  // Mark as ready to load - watcher can now make API calls
-  isReadyToLoad.value = true;
-  
-  // Always call loadOrders from onMounted - we're now ready
   loadOrders();
 });
 
 // Watch for URL state changes and reload orders
 watch(
-  [page, pageSize, search, () => filters.value.status, sortOrdering],
+  [page, pageSize, search, sortOrdering],
   () => {
-    // Mark initialization as complete once the watcher fires
-    if (isInitializing.value) {
-      isInitializing.value = false;
-    }
-    // Only load if ready (projects loaded for superadmin)
-    // onMounted will handle the initial load
-    if (isReadyToLoad.value) {
-      loadOrders();
-    }
+    loadOrders();
   }
 );
 
-// Watch for search/filter changes and reset to first page
+// Watch for search changes and reset to first page
 watch(
-  [search, () => filters.value.status],
-  (newVals, oldVals) => {
+  search,
+  (newVal, oldVal) => {
     // Only reset if values actually changed (not initial load)
-    if (oldVals && (oldVals[0] !== newVals[0] || oldVals[1] !== newVals[1])) {
+    if (oldVal !== undefined && oldVal !== newVal) {
       resetPage();
     }
   }
 );
 
-// Watch for project changes and reset to first page
+// Watch for project changes (superadmin only)
 watch(
   selectedProjectId,
-  (newVal, oldVal) => {
-    // Only reset if this is an actual change, not initial load (oldVal will be null or undefined on first load)
-    if (oldVal !== undefined && oldVal !== null) {
-      resetPage();
+  () => {
+    if (isSuperAdmin.value) {
       loadOrders();
     }
   }
@@ -541,14 +415,10 @@ watch(expandedRows, async (newExpandedRows, oldExpandedRows) => {
 
 async function loadOrders() {
   const params: any = {
+    customer_id: props.customerId,
     limit: pageSize.value,
     offset: offset.value,
   };
-
-  // Add status filter if not "All Orders"
-  if (filters.value.status) {
-    params.status = filters.value.status;
-  }
 
   // Add search filter
   if (search.value) {
@@ -560,19 +430,19 @@ async function loadOrders() {
     params.ordering = sortOrdering.value;
   }
 
-  // Add project_id filter if available
-  if (selectedProjectId.value !== null) {
+  // Add project_id for superadmin
+  if (isSuperAdmin.value && selectedProjectId.value !== null) {
     params.project_id = selectedProjectId.value;
   }
 
   await useApiCall({
     fn: () => ordersApi.list(params),
     errorMessage: 'Failed to Load Orders',
-    loading,
+    loading: ordersLoading,
     toast,
     onSuccess: (data) => {
       orders.value = data.results;
-      totalRecords.value = data.count;
+      totalOrders.value = data.count;
     },
   });
 }
@@ -585,15 +455,6 @@ function onPageChange(event: PrimeVuePageEvent) {
 function toggleMenu(event: Event, order: Order) {
   selectedOrder.value = order;
   menuRef.value.toggle(event);
-}
-
-function getEmptyStateMessage(): string {
-  if (!filters.value.status) {
-    return 'No orders found';
-  }
-  
-  const statusLabel = ORDER_STATUS_LABELS[filters.value.status as OrderStatus];
-  return `No ${statusLabel.toLowerCase()} orders`;
 }
 
 function toggleExpand(order: Order) {
@@ -662,110 +523,39 @@ async function loadOrderItems(order: Order) {
   });
 }
 
-// Keep formatInvoice as it's custom logic specific to this page
 function formatInvoice(invoice: string): string {
   return invoice?.trim() || '—';
 }
 </script>
 
 <style scoped>
-.orders-page {
-  padding: 1.5rem 1.5rem;
-  min-height: 100vh;
-  max-width: 1400px;
-  min-width: 700px;
-  margin: 0 auto;
-}
-
-.page-title {
-  font-size: var(--font-size-heading-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  margin: 0;
-  letter-spacing: -0.5px;
-}
-
-/* Tabs */
-.tabs-container {
-  margin-bottom: 1rem;
-}
-
-.tabs {
-  gap: 0.25rem;
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.tab {
-  padding: 0.5rem 1rem;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  font-size: var(--font-size-body-s);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.tab:hover {
-  color: var(--color-text-primary);
-  background: var(--color-neutral-200);
-}
-
-.tab-active {
-  color: var(--color-text-primary);
-  border-bottom-color: var(--color-neutral-900);
-}
-
-/* Search */
+/* Search container spacing */
 .search-container {
   margin-bottom: 1rem;
 }
 
-.search-input {
-  width: 100%;
-  max-width: 400px;
+/* Empty state */
+.empty-state {
+  padding: 4rem 2rem;
 }
 
-/* Table */
+.empty-state i {
+  font-size: 3rem;
+  color: var(--color-text-tertiary);
+}
+
+.empty-state-text {
+  font-size: var(--font-size-body-m);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Table card */
 .table-card {
   background: white;
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-sm);
   overflow: hidden;
-  min-width: 700px;
-}
-
-.orders-table {
-  width: 100%;
-}
-
-.orders-table :deep(table) {
-  table-layout: fixed;
-  width: 100%;
-}
-
-.invoice-number {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-body-s);
-}
-
-.customer-name {
-  color: var(--color-text-primary);
-  font-size: var(--font-size-body-s);
-}
-
-.order-date,
-.due-date {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-body-s);
-}
-
-.order-total {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-body-s);
 }
 
 /* Pagination */
@@ -779,19 +569,6 @@ function formatInvoice(invoice: string): string {
   font-size: var(--font-size-body-xs);
   color: var(--color-text-tertiary);
   font-weight: var(--font-weight-regular);
-}
-
-.orders-paginator {
-  padding: 0.5rem;
-}
-
-/* Prevent horizontal shifting during loading */
-.orders-table :deep(.p-datatable-tbody > tr > td) {
-  overflow: hidden;
-}
-
-.orders-table :deep(.p-datatable-thead > tr > th) {
-  overflow: hidden;
 }
 
 /* Row Expansion Styles */
@@ -914,21 +691,5 @@ function formatInvoice(invoice: string): string {
   padding: 8px !important;
   height: 45px;
   line-height: normal;
-}
-
-/* Empty state */
-.empty-state {
-  padding: 4rem 2rem;
-}
-
-.empty-state i {
-  font-size: 3rem;
-  color: var(--color-text-tertiary);
-}
-
-.empty-state-text {
-  font-size: var(--font-size-body-m);
-  color: var(--color-text-secondary);
-  margin: 0;
 }
 </style>

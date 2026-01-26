@@ -14,6 +14,7 @@ export default defineNuxtPlugin(async () => {
 
   const auth = useAuth()
   const authStore = useAuthStore()
+  const projectsStore = useProjectsStore()
   
   // Check cookies first
   const accessCookie = useCookie("auth.access")
@@ -28,8 +29,20 @@ export default defineNuxtPlugin(async () => {
   // If user already exists in store, skip API call
   if (authStore.accessToken && !authStore.user) {
     // Bootstrap in background - don't block page load
-    auth.bootstrap().catch(() => {
+    auth.bootstrap().then(() => {
+      // Load projects for super admins after auth is ready
+      if (authStore.user?.role === 'superadmin') {
+        projectsStore.loadProjects().catch(() => {
+          // Silently fail - errors shown via toast in store
+        })
+      }
+    }).catch(() => {
       // Silently fail - errors handled elsewhere
+    })
+  } else if (authStore.user?.role === 'superadmin') {
+    // If user already loaded, ensure projects are loaded
+    projectsStore.loadProjects().catch(() => {
+      // Silently fail - errors shown via toast in store
     })
   }
 })
