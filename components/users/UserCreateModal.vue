@@ -130,7 +130,7 @@
       </div>
 
       <!-- Change Password Toggle (Edit mode only) -->
-      <div v-else class="w-full mb-6">
+      <!-- <div v-else class="w-full mb-6">
         <div class="flex align-items-center mb-4">
           <Button
             type="button"
@@ -179,7 +179,7 @@
             <ErrorMessage name="password_confirm" class="p-error text-sm mt-1" />
           </div>
         </div>
-      </div>
+      </div> -->
 
       <!-- Submit Button -->
       <Button
@@ -501,6 +501,6 @@ function handleValidationErrors(error: unknown, setFieldError: (field: string, m
   display: block;
   font-size: var(--font-size-body-xs);
   color: var(--color-text-secondary);
-  margin-top: 0.25rem;
+  margin-top: 0.25rem !important;
 }
 </style>

@@ -383,6 +383,9 @@ const loadingItems = ref<Record<string, boolean>>({});
 const menuRef = ref();
 const selectedOrder = ref<Order | null>(null);
 
+// Request cancellation - track the current request to prevent race conditions
+const currentAbortController = ref<AbortController | null>(null);
+
 // Status tabs configuration
 const statusTabs = [
   { 
@@ -540,6 +543,18 @@ watch(expandedRows, async (newExpandedRows, oldExpandedRows) => {
 }, { deep: true });
 
 async function loadOrders() {
+  // Cancel any in-flight request to prevent race conditions
+  if (currentAbortController.value) {
+    currentAbortController.value.abort();
+  }
+
+  // Create a new AbortController for this request
+  const abortController = new AbortController();
+  currentAbortController.value = abortController;
+
+  // Set loading state immediately
+  loading.value = true;
+
   const params: any = {
     limit: pageSize.value,
     offset: offset.value,
@@ -565,16 +580,31 @@ async function loadOrders() {
     params.project_id = selectedProjectId.value;
   }
 
-  await useApiCall({
-    fn: () => ordersApi.list(params),
-    errorMessage: 'Failed to Load Orders',
-    loading,
-    toast,
-    onSuccess: (data) => {
+  try {
+    const data = await ordersApi.list(params, abortController.signal);
+    
+    // Only update data if this request wasn't aborted
+    if (!abortController.signal.aborted) {
       orders.value = data.results;
       totalRecords.value = data.count;
-    },
-  });
+      loading.value = false;
+    }
+  } catch (error: any) {
+    // Only handle errors if this request wasn't aborted
+    if (!abortController.signal.aborted) {
+      // Check for abort error (can be DOMException with name 'AbortError' or Error)
+      const isAbortError = 
+        error?.name === 'AbortError' || 
+        error?.code === DOMException.ABORT_ERR ||
+        error?.message?.includes('aborted');
+      
+      if (!isAbortError) {
+        toast.showError(error, 'Failed to Load Orders');
+      }
+      loading.value = false;
+    }
+    // If aborted, don't change loading state - let the new request handle it
+  }
 }
 
 function onPageChange(event: PrimeVuePageEvent) {

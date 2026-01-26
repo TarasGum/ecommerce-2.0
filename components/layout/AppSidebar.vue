@@ -115,8 +115,21 @@ const userRole = computed(() => {
   return user?.role || "user";
 });
 
+// Router for navigation
+const router = useRouter();
+
 // User menu items
 const userMenuItems = ref<MenuItem[]>([
+  {
+    label: "My Profile",
+    icon: "pi pi-user",
+    command: () => {
+      router.push("/profile");
+    },
+  },
+  {
+    separator: true,
+  },
   {
     label: "Logout",
     icon: "pi pi-sign-out",

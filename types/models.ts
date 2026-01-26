@@ -129,3 +129,55 @@ export interface UpdateCustomerPayload {
   in_level?: string;
   inactive?: boolean;
 }
+
+// Profile types
+export interface UpdateProfileRequest {
+  first_name?: string;
+  last_name?: string;
+}
+
+export interface ChangePasswordRequest {
+  old_password: string;
+  new_password: string;
+  new_password_confirm: string;
+}
+
+// Payload Logs types (SuperAdmin only)
+export interface PayloadLogListParams {
+  page?: number;
+  created_after?: string;
+  created_before?: string;
+  entity?: string;
+  is_error?: boolean;
+  method?: string;
+  project_id?: number;
+  status_code?: number;
+}
+
+export interface PayloadLog {
+  id: number;
+  project_id: number;
+  project_name: string;
+  method: string;
+  url: string;
+  entity: string;
+  key: string;
+  payload: Record<string, any> | null;
+  response: Record<string, any> | null;
+  status_code: number;
+  is_error: boolean;
+  error_message: string | null;
+  duration_ms: number;
+  created_at: string;
+}
+
+export interface PayloadLogDetail extends PayloadLog {
+  is_autoid: boolean;
+}
+
+export interface PayloadLogListResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: PayloadLog[];
+}

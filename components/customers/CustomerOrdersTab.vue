@@ -304,7 +304,7 @@ const {
 
 // Local orders state
 const orders = ref<Order[]>([]);
-const ordersLoading = ref(false);
+const ordersLoading = ref(true);
 const totalOrders = ref(0);
 const expandedRows = ref<Record<string, boolean>>({});
 const orderItemsMap = ref<Record<string, OrderItem[]>>({});

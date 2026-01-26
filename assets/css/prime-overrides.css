@@ -27,6 +27,10 @@
   color: var(--color-text-primary);
 }
 
+.p-password-panel {
+  padding: 1rem;
+}
+
 /* ==================== DIALOG / MODAL - Ultra Minimal Shadcn Style ==================== */
 .p-dialog-mask {
   background-color: rgba(0, 0, 0, 0.3);
@@ -206,7 +210,7 @@
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-sm);
   box-shadow: none;
-  margin-top: 0.25rem;
+  margin-top: 0.25rem !important;
   background: var(--color-bg-primary);
 }
 
@@ -320,6 +324,222 @@
 
 .p-inputswitch.p-inputswitch-checked:not(.p-disabled):hover .p-inputswitch-slider {
   background: var(--color-green-700);
+}
+
+/* ==================== CALENDAR (DATE PICKER) - Ultra Minimal Shadcn Style ==================== */
+.p-calendar {
+  display: inline-flex;
+}
+
+.p-calendar .p-inputtext {
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  height: 1.75rem;
+  font-size: var(--font-size-body-s);
+  padding: 0 0.625rem;
+  background: var(--color-bg-primary);
+}
+
+.p-calendar .p-inputtext:hover {
+  border-color: var(--color-border-primary);
+}
+
+.p-calendar .p-inputtext:focus {
+  border-color: var(--color-neutral-900);
+  outline: none;
+  box-shadow: none;
+}
+
+.p-calendar .p-datepicker-trigger {
+  color: var(--color-text-tertiary);
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* Calendar Panel */
+.p-datepicker {
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  background: var(--color-bg-primary);
+  padding: 0.5rem;
+}
+
+.p-datepicker {
+  margin-top: 0.25rem !important;
+}
+
+/* Calendar Header */
+.p-datepicker .p-datepicker-header {
+  padding: 0.25rem 0;
+  background: transparent;
+  border: none;
+  margin-bottom: 0.5rem;
+}
+
+.p-datepicker .p-datepicker-title {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0 0.25rem;
+}
+
+.p-datepicker .p-datepicker-title .p-datepicker-month,
+.p-datepicker .p-datepicker-title .p-datepicker-year {
+  font-size: var(--font-size-body-s);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s;
+  border: none;
+  background: transparent;
+}
+
+.p-datepicker .p-datepicker-title .p-datepicker-month:hover,
+.p-datepicker .p-datepicker-title .p-datepicker-year:hover {
+  background: var(--color-neutral-200);
+}
+
+.p-datepicker .p-datepicker-prev,
+.p-datepicker .p-datepicker-next {
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s, color 0.15s;
+  background: transparent;
+  border: none;
+}
+
+.p-datepicker .p-datepicker-prev:hover,
+.p-datepicker .p-datepicker-next:hover {
+  background: var(--color-neutral-200);
+  color: var(--color-text-primary);
+}
+
+/* Calendar Table */
+.p-datepicker table {
+  font-size: var(--font-size-body-xs);
+  margin: 0;
+}
+
+.p-datepicker table th {
+  padding: 0.5rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-xs);
+}
+
+.p-datepicker table td {
+  padding: 0.125rem;
+}
+
+.p-datepicker table td > span {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s, color 0.15s;
+  color: var(--color-text-primary);
+}
+
+.p-datepicker table td > span:not(.p-highlight):not(.p-disabled):hover {
+  background: var(--color-neutral-200);
+}
+
+.p-datepicker table td > span.p-highlight {
+  background: var(--color-neutral-900);
+  color: white;
+}
+
+.p-datepicker table td.p-datepicker-today > span {
+  background: var(--color-neutral-200);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.p-datepicker table td.p-datepicker-today > span.p-highlight {
+  background: var(--color-neutral-900);
+  color: white;
+}
+
+.p-datepicker table td > span.p-disabled {
+  color: var(--color-text-tertiary);
+  opacity: 0.5;
+}
+
+/* Time picker */
+.p-datepicker .p-timepicker {
+  border-top: 1px solid var(--color-border-light);
+  padding: 0.5rem 0.25rem 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.p-datepicker .p-timepicker button {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s, color 0.15s;
+  background: transparent;
+  border: none;
+}
+
+.p-datepicker .p-timepicker button:hover {
+  background: var(--color-neutral-200);
+  color: var(--color-text-primary);
+}
+
+.p-datepicker .p-timepicker span {
+  font-size: var(--font-size-body-s);
+  color: var(--color-text-primary);
+}
+
+.p-datepicker .p-timepicker > div {
+  padding: 0 0.25rem;
+}
+
+/* Month/Year Picker */
+.p-datepicker .p-monthpicker,
+.p-datepicker .p-yearpicker {
+  margin: 0.5rem 0;
+}
+
+.p-datepicker .p-monthpicker .p-monthpicker-month,
+.p-datepicker .p-yearpicker .p-yearpicker-year {
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s, color 0.15s;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body-s);
+}
+
+.p-datepicker .p-monthpicker .p-monthpicker-month:not(.p-highlight):hover,
+.p-datepicker .p-yearpicker .p-yearpicker-year:not(.p-highlight):hover {
+  background: var(--color-neutral-200);
+}
+
+.p-datepicker .p-monthpicker .p-monthpicker-month.p-highlight,
+.p-datepicker .p-yearpicker .p-yearpicker-year.p-highlight {
+  background: var(--color-neutral-900);
+  color: white;
+}
+
+/* Button Bar */
+.p-datepicker .p-datepicker-buttonbar {
+  border-top: 1px solid var(--color-border-light);
+  padding: 0.5rem 0.25rem 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.p-datepicker .p-datepicker-buttonbar .p-button {
+  height: 1.75rem;
+  padding: 0.25rem 0.625rem;
+  font-size: var(--font-size-body-xs);
 }
 
 /* ==================== MENU (CONTEXT MENU) - Ultra Minimal Shadcn Style ==================== */

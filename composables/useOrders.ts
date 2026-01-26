@@ -24,8 +24,9 @@ export const useOrders = () => {
   /**
    * Fetch orders list with filters
    * @param params - filter and pagination options
+   * @param signal - optional AbortSignal for request cancellation
    */
-  async function list(params: OrdersListParams = {}): Promise<PaginatedResponse<Order>> {
+  async function list(params: OrdersListParams = {}, signal?: AbortSignal): Promise<PaginatedResponse<Order>> {
     const { status, invoice, customer_id, limit = 50, offset = 0, ordering, project_id } = params;
     
     // Build query string
@@ -50,7 +51,7 @@ export const useOrders = () => {
     }
 
     const url = `/data/orders/?${queryParams.toString()}`;
-    return api.get<PaginatedResponse<Order>>(url);
+    return api.get<PaginatedResponse<Order>>(url, signal ? { signal } : undefined);
   }
 
   /**

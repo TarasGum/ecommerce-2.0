@@ -52,6 +52,32 @@ export const createUserSchema = z
 
 export type CreateUserFormData = z.infer<typeof createUserSchema>;
 
+// Change password form schema
+export const changePasswordSchema = z
+  .object({
+    old_password: z
+      .string()
+      .min(1, "Current password is required")
+      .min(8, "Password must be at least 8 characters"),
+    new_password: z
+      .string()
+      .min(1, "New password is required")
+      .min(8, "Password must be at least 8 characters"),
+    new_password_confirm: z
+      .string()
+      .min(1, "Please confirm your new password"),
+  })
+  .refine((data) => data.new_password === data.new_password_confirm, {
+    message: "Passwords do not match",
+    path: ["new_password_confirm"],
+  })
+  .refine((data) => data.new_password !== data.old_password, {
+    message: "New password must be different from current password",
+    path: ["new_password"],
+  });
+
+export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+
 // Edit user form schema (password optional)
 export const editUserSchema = (changePassword: boolean) => {
   if (changePassword) {
