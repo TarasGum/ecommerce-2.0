@@ -155,7 +155,20 @@
     </div>
 
     <!-- Context Menu -->
-    <Menu ref="menuRef" :model="menuItems" :popup="true" />
+    <Menu ref="menuRef" :model="menuItems" :popup="true">
+      <template #item="{ item, props }">
+        <a 
+          v-ripple 
+          class="flex align-items-center menu-item-link" 
+          v-bind="props.action"
+          :data-tooltip="item.tooltip"
+          v-tooltip.top="{ value: item.tooltip, disabled: !item.tooltip }"
+        >
+          <span :class="item.icon" />
+          <span class="ml-2">{{ item.label }}</span>
+        </a>
+      </template>
+    </Menu>
 
     <!-- User Modal (Create/Edit) -->
     <UserCreateModal
@@ -179,6 +192,7 @@ import Menu from "primevue/menu";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import Tooltip from "primevue/tooltip";
+import Ripple from "primevue/ripple";
 import UserCreateModal from "~/components/users/UserCreateModal.vue";
 import type { User, PrimeVuePageEvent } from "~/types";
 import type { DataTableSortEvent } from "primevue/datatable";
@@ -186,8 +200,9 @@ import { PAGINATION_DEFAULTS, getUserRoleLabel, getUserRoleSeverity } from "~/ut
 import { ValidationError } from "~/utils/errors";
 import { useConfirm } from "primevue/useconfirm";
 
-// Register tooltip directive
+// Register directives
 const vTooltip = Tooltip;
+const vRipple = Ripple;
 
 definePageMeta({
   middleware: "auth",
@@ -249,22 +264,30 @@ const skeletonRows = computed(() => {
 });
 
 // Menu items (dynamic based on selected user)
-const menuItems = computed(() => [
-  {
-    label: "Edit",
-    icon: "pi pi-pencil",
-    command: () => {
-      openEditModal(selectedUser.value!);
+const menuItems = computed(() => {
+  const isOwnAccount = selectedUser.value ? isCurrentUser(selectedUser.value.id) : false;
+  
+  return [
+    {
+      label: "Edit",
+      icon: "pi pi-pencil",
+      command: () => {
+        openEditModal(selectedUser.value!);
+      },
     },
-  },
-  {
-    label: "Delete",
-    icon: "pi pi-trash",
-    command: () => {
-      confirmDeleteUser(selectedUser.value!);
+    {
+      label: "Delete",
+      icon: "pi pi-trash",
+      disabled: isOwnAccount,
+      command: () => {
+        if (!isOwnAccount) {
+          confirmDeleteUser(selectedUser.value!);
+        }
+      },
+      tooltip: isOwnAccount ? "You cannot delete your own account" : undefined,
     },
-  },
-]);
+  ];
+});
 
 // Load users on mount
 onMounted(() => {
@@ -486,5 +509,19 @@ async function deleteUser(userId: number) {
   font-size: var(--font-size-body-m);
   color: var(--color-text-secondary);
   margin: 0;
+}
+
+/* Menu item disabled state */
+:deep(.p-menuitem.p-disabled) {
+  opacity: 0.5;
+}
+
+:deep(.p-menuitem.p-disabled) a {
+  cursor: not-allowed !important;
+  pointer-events: auto !important; /* Allow hover for tooltip */
+}
+
+:deep(.p-menuitem.p-disabled) a:hover {
+  background: transparent !important;
 }
 </style>

@@ -348,6 +348,9 @@
   margin-right: 0.5rem;
   font-size: 0.875rem;
 }
+.p-menu .p-menuitem:not(.p-highlight):not(.p-disabled) > .p-menuitem-content:hover{
+  background: transparent;
+}
 
 /* ==================== PAGINATOR - Ultra Minimal Shadcn Style ==================== */
 .p-paginator {

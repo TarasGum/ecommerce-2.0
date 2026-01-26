@@ -349,7 +349,7 @@ const { filters, setFilter } = useUrlFilters<{
 }>({
   status: {
     param: 'status',
-    defaultValue: ORDER_STATUS.UNPROCESSED as OrderStatus | '', // Default to Unprocessed
+    defaultValue: '', // Empty default so "U" appears in URL
   },
 });
 
@@ -437,6 +437,12 @@ const menuItems = computed(() => [
     },
   },
 ]);
+
+// Initialize status filter on mount if not present in URL
+const route = useRoute();
+if (!route.query.status || route.query.status === '') {
+  setFilter('status', ORDER_STATUS.UNPROCESSED as OrderStatus | '');
+}
 
 // Load orders on mount
 onMounted(async () => {
