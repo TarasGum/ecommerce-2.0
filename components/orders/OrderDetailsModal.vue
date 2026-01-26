@@ -5,8 +5,7 @@
     modal
     :closable="true"
     :draggable="false"
-    class="order-details-modal"
-    :style="{ width: '800px', maxWidth: '95vw' }"
+    class="modal-lg"
   >
     <template #header>
       <h2 class="modal-title">Order Details</h2>
@@ -214,14 +213,6 @@ function formatInvoice(invoice: string): string {
 </script>
 
 <style scoped>
-.modal-title {
-  font-size: var(--font-size-body-m);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  margin: 0;
-  letter-spacing: -0.25px;
-}
-
 /* Order Summary */
 .order-summary {
   background: var(--color-neutral-200);

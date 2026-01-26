@@ -5,8 +5,7 @@
     modal
     :closable="true"
     :draggable="false"
-    class="user-create-modal"
-    :style="{ width: '500px' }"
+    class="modal-md"
   >
     <template #header>
       <h2 class="modal-title">User</h2>
@@ -478,14 +477,6 @@ async function handleSubmit(
 </script>
 
 <style scoped>
-.modal-title {
-  font-size: var(--font-size-body-m);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  margin: 0;
-  letter-spacing: -0.25px;
-}
-
 .user-form {
   padding: 0.25rem 0 0;
 }

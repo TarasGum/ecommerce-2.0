@@ -180,6 +180,15 @@ async function handleLogin(
   border-radius: var(--radius-xl);
   padding: var(--spacing-9);
   box-shadow: var(--shadow-lg);
+  /* Initial state for animation - prevents flash of content */
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.login-card h1 {
+  /* Initial state for animation - prevents flash of content */
+  opacity: 0;
+  transform: translateY(20px);
 }
 
 .field-label {

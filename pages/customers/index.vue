@@ -98,7 +98,7 @@
         <!-- Actions Column -->
         <Column header="Actions" :style="{ width: '10%', minWidth: '80px', textAlign: 'center' }">
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-circle" style="width: 2rem; height: 2rem; margin: 0 auto;"></div>
+            <div v-if="loading" class="skeleton skeleton-circle" ></div>
             <Button
               v-else
               icon="pi pi-ellipsis-v"
@@ -141,17 +141,20 @@
     <!-- Create/Edit Customer Modal -->
     <Dialog
       v-model:visible="showModal"
-      :header="modalMode === 'create' ? 'Create New Customer' : 'Edit Customer'"
       :modal="true"
       :closable="true"
       :draggable="false"
-      class="customer-modal"
-      :style="{ width: '500px' }"
+      class="modal-md"
     >
+      <template #header>
+        <h2 class="modal-title">{{ modalMode === 'create' ? 'Create New Customer' : 'Edit Customer' }}</h2>
+      </template>
+
       <div class="modal-content">
         <p>Customer creation/edit form coming soon!</p>
         <p class="text-sm">Backend request body structure needed.</p>
       </div>
+
       <template #footer>
         <Button label="Cancel" severity="secondary" @click="showModal = false" />
         <Button label="Save" severity="primary" @click="showModal = false" />
@@ -440,11 +443,6 @@ function openEditModal() {
   font-size: var(--font-size-body-m);
   color: var(--color-text-secondary);
   margin: 0;
-}
-
-/* Modal */
-.modal-content {
-  padding: 1rem 0;
 }
 
 .text-sm {

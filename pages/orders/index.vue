@@ -186,7 +186,7 @@
         <!-- Actions Column -->
         <Column header="Actions" :style="{ width: '8%', minWidth: '70px', textAlign: 'center' }">
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-circle" style="width: 2rem; height: 2rem; margin: 0 auto;"></div>
+            <div v-if="loading" class="skeleton skeleton-circle"></div>
             <Button
               v-else
               icon="pi pi-ellipsis-v"
@@ -497,6 +497,7 @@ watch(expandedRows, async (newExpandedRows, oldExpandedRows) => {
 
 async function loadOrders() {
   loading.value = true;
+  
   try {
     const params: any = {
       limit: pageSize.value,

@@ -78,7 +78,7 @@
 
 .p-confirmdialog .p-confirm-dialog-icon {
   font-size: 1.5rem;
-  color: var(--color-warning-700);
+  color: #d97706;
   flex-shrink: 0;
   line-height: 1;
 }
@@ -235,7 +235,7 @@
   outline: none;
 }
 
-/* ==================== TAG (BADGE) - Ultra Minimal Shadcn Style ==================== */
+/* ==================== TAG (BADGE) - Ultra Minimal Shadcn Style with Consistent Colors ==================== */
 .p-tag {
   font-size: 0.6875rem;
   font-weight: 500;
@@ -246,24 +246,40 @@
   background: transparent;
 }
 
-.p-tag.p-tag-danger {
-  color: var(--color-error-800);
-  border-color: var(--color-error-800);
+/* Primary/Default Tag - Dark neutral */
+.p-tag.p-tag-primary {
+  color: var(--color-neutral-900);
+  border-color: var(--color-neutral-900);
 }
 
-.p-tag.p-tag-warning {
-  color: var(--color-warning-900);
-  border-color: var(--color-warning-800);
-}
-
-.p-tag.p-tag-info {
-  color: var(--color-violet-800);
-  border-color: var(--color-violet-600);
-}
-
+/* Success Tag - Subtle green */
 .p-tag.p-tag-success {
-  color: var(--color-success-900);
-  border-color: var(--color-success-900);
+  color: #16a34a;
+  border-color: #16a34a;
+}
+
+/* Warning Tag - Subtle amber */
+.p-tag.p-tag-warning {
+  color: #d97706;
+  border-color: #d97706;
+}
+
+/* Danger Tag - Subtle red */
+.p-tag.p-tag-danger {
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+/* Info Tag - Neutral gray */
+.p-tag.p-tag-info {
+  color: var(--color-neutral-700);
+  border-color: var(--color-neutral-500);
+}
+
+/* Secondary Tag - Light gray */
+.p-tag.p-tag-secondary {
+  color: var(--color-neutral-600);
+  border-color: var(--color-neutral-400);
 }
 
 /* ==================== INPUT SWITCH (TOGGLE) - Ultra Minimal Shadcn Style ==================== */

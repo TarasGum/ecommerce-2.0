@@ -205,7 +205,7 @@ body {
 
 /* ==================== COMPONENT OVERRIDES ==================== */
 
-/* PrimeVue Button Overrides - Ultra Minimal Shadcn Style */
+/* PrimeVue Button Overrides - Ultra Minimal Shadcn Style with Consistent Colors */
 .p-button {
   font-family: var(--font-family);
   border-radius: var(--radius-sm);
@@ -223,16 +223,55 @@ body {
   font-size: 0.875rem;
 }
 
-.p-button-success {
+/* Primary Button - Dark neutral (main action) */
+.p-button-primary {
   background: var(--color-neutral-900);
   border-color: var(--color-neutral-900);
+  color: white;
 }
 
-.p-button-success:hover {
+.p-button-primary:enabled:hover {
   background: var(--color-neutral-800);
   border-color: var(--color-neutral-800);
 }
 
+/* Success Button - Same as primary for consistency */
+.p-button-success {
+  background: var(--color-neutral-900);
+  border-color: var(--color-neutral-900);
+  color: white;
+}
+
+.p-button-success:enabled:hover {
+  background: var(--color-neutral-800);
+  border-color: var(--color-neutral-800);
+}
+
+/* Secondary Button - Outlined neutral */
+.p-button-secondary {
+  background: white;
+  border-color: var(--color-border-light);
+  color: var(--color-text-primary);
+}
+
+.p-button-secondary:enabled:hover {
+  background: var(--color-neutral-100);
+  border-color: var(--color-border-primary);
+}
+
+/* Danger Button - Subtle red, not bright */
+.p-button-danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
+}
+
+.p-button-danger:enabled:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+/* Text Button - Transparent with subtle hover */
 .p-button-text {
   box-shadow: none;
   background: transparent;
@@ -240,11 +279,12 @@ body {
   color: var(--color-text-secondary);
 }
 
-.p-button-text:hover {
+.p-button-text:enabled:hover {
   background: var(--color-neutral-200);
   color: var(--color-text-primary);
 }
 
+/* Rounded Button */
 .p-button-rounded {
   width: 1.75rem;
   height: 1.75rem;
@@ -321,17 +361,6 @@ body {
   color: var(--color-text-primary);
 }
 
-/* PrimeVue Dialog (Modal) Overrides */
-.p-dialog {
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border-primary);
-  box-shadow: var(--shadow-lg);
-}
-
-.p-dialog .p-dialog-content {
-  padding: var(--spacing-7);
-}
-
 /* PrimeVue DataTable Overrides - Ultra Minimal Shadcn Style */
 .p-datatable {
   font-size: var(--font-size-body-s);
@@ -398,15 +427,6 @@ body {
 }
 
 /* Smooth animations for interactive elements - Shadcn Style */
-.p-button {
-  transition: all 0.15s ease;
-}
-
-.p-button:hover {
-  transform: none;
-  opacity: 0.9;
-}
-
 .p-button:active {
   transform: scale(0.98);
 }
