@@ -6,16 +6,8 @@
       <h3 class="section-title">API Payload Logs</h3>
     </div>
 
-    <!-- Search Row -->
+    <!-- Filters Button -->
     <div class="flex gap-2 mb-3">
-      <IconField iconPosition="left" class="search-field">
-        <InputIcon class="pi pi-search" />
-        <InputText
-          v-model="searchInput"
-          placeholder="Search by entity, method, or status…"
-          class="search-input"
-        />
-      </IconField>
       <Button
         :icon="showFilters ? 'pi pi-filter-slash' : 'pi pi-filter'"
         :label="showFilters ? 'Hide Filters' : 'Filters'"
@@ -31,33 +23,36 @@
           <div class="filter-field">
             <label class="filter-label">Created After</label>
             <Calendar
-              v-model="filters.created_after"
+              :modelValue="filters.created_after"
+              @update:modelValue="(val) => setFilter('created_after', (val instanceof Date ? val : null) as any)"
               showTime
               hourFormat="12"
               dateFormat="M dd, yy"
               placeholder="Select date"
               class="w-full"
-             
+              showClear
             />
           </div>
 
           <div class="filter-field">
             <label class="filter-label">Created Before</label>
             <Calendar
-              v-model="filters.created_before"
+              :modelValue="filters.created_before"
+              @update:modelValue="(val) => setFilter('created_before', (val instanceof Date ? val : null) as any)"
               showTime
               hourFormat="12"
               dateFormat="M dd, yy"
               placeholder="Select date"
               class="w-full"
-            
+              showClear
             />
           </div>
 
           <div class="filter-field">
             <label class="filter-label">Entity</label>
             <InputText
-              v-model="filters.entity"
+              :modelValue="filters.entity"
+              @update:modelValue="(val) => setFilter('entity', val || '')"
               placeholder="e.g. Order, Customer"
               class="w-full"
             />
@@ -66,7 +61,8 @@
           <div class="filter-field">
             <label class="filter-label">Method</label>
             <Dropdown
-              v-model="filters.method"
+              :modelValue="filters.method"
+              @update:modelValue="(val) => setFilter('method', val || null)"
               :options="methodOptions"
               optionLabel="label"
               optionValue="value"
@@ -79,7 +75,8 @@
           <div class="filter-field">
             <label class="filter-label">Status Code</label>
             <InputNumber
-              v-model="filters.status_code"
+              :modelValue="filters.status_code"
+              @update:modelValue="(val) => setFilter('status_code', val || null)"
               placeholder="e.g. 200, 404"
               :useGrouping="false"
               class="w-full"
@@ -89,7 +86,8 @@
           <div class="filter-field">
             <label class="filter-label">Is Error</label>
             <Dropdown
-              v-model="filters.is_error"
+              :modelValue="filters.is_error"
+              @update:modelValue="(val) => setFilter('is_error', val ?? null)"
               :options="errorOptions"
               optionLabel="label"
               optionValue="value"
@@ -119,14 +117,14 @@
       <div v-if="!loading && logs.length === 0" class="flex flex-column align-items-center justify-content-center gap-3 empty-state">
         <i class="pi pi-inbox"></i>
         <p class="empty-state-text">
-          {{ hasActiveSearch ? 'No logs match your search' : 'No logs found' }}
+          {{ hasActiveSearch ? 'No logs match your filters' : 'No logs found' }}
         </p>
         <Button
           v-if="hasActiveSearch"
-          label="Clear Search"
+          label="Clear Filters"
           severity="secondary"
           size="small"
-          @click="clearSearch"
+          @click="clearFilters"
         />
       </div>
 
@@ -208,8 +206,8 @@
         
         <Paginator
           v-if="showPagination"
-          :first="(currentPage - 1) * 10"
-          :rows="10"
+          :first="offset"
+          :rows="pageSize"
           :totalRecords="totalRecords"
           @page="onPage"
           template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
@@ -278,9 +276,9 @@
 
       <div v-if="selectedLog.error_message" class="detail-section">
         <span class="detail-label">Error Message</span>
-        <Message severity="error" :closable="false">
-          {{ selectedLog.error_message }}
-        </Message>
+        <div class="error-box">
+          <pre>{{ formatJson(selectedLog.error_message) }}</pre>
+        </div>
       </div>
 
       <div class="detail-section">
@@ -312,8 +310,6 @@
 import Button from "primevue/button";
 import InputNumber from "primevue/inputnumber";
 import InputText from "primevue/inputtext";
-import IconField from "primevue/iconfield";
-import InputIcon from "primevue/inputicon";
 import Calendar from "primevue/calendar";
 import Dropdown from "primevue/dropdown";
 import DataTable from "primevue/datatable";
@@ -332,23 +328,47 @@ const toast = useToast();
 const logs = ref<PayloadLog[]>([]);
 const totalRecords = ref(0);
 const loading = ref(true); // Start with true to prevent empty state flash
-const currentPage = ref(1);
 const showFilters = ref(false);
 
-// URL-based search
-const { searchInput, search, clearSearch } = useUrlSearch({
-  param: 'logs_search',
-  debounce: DEBOUNCE_MS.SEARCH_DEFAULT,
+// URL-based pagination
+const { page, pageSize, offset, setPage, resetPage } = useUrlPagination({
+  defaultPageSize: 10,
 });
 
-// Filters
-const filters = reactive({
-  created_after: null as Date | null,
-  created_before: null as Date | null,
-  entity: "",
-  method: null as string | null,
-  status_code: null as number | null,
-  is_error: null as boolean | null,
+// URL-based filters (using 'as any' for Date types since FilterValue doesn't include Date)
+const { filters, setFilter, resetAllFilters } = useUrlFilters<any>({
+  created_after: {
+    param: 'created_after',
+    defaultValue: null,
+    parse: (val: string) => val ? new Date(val) : null,
+    serialize: (val: any) => val ? val.toISOString() : '',
+  },
+  created_before: {
+    param: 'created_before',
+    defaultValue: null,
+    parse: (val: string) => val ? new Date(val) : null,
+    serialize: (val: any) => val ? val.toISOString() : '',
+  },
+  entity: {
+    param: 'entity',
+    defaultValue: '',
+  },
+  method: {
+    param: 'method',
+    defaultValue: null,
+  },
+  status_code: {
+    param: 'status_code',
+    defaultValue: null,
+    parse: (val: string) => val ? parseInt(val) : null,
+    serialize: (val) => val?.toString() || '',
+  },
+  is_error: {
+    param: 'is_error',
+    defaultValue: null,
+    parse: (val: string) => val === '' || val === null ? null : val === 'true',
+    serialize: (val) => val === null ? '' : String(val),
+  },
 });
 
 // Details dialog
@@ -384,48 +404,63 @@ const skeletonRows = computed(() => {
 // Computed
 const hasFilters = computed(() => {
   return (
-    filters.created_after !== null ||
-    filters.created_before !== null ||
-    filters.entity !== "" ||
-    filters.method !== null ||
-    filters.status_code !== null ||
-    filters.is_error !== null
+    filters.value.created_after !== null ||
+    filters.value.created_before !== null ||
+    filters.value.entity !== "" ||
+    filters.value.method !== null ||
+    filters.value.status_code !== null ||
+    filters.value.is_error !== null
   );
 });
 
 const hasActiveSearch = computed(() => {
-  return search.value || hasFilters.value;
+  return hasFilters.value;
 });
 
-const showPagination = computed(() => totalRecords.value > 10);
+const showPagination = computed(() => totalRecords.value > pageSize.value);
 
 const paginationRange = computed(() => {
   if (totalRecords.value === 0) {
     return { start: 0, end: 0, total: 0 };
   }
-  const start = (currentPage.value - 1) * 10 + 1;
-  const end = Math.min(currentPage.value * 10, totalRecords.value);
+  const start = offset.value + 1;
+  const end = Math.min(offset.value + pageSize.value, totalRecords.value);
   return { start, end, total: totalRecords.value };
 });
 
-// Watch filters and search
-let filterTimeout: NodeJS.Timeout | null = null;
+// Watch for URL state changes and reload logs
 watch(
-  () => ({ ...filters }),
+  [
+    page,
+    () => filters.value.created_after,
+    () => filters.value.created_before,
+    () => filters.value.entity,
+    () => filters.value.method,
+    () => filters.value.status_code,
+    () => filters.value.is_error
+  ],
   () => {
-    if (filterTimeout) clearTimeout(filterTimeout);
-    filterTimeout = setTimeout(() => {
-      currentPage.value = 1;
-      loadLogs();
-    }, 500);
-  },
-  { deep: true }
+    loadLogs();
+  }
 );
 
-watch(search, () => {
-  currentPage.value = 1;
-  loadLogs();
-});
+// Watch for filter changes and reset to first page
+watch(
+  [
+    () => filters.value.created_after,
+    () => filters.value.created_before,
+    () => filters.value.entity,
+    () => filters.value.method,
+    () => filters.value.status_code,
+    () => filters.value.is_error
+  ],
+  (newVals, oldVals) => {
+    // Only reset if values actually changed (not initial load)
+    if (oldVals && oldVals.some((oldVal, idx) => oldVal !== newVals[idx])) {
+      resetPage();
+    }
+  }
+);
 
 // Load on mount
 onMounted(() => {
@@ -434,31 +469,29 @@ onMounted(() => {
 
 async function loadLogs() {
   const params: any = {
-    page: currentPage.value,
+    page: page.value,
   };
 
-  // Add search
-  if (search.value) {
-    params.search = search.value;
+  // Add date filters
+  if (filters.value.created_after) {
+    params.created_after = filters.value.created_after.toISOString();
+  }
+  if (filters.value.created_before) {
+    params.created_before = filters.value.created_before.toISOString();
   }
 
-  if (filters.created_after) {
-    params.created_after = filters.created_after.toISOString();
+  // Add other filters
+  if (filters.value.entity) {
+    params.entity = filters.value.entity;
   }
-  if (filters.created_before) {
-    params.created_before = filters.created_before.toISOString();
+  if (filters.value.method) {
+    params.method = filters.value.method;
   }
-  if (filters.entity) {
-    params.entity = filters.entity;
+  if (filters.value.status_code) {
+    params.status_code = filters.value.status_code;
   }
-  if (filters.method) {
-    params.method = filters.method;
-  }
-  if (filters.status_code) {
-    params.status_code = filters.status_code;
-  }
-  if (filters.is_error !== null) {
-    params.is_error = filters.is_error;
+  if (filters.value.is_error !== null) {
+    params.is_error = filters.value.is_error;
   }
 
   await useApiCall({
@@ -479,18 +512,12 @@ function viewDetails(log: PayloadLog) {
 }
 
 function onPage(event: { first: number; rows: number }) {
-  currentPage.value = Math.floor(event.first / event.rows) + 1;
-  loadLogs();
+  const newPage = Math.floor(event.first / event.rows) + 1;
+  setPage(newPage);
 }
 
 function clearFilters() {
-  filters.created_after = null;
-  filters.created_before = null;
-  filters.entity = "";
-  filters.method = null;
-  filters.status_code = null;
-  filters.is_error = null;
-  clearSearch();
+  resetAllFilters();
 }
 
 // Helpers
@@ -528,8 +555,19 @@ function formatDateTime(isoString: string): string {
   }
 }
 
-function formatJson(obj: Record<string, any> | null): string {
+function formatJson(obj: Record<string, any> | string | null): string {
   if (!obj) return "null";
+  
+  // If it's a string, try to parse it first
+  if (typeof obj === 'string') {
+    try {
+      const parsed = JSON.parse(obj);
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      return obj;
+    }
+  }
+  
   try {
     return JSON.stringify(obj, null, 2);
   } catch {
@@ -719,5 +757,24 @@ function formatJson(obj: Record<string, any> | null): string {
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.error-box {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--border-radius);
+  max-height: 300px;
+  overflow: auto;
+}
+
+.error-box pre {
+  font-family: var(--font-family-mono, monospace);
+  font-size: var(--font-size-body-xs);
+  padding: 1rem;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #991b1b;
+  line-height: 1.6;
 }
 </style>

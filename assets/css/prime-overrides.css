@@ -196,6 +196,22 @@
   color: var(--color-text-tertiary);
 }
 
+.p-dropdown .p-dropdown-clear-icon {
+  position: relative !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: color 0.15s;
+  right: 0px;
+    top: 0px;
+}
+
+.p-dropdown .p-dropdown-clear-icon:hover {
+  color: var(--color-text-primary);
+}
+
 .p-dropdown:not(.p-disabled):hover {
   border-color: var(--color-border-primary);
 }
