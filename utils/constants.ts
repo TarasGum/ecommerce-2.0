@@ -121,6 +121,30 @@ export const USER_ROLE_SEVERITIES: Record<UserRole, string> = {
 
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
 
+// ==================== TASK PRIORITY ====================
+export const TASK_PRIORITY = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high',
+  URGENT: 'urgent',
+} as const;
+
+export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
+  [TASK_PRIORITY.LOW]: 'Low',
+  [TASK_PRIORITY.MEDIUM]: 'Medium',
+  [TASK_PRIORITY.HIGH]: 'High',
+  [TASK_PRIORITY.URGENT]: 'Urgent',
+} as const;
+
+export const TASK_PRIORITY_COLORS: Record<TaskPriority, string> = {
+  [TASK_PRIORITY.LOW]: '#6B7280',     // gray
+  [TASK_PRIORITY.MEDIUM]: '#3B82F6',  // blue
+  [TASK_PRIORITY.HIGH]: '#F59E0B',    // amber
+  [TASK_PRIORITY.URGENT]: '#EF4444',  // red
+} as const;
+
+export type TaskPriority = typeof TASK_PRIORITY[keyof typeof TASK_PRIORITY];
+
 // ==================== VALIDATION ====================
 export const VALIDATION_LIMITS = {
   PASSWORD_MIN_LENGTH: 8,
@@ -225,4 +249,18 @@ export function getProposalStatusLabel(status: ProposalStatus): string {
  */
 export function getProposalStatusSeverity(status: ProposalStatus): string {
   return PROPOSAL_STATUS_SEVERITIES[status] || 'secondary';
+}
+
+/**
+ * Get display label for task priority
+ */
+export function getTaskPriorityLabel(priority: TaskPriority): string {
+  return TASK_PRIORITY_LABELS[priority] || priority;
+}
+
+/**
+ * Get color for task priority
+ */
+export function getTaskPriorityColor(priority: TaskPriority): string {
+  return TASK_PRIORITY_COLORS[priority] || '#6B7280';
 }

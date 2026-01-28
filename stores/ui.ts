@@ -12,6 +12,7 @@ interface PageHeaderOptions {
   title?: string | null;
   subtitle?: string | null;
   showBack?: boolean;
+  backPath?: string | null;
 }
 
 export const useUiStore = defineStore('ui', () => {
@@ -19,6 +20,7 @@ export const useUiStore = defineStore('ui', () => {
   const pageTitle = ref<string | null>(null);
   const pageSubtitle = ref<string | null>(null);
   const showBackButton = ref(false);
+  const backPath = ref<string | null>(null);
 
   // ===== Breadcrumbs State =====
   const breadcrumbs = ref<Breadcrumb[]>([]);
@@ -36,12 +38,14 @@ export const useUiStore = defineStore('ui', () => {
     pageTitle.value = options.title ?? null;
     pageSubtitle.value = options.subtitle ?? null;
     showBackButton.value = options.showBack ?? false;
+    backPath.value = options.backPath ?? null;
   }
 
   function clearPageHeader() {
     pageTitle.value = null;
     pageSubtitle.value = null;
     showBackButton.value = false;
+    backPath.value = null;
   }
 
   // ===== Breadcrumbs Actions =====
@@ -87,6 +91,7 @@ export const useUiStore = defineStore('ui', () => {
     pageTitle,
     pageSubtitle,
     showBackButton,
+    backPath,
     breadcrumbs,
     sidebarCollapsed,
     // Actions

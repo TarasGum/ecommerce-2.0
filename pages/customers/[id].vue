@@ -86,6 +86,7 @@ watch(customer, (newCustomer) => {
       title: `Customers / #${customerId.value}`,
       subtitle: newCustomer.l_name || null,
       showBack: true,
+      backPath: '/customers',
     });
   }
 }, { immediate: true });

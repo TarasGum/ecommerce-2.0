@@ -74,7 +74,7 @@ const projectsStore = useProjectsStore();
 const { selectedProjectId, loading: projectsLoading, projectOptions } = storeToRefs(projectsStore);
 
 const uiStore = useUiStore();
-const { pageTitle, pageSubtitle, showBackButton } = storeToRefs(uiStore);
+const { pageTitle, pageSubtitle, showBackButton, backPath } = storeToRefs(uiStore);
 
 const isSuperAdmin = computed(() => auth.user.value?.role === USER_ROLES.SUPERADMIN);
 
@@ -101,7 +101,11 @@ async function handleLogout() {
 }
 
 function handleBack() {
-  router.push('/customers');
+  if (backPath.value) {
+    router.push(backPath.value);
+  } else {
+    router.back();
+  }
 }
 </script>
 
