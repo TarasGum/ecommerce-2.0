@@ -941,7 +941,6 @@ function formatInvoice(invoice: string): string {
 
 .orders-table :deep(.p-datatable-tbody > tr > td) {
   vertical-align: middle;
-  padding: 8px !important;
   height: 45px;
   line-height: normal;
 }
