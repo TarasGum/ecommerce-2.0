@@ -68,6 +68,7 @@
         :sortField="primeVueSortField || undefined"
         :sortOrder="primeVueSortOrder"
         @sort="handlePrimeVueSort"
+        tableStyle="table-layout: fixed"
       >
         <!-- Expansion Column -->
         <Column expander :style="{ width: '50px', minWidth: '50px' }">

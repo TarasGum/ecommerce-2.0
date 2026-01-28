@@ -62,16 +62,17 @@
         @sort="handlePrimeVueSort"
         @row-click="onRowClick"
         :pt="{ bodyRow: { class: 'cursor-pointer' } }"
+        tableStyle="table-layout: fixed"
       >
         <!-- Selection Column -->
-        <Column selectionMode="multiple" :style="{ width: '3rem', minWidth: '3rem' }" />
+        <Column selectionMode="multiple" :style="{ width: '50px', minWidth: '50px', maxWidth: '50px' }" />
 
         <!-- Customer Column (sortable) -->
         <Column
           field="l_name"
           header="Customer"
           sortable
-          :style="{ width: '40%', minWidth: '200px' }"
+          :style="{ width: 'calc(60% - 78px)', minWidth: '200px' }"
           :pt="{ sort: { class: 'cursor-pointer' } }"
         >
           <template #body="{ data }">
@@ -86,7 +87,7 @@
           field="last_order_date"
           header="Last Order Date"
           sortable
-          :style="{ width: '30%', minWidth: '150px' }"
+          :style="{ width: 'calc(40% - 52px)', minWidth: '150px' }"
           :pt="{ sort: { class: 'cursor-pointer' } }"
         >
           <template #body="{ data }">
@@ -96,7 +97,11 @@
         </Column>
 
         <!-- Actions Column -->
-        <Column header="Actions" :style="{ width: '10%', minWidth: '80px', textAlign: 'center' }">
+        <Column 
+          header="Actions" 
+          :style="{ width: '80px', minWidth: '80px', maxWidth: '80px', textAlign: 'center' }"
+          :pt="{ headerContent: { style: 'justify-content: center' } }"
+        >
           <template #body="{ data }">
             <div v-if="loading" class="skeleton skeleton-circle" ></div>
             <Button
@@ -413,11 +418,6 @@ function openEditModal() {
 }
 
 .customers-table {
-  width: 100%;
-}
-
-.customers-table :deep(table) {
-  table-layout: fixed;
   width: 100%;
 }
 
