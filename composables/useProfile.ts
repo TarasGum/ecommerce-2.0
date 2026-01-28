@@ -5,6 +5,7 @@ import type {
   User,
   UpdateProfileRequest,
 } from "~/types/models";
+import { useAuthStore } from "~/stores/auth";
 
 export const useProfile = () => {
   const api = useApi();

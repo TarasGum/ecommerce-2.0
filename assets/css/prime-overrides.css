@@ -653,7 +653,6 @@
 }
 
 .p-datatable .p-datatable-tbody > tr > td {
-  padding: 8px !important;
   font-size: var(--font-size-body-s);
   vertical-align: middle;
   height: 45px;

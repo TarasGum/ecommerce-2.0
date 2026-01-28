@@ -1,9 +1,9 @@
 // composables/useApi.ts
-// Provides easy API access using the api-client
-
-import { apiClient } from "~/utils/api-client";
+// Provides easy API access using the api-client composable
 
 export const useApi = () => {
+  const { apiClient } = useApiClient();
+
   const get = <T>(url: string, options?: RequestInit) => {
     return apiClient<T>(url, { ...options, method: "GET" });
   };

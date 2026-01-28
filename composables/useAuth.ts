@@ -2,39 +2,39 @@
 // Orchestrates authentication flow: login, logout, session restoration
 
 import type { LoginResponse, User } from "~/types/models";
-import { ValidationError } from "~/utils/errors";
 import { COOKIE_CONFIG } from "~/utils/constants";
+import { useAuthStore } from "~/stores/auth";
 
 export const useAuth = () => {
   const authStore = useAuthStore();
-  const api = useApi();
+  const config = useRuntimeConfig();
   const router = useRouter();
+
+  const accessCookie = useCookie(COOKIE_CONFIG.names.access, {
+    maxAge: COOKIE_CONFIG.maxAge.access,
+    sameSite: COOKIE_CONFIG.options.sameSite,
+    secure: process.env.NODE_ENV === "production",
+    path: COOKIE_CONFIG.options.path,
+  });
+  const refreshCookie = useCookie(COOKIE_CONFIG.names.refresh, {
+    maxAge: COOKIE_CONFIG.maxAge.refresh,
+    sameSite: COOKIE_CONFIG.options.sameSite,
+    secure: process.env.NODE_ENV === "production",
+    path: COOKIE_CONFIG.options.path,
+  });
 
   // Login
   async function login(email: string, password: string): Promise<void> {
-    const response = await api.post<LoginResponse>("/auth/login/", {
-      email,
-      password,
+    const response = await $fetch<LoginResponse>(`${config.public.apiBase}/auth/login/`, {
+      method: 'POST',
+      body: { email, password },
     });
 
     // Update store
     authStore.setUser(response.user);
     authStore.setTokens(response.access, response.refresh);
 
-    // Persist tokens in cookies (SSR-safe)
-    const accessCookie = useCookie(COOKIE_CONFIG.names.access, {
-      maxAge: COOKIE_CONFIG.maxAge.access,
-      sameSite: COOKIE_CONFIG.options.sameSite,
-      secure: process.env.NODE_ENV === "production",
-      path: COOKIE_CONFIG.options.path,
-    });
-    const refreshCookie = useCookie(COOKIE_CONFIG.names.refresh, {
-      maxAge: COOKIE_CONFIG.maxAge.refresh,
-      sameSite: COOKIE_CONFIG.options.sameSite,
-      secure: process.env.NODE_ENV === "production",
-      path: COOKIE_CONFIG.options.path,
-    });
-
+    // Persist tokens in cookies
     accessCookie.value = response.access;
     refreshCookie.value = response.refresh;
 
@@ -44,24 +44,25 @@ export const useAuth = () => {
 
   // Logout
   async function logout(): Promise<void> {
-    // Invalidate tokens on server
+    // Try to invalidate tokens on server
     try {
-      const refreshToken = authStore.refreshToken;
-      if (refreshToken) {
-        // Try without trailing slash first (some APIs don't accept it)
-        await api.post("/auth/logout", { refresh: refreshToken });
+      if (refreshCookie.value) {
+        await $fetch(`${config.public.apiBase}/auth/logout/`, {
+          method: 'POST',
+          body: { refresh: refreshCookie.value },
+          headers: accessCookie.value ? {
+            Authorization: `Bearer ${accessCookie.value}`,
+          } : {},
+        });
       }
     } catch (error) {
-      // Log error but don't block logout - this is not critical
-      console.warn("Failed to invalidate tokens on server (non-critical):", error);
+      console.warn("Failed to invalidate tokens on server:", error);
     }
 
     // Clear store
     authStore.clearAuth();
 
     // Clear cookies
-    const accessCookie = useCookie(COOKIE_CONFIG.names.access);
-    const refreshCookie = useCookie(COOKIE_CONFIG.names.refresh);
     accessCookie.value = null;
     refreshCookie.value = null;
 
@@ -69,32 +70,32 @@ export const useAuth = () => {
     await router.push("/login");
   }
 
-  // Bootstrap session from cookies
+  // Bootstrap - now simplified, mainly for client-side use after SSR
   async function bootstrap(): Promise<boolean> {
-    // Check if we have tokens in cookies
-    const accessCookie = useCookie(COOKIE_CONFIG.names.access);
-    const refreshCookie = useCookie(COOKIE_CONFIG.names.refresh);
-
-    if (!accessCookie.value && !refreshCookie.value) {
-      return false;
-    }
-
-    // Restore tokens to store
-    authStore.setTokens(accessCookie.value || null, refreshCookie.value || null);
-
-    // If we have a user, we're done
+    // If already have user, we're good
     if (authStore.user) {
       return true;
     }
 
-    // Fetch user profile
+    // No tokens → not authenticated
+    if (!accessCookie.value && !refreshCookie.value) {
+      return false;
+    }
+
+    // Sync tokens to store
+    authStore.setTokens(accessCookie.value || null, refreshCookie.value || null);
+
+    // Try to fetch user
     try {
-      const user = await api.get<User>("/auth/me/");
+      const user = await $fetch<User>(`${config.public.apiBase}/auth/me/`, {
+        headers: {
+          Authorization: `Bearer ${accessCookie.value}`,
+        },
+      });
       authStore.setUser(user);
       return true;
-    } catch (error) {
-      // Failed to fetch user - clear everything silently
-      // Don't show toast for bootstrap failures
+    } catch {
+      // Failed → clear auth
       authStore.clearAuth();
       accessCookie.value = null;
       refreshCookie.value = null;

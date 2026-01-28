@@ -94,6 +94,7 @@ import Button from "primevue/button";
 import Tag from "primevue/tag";
 import { getUserRoleLabel, getUserRoleSeverity } from "~/utils/constants";
 import { formatDate } from "~/utils/formatters";
+import { useAuthStore } from "~/stores/auth";
 
 const auth = useAuth();
 const profileApi = useProfile();
