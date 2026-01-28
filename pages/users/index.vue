@@ -43,7 +43,7 @@
           field="first_name"
           header="Name"
           sortable
-          :style="{ width: '25%', minWidth: '150px' }"
+          :style="{ width: isSuperAdmin ? '20%' : '25%', minWidth: '150px' }"
           :pt="{
             sort: { class: 'cursor-pointer' },
           }"
@@ -61,7 +61,7 @@
           field="email"
           header="E-mail"
           sortable
-          :style="{ width: '35%', minWidth: '180px' }"
+          :style="{ width: isSuperAdmin ? '28%' : '35%', minWidth: '180px' }"
           :pt="{
             sort: { class: 'cursor-pointer' },
           }"
@@ -77,7 +77,7 @@
           field="role"
           header="Type"
           sortable
-          :style="{ width: '15%', minWidth: '100px' }"
+          :style="{ width: isSuperAdmin ? '12%' : '15%', minWidth: '100px' }"
           :pt="{
             sort: { class: 'cursor-pointer' },
           }"
@@ -85,6 +85,23 @@
           <template #body="{ data }">
             <div v-if="loading" class="skeleton skeleton-button"></div>
             <Tag v-else :value="getUserRoleLabel(data.role)" :severity="getUserRoleSeverity(data.role)" />
+          </template>
+        </Column>
+
+        <!-- Project Column (superadmin only) -->
+        <Column
+          v-if="isSuperAdmin"
+          field="project_name"
+          header="Project"
+          sortable
+          :style="{ width: '15%', minWidth: '120px' }"
+          :pt="{
+            sort: { class: 'cursor-pointer' },
+          }"
+        >
+          <template #body="{ data }">
+            <div v-if="loading" class="skeleton skeleton-text" style="width: 100px;"></div>
+            <span v-else class="cell-secondary">{{ data.project_name || '—' }}</span>
           </template>
         </Column>
 
@@ -196,7 +213,7 @@ import Ripple from "primevue/ripple";
 import UserCreateModal from "~/components/users/UserCreateModal.vue";
 import type { User, PrimeVuePageEvent } from "~/types";
 import type { DataTableSortEvent } from "primevue/datatable";
-import { PAGINATION_DEFAULTS, getUserRoleLabel, getUserRoleSeverity } from "~/utils/constants";
+import { PAGINATION_DEFAULTS, getUserRoleLabel, getUserRoleSeverity, USER_ROLES } from "~/utils/constants";
 import { ValidationError } from "~/utils/errors";
 import { useConfirm } from "primevue/useconfirm";
 
@@ -212,6 +229,8 @@ const usersApi = useUsers();
 const toast = useToast();
 const confirm = useConfirm();
 const auth = useAuth();
+
+const isSuperAdmin = computed(() => auth.user.value?.role === USER_ROLES.SUPERADMIN);
 
 // URL-based state management
 const { page, pageSize, offset, setPage } = useUrlPagination({
@@ -259,6 +278,7 @@ const skeletonRows = computed(() => {
     last_name: '',
     email: '',
     role: '',
+    project_name: '',
     is_active: false,
   }));
 });
