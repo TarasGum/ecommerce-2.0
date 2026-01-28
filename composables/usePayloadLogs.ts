@@ -16,11 +16,12 @@ export const usePayloadLogs = () => {
    * @returns Paginated list of payload logs
    */
   async function list(params: PayloadLogListParams = {}): Promise<PayloadLogListResponse> {
+    const { limit = 10, offset = 0 } = params;
+    
     const queryParams = new URLSearchParams();
+    queryParams.set("limit", limit.toString());
+    queryParams.set("offset", offset.toString());
 
-    if (params.page) {
-      queryParams.set("page", params.page.toString());
-    }
     if (params.created_after) {
       queryParams.set("created_after", params.created_after);
     }
@@ -43,12 +44,7 @@ export const usePayloadLogs = () => {
       queryParams.set("status_code", params.status_code.toString());
     }
 
-    const queryString = queryParams.toString();
-    const url = queryString
-      ? `/projects/payload-logs/?${queryString}`
-      : "/projects/payload-logs/";
-
-    return api.get<PayloadLogListResponse>(url);
+    return api.get<PayloadLogListResponse>(`/projects/payload-logs/?${queryParams.toString()}`);
   }
 
   /**

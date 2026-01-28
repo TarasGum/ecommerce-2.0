@@ -144,7 +144,8 @@ export interface ChangePasswordRequest {
 
 // Payload Logs types (SuperAdmin only)
 export interface PayloadLogListParams {
-  page?: number;
+  limit?: number;
+  offset?: number;
   created_after?: string;
   created_before?: string;
   entity?: string;
@@ -177,7 +178,7 @@ export interface PayloadLogDetail extends PayloadLog {
 
 export interface PayloadLogListResponse {
   count: number;
-  next: string | null;
-  previous: string | null;
+  limit: number;
+  offset: number;
   results: PayloadLog[];
 }

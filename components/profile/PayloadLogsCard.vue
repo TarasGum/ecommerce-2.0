@@ -469,7 +469,8 @@ onMounted(() => {
 
 async function loadLogs() {
   const params: any = {
-    page: page.value,
+    limit: pageSize.value,
+    offset: offset.value,
   };
 
   // Add date filters
