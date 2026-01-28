@@ -156,6 +156,7 @@ const allMenuItems: NavItem[] = [
   { path: "/users", label: "Users", icon: "pi-users" },
   { path: "/customers", label: "Customers", icon: "pi-user" },
   { path: "/orders", label: "Orders", icon: "pi-shopping-cart" },
+  { path: "/proposals", label: "Proposals", icon: "pi-file-edit" },
   { path: "/order-desk", label: "Order Desk", icon: "pi-inbox" },
   { path: "/shipping", label: "Shipping", icon: "pi-truck" },
   { path: "/tasks", label: "Tasks", icon: "pi-list" },

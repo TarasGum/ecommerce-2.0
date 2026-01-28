@@ -73,6 +73,33 @@ export const ORDER_STATUS_SEVERITIES: Record<OrderStatus, string> = {
 
 export type OrderStatus = typeof ORDER_STATUS[keyof typeof ORDER_STATUS];
 
+// ==================== PROPOSAL STATUS ====================
+export const PROPOSAL_STATUS = {
+  OPEN: 'O',
+  ACCEPTED: 'A',
+  LOST: 'L',
+  CANCELLED: 'C',
+  EXPIRED: 'E',
+} as const;
+
+export const PROPOSAL_STATUS_LABELS: Record<ProposalStatus, string> = {
+  [PROPOSAL_STATUS.OPEN]: 'Open',
+  [PROPOSAL_STATUS.ACCEPTED]: 'Accepted',
+  [PROPOSAL_STATUS.LOST]: 'Lost',
+  [PROPOSAL_STATUS.CANCELLED]: 'Cancelled',
+  [PROPOSAL_STATUS.EXPIRED]: 'Expired',
+} as const;
+
+export const PROPOSAL_STATUS_SEVERITIES: Record<ProposalStatus, string> = {
+  [PROPOSAL_STATUS.OPEN]: 'info',
+  [PROPOSAL_STATUS.ACCEPTED]: 'success',
+  [PROPOSAL_STATUS.LOST]: 'danger',
+  [PROPOSAL_STATUS.CANCELLED]: 'secondary',
+  [PROPOSAL_STATUS.EXPIRED]: 'warning',
+} as const;
+
+export type ProposalStatus = typeof PROPOSAL_STATUS[keyof typeof PROPOSAL_STATUS];
+
 // ==================== USER ROLES ====================
 export const USER_ROLES = {
   SUPERADMIN: 'superadmin',
@@ -184,4 +211,18 @@ export function isSuperAdmin(role: UserRole): boolean {
  */
 export function isAdmin(role: UserRole): boolean {
   return role === USER_ROLES.ADMIN || role === USER_ROLES.SUPERADMIN;
+}
+
+/**
+ * Get display label for proposal status
+ */
+export function getProposalStatusLabel(status: ProposalStatus): string {
+  return PROPOSAL_STATUS_LABELS[status] || status;
+}
+
+/**
+ * Get PrimeVue severity for proposal status badge
+ */
+export function getProposalStatusSeverity(status: ProposalStatus): string {
+  return PROPOSAL_STATUS_SEVERITIES[status] || 'secondary';
 }

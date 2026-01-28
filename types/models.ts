@@ -219,3 +219,26 @@ export interface PayloadLogListResponse {
   offset: number;
   results: PayloadLog[];
 }
+
+// Proposal types (Quotes)
+export interface Proposal {
+  autoid: string;
+  b_id: string; // customer ID
+  quote: string; // quote number
+  b_name: string; // customer name
+  qt_date: string | null; // quote date
+  status: 'O' | 'A' | 'L' | 'C' | 'E'; // Open, Accepted, Lost, Cancelled, Expired
+  tax: string; // decimal
+  subtotal: string;
+  total: string;
+  items?: ProposalItem[];
+}
+
+export interface ProposalItem {
+  autoid: string;
+  inven: string; // product code
+  doc_aid: string; // parent proposal reference
+  quan: string; // quantity
+  descr: string; // description
+  amount: string; // line total
+}
