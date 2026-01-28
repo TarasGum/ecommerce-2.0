@@ -96,11 +96,6 @@ function truncateName(name: string): string {
   return name.substring(0, maxLength) + '...';
 }
 
-// Load projects on mount for superadmins
-onMounted(() => {
-  projectsStore.loadProjects();
-});
-
 async function handleLogout() {
   await auth.logout();
 }

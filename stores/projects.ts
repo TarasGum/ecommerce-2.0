@@ -26,17 +26,21 @@ export const useProjectsStore = defineStore('projects', () => {
   const hasProjects = computed(() => projects.value.length > 0);
 
   // ===== Actions =====
-  async function loadProjects() {
+  async function loadProjects(force = false) {
     // Check if user is super admin before loading
     const auth = useAuth();
     const isSuperAdmin = computed(() => auth.user.value?.role === 'superadmin');
     
     if (!isSuperAdmin.value) return;
 
+    // Skip if already loading or already has projects (unless forced)
+    if (loading.value) return;
+    if (hasProjects.value && !force) return;
+
     loading.value = true;
     try {
       const projectsApi = useProjects();
-      const response = await projectsApi.list({ page: 1 });
+      const response = await projectsApi.list({ limit: 100 });
       projects.value = response.results;
 
       // Auto-select first project if none selected and projects exist

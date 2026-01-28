@@ -15,10 +15,47 @@ export interface User {
 export interface Project {
   id: number;
   name: string;
-  description?: string;
-  is_active: boolean;
+  db_type: string;
+  db_host: string;
+  db_port?: number;
+  db_name?: string;
+  db_username?: string;
+  api_endpoint?: string;
+  api_login?: string;
+  extra_columns?: string;
+  user_count: string;
   created_at: string;
   updated_at: string;
+}
+
+// Project creation payload
+export interface CreateProjectPayload {
+  name: string;
+  db_type: string;
+  db_host: string;
+  db_port: number;
+  db_name: string;
+  db_username: string;
+  db_password: string;
+  api_endpoint?: string;
+  api_login?: string;
+  api_password?: string;
+  extra_columns?: string;
+}
+
+// Project update payload
+export interface UpdateProjectPayload {
+  name?: string;
+  db_type?: string;
+  db_host?: string;
+  db_port?: number;
+  db_name?: string;
+  db_username?: string;
+  db_password?: string;
+  api_endpoint?: string;
+  api_login?: string;
+  api_password?: string;
+  extra_columns?: string;
 }
 
 export interface PaginatedResponse<T> {

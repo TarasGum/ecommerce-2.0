@@ -137,3 +137,40 @@ export const editUserSchema = (changePassword: boolean) => {
       }
     );
 };
+
+// ==================== PROJECT SCHEMAS ====================
+
+// Database type options
+export const DB_TYPES = ['postgresql', 'mysql', 'mssql', 'oracle'] as const;
+
+// Create project form schema
+export const createProjectSchema = z.object({
+  name: z.string().min(1, "Project name is required").max(100, "Project name must be less than 100 characters"),
+  db_type: z.string().min(1, "Database type is required"),
+  db_host: z.string().min(1, "Database host is required"),
+  db_port: z.coerce.number().int().positive("Port must be a positive number").max(65535, "Port must be less than 65535"),
+  db_name: z.string().min(1, "Database name is required"),
+  db_username: z.string().min(1, "Database username is required"),
+  db_password: z.string().min(1, "Database password is required"),
+  api_endpoint: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
+  api_login: z.string().optional(),
+  api_password: z.string().optional(),
+});
+
+export type CreateProjectFormData = z.infer<typeof createProjectSchema>;
+
+// Edit project form schema (passwords optional)
+export const editProjectSchema = z.object({
+  name: z.string().min(1, "Project name is required").max(100, "Project name must be less than 100 characters"),
+  db_type: z.string().min(1, "Database type is required"),
+  db_host: z.string().min(1, "Database host is required"),
+  db_port: z.coerce.number().int().positive("Port must be a positive number").max(65535, "Port must be less than 65535"),
+  db_name: z.string().min(1, "Database name is required"),
+  db_username: z.string().min(1, "Database username is required"),
+  db_password: z.string().optional(), // Optional in edit mode
+  api_endpoint: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
+  api_login: z.string().optional(),
+  api_password: z.string().optional(),
+});
+
+export type EditProjectFormData = z.infer<typeof editProjectSchema>;

@@ -145,10 +145,14 @@ interface NavItem {
   label: string;
   icon: string;
   badge?: string | number;
+  superAdminOnly?: boolean;
 }
 
-const menuItems: NavItem[] = [
+const isSuperAdmin = computed(() => auth.user.value?.role === 'superadmin');
+
+const allMenuItems: NavItem[] = [
   { path: "/", label: "Dashboard", icon: "pi-home" },
+  { path: "/projects", label: "Projects", icon: "pi-briefcase", superAdminOnly: true },
   { path: "/users", label: "Users", icon: "pi-users" },
   { path: "/customers", label: "Customers", icon: "pi-user" },
   { path: "/orders", label: "Orders", icon: "pi-shopping-cart" },
@@ -158,6 +162,16 @@ const menuItems: NavItem[] = [
   { path: "/notes", label: "Notes", icon: "pi-file" },
   { path: "/settings", label: "Settings", icon: "pi-cog" },
 ];
+
+// Filter menu items based on user role
+const menuItems = computed(() => {
+  return allMenuItems.filter(item => {
+    if (item.superAdminOnly) {
+      return isSuperAdmin.value;
+    }
+    return true;
+  });
+});
 
 // Check if route is active
 function isActive(path: string): boolean {
