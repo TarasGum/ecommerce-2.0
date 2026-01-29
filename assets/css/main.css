@@ -214,9 +214,14 @@ body {
   font-size: var(--font-size-body-s);
   font-weight: var(--font-weight-medium);
   height: 1.75rem;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
   box-shadow: none;
   border: 1px solid transparent;
+  transform: translateY(0);
+}
+
+.p-button:hover {
+  transform: translateY(-1px);
 }
 
 .p-button .p-button-icon {
@@ -313,7 +318,7 @@ body {
   background: var(--color-bg-primary);
   box-shadow: none;
   font-size: var(--font-size-body-s);
-  transition: all 0.15s;
+  transition: all 0.2s ease;
   line-height: 1.5;
 }
 
@@ -324,6 +329,7 @@ body {
 .p-inputtext:focus {
   border-color: var(--color-neutral-900);
   outline: none;
+  box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.08);
 }
 
 /* Ensure dropdown takes full width when needed */
@@ -580,18 +586,341 @@ body {
   }
 }
 
-/* Page transitions */
+/* ==================== PAGE TRANSITIONS ==================== */
 .page-enter-active,
 .page-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .page-enter-from {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(8px);
 }
 
 .page-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(-4px);
+}
+
+/* Layout transitions */
+.layout-enter-active,
+.layout-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.layout-enter-from,
+.layout-leave-to {
+  opacity: 0;
+}
+
+/* ==================== VUE TRANSITION CLASSES ==================== */
+
+/* Fade transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Fade up transition */
+.fade-up-enter-active,
+.fade-up-leave-active {
+  transition: all 0.25s ease;
+}
+
+.fade-up-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-up-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
+/* Slide down transition (for dropdowns, expanding content) */
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.2s ease;
+  transform-origin: top;
+}
+
+.slide-down-enter-from,
+.slide-down-leave-to {
+  opacity: 0;
+  transform: scaleY(0.95) translateY(-8px);
+}
+
+/* Slide up transition */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.2s ease;
+  transform-origin: bottom;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+/* Scale transition (for modals, dialogs) */
+.scale-enter-active,
+.scale-leave-active {
+  transition: all 0.2s ease;
+}
+
+.scale-enter-from {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.scale-leave-to {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+/* Pop transition (for small elements, badges) */
+.pop-enter-active {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pop-leave-active {
+  transition: all 0.15s ease;
+}
+
+.pop-enter-from,
+.pop-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+/* Expand/collapse transition (height-based) */
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  max-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Slide left transition */
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: all 0.25s ease;
+}
+
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(-15px);
+}
+
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+/* Slide right transition */
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.25s ease;
+}
+
+.slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(15px);
+}
+
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+/* List/group transitions with stagger effect */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.25s ease;
+}
+
+.list-enter-from {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+.list-move {
+  transition: transform 0.3s ease;
+}
+
+/* ==================== ANIMATION UTILITIES ==================== */
+
+/* Smooth hover lift effect */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Subtle scale on hover */
+.hover-scale {
+  transition: transform 0.15s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+/* Press effect */
+.press-effect {
+  transition: transform 0.1s ease;
+}
+
+.press-effect:active {
+  transform: scale(0.97);
+}
+
+/* Glow effect on focus */
+.focus-glow:focus {
+  box-shadow: 0 0 0 3px rgba(109, 91, 208, 0.2);
+}
+
+/* Animate presence wrapper */
+.animate-in {
+  animation: animateIn 0.3s ease forwards;
+}
+
+@keyframes animateIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-out {
+  animation: animateOut 0.2s ease forwards;
+}
+
+@keyframes animateOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}
+
+/* Stagger children animation */
+.stagger-in > * {
+  opacity: 0;
+  animation: staggerFadeIn 0.3s ease forwards;
+}
+
+.stagger-in > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-in > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-in > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-in > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-in > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-in > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-in > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-in > *:nth-child(8) { animation-delay: 0.4s; }
+
+@keyframes staggerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pulse animation */
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Spin animation (for loading) */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Shake animation (for errors) */
+.shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+/* Bounce animation */
+.bounce {
+  animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Content reveal animation */
+.reveal {
+  animation: reveal 0.4s ease forwards;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
 }

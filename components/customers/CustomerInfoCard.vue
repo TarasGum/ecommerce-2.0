@@ -2,22 +2,23 @@
 <template>
   <div class="info-card">
     <!-- Loading State -->
-    <template v-if="loading">
-      <div class="skeleton skeleton-title" style="width: 200px; margin-bottom: 1.5rem;"></div>
-      
-      <div class="flex flex-column gap-3">
-        <div class="flex flex-column gap-1" v-for="i in 5" :key="i">
-          <div class="skeleton skeleton-text" style="width: 60px; height: 0.75rem;"></div>
-          <div class="skeleton skeleton-text" :style="{ width: `${100 + i * 20}px`, height: '0.875rem' }"></div>
+    <Transition name="fade" mode="out-in">
+      <div v-if="loading" key="loading">
+        <div class="skeleton skeleton-title" style="width: 200px; margin-bottom: 1.5rem;"></div>
+        
+        <div class="flex flex-column gap-3">
+          <div class="flex flex-column gap-1" v-for="i in 5" :key="i">
+            <div class="skeleton skeleton-text" style="width: 60px; height: 0.75rem;"></div>
+            <div class="skeleton skeleton-text" :style="{ width: `${100 + i * 20}px`, height: '0.875rem' }"></div>
+          </div>
         </div>
       </div>
-    </template>
 
-    <!-- Loaded Content -->
-    <template v-else-if="customer">
-      <h3 class="info-card-title">{{ truncatedName }}</h3>
-      
-      <div class="flex flex-column gap-3">
+      <!-- Loaded Content -->
+      <div v-else-if="customer" key="content" class="animate-in">
+        <h3 class="info-card-title">{{ truncatedName }}</h3>
+        
+        <div class="flex flex-column gap-3 stagger-in">
         <div v-if="customer.phone" class="flex flex-column gap-1">
           <span class="info-label">Phone</span>
           <span class="info-value">{{ customer.phone }}</span>
@@ -52,8 +53,9 @@
             :severity="customer.inactive ? 'danger' : 'success'"
           />
         </div>
+        </div>
       </div>
-    </template>
+    </Transition>
   </div>
 </template>
 
@@ -101,6 +103,12 @@ const truncatedName = computed(() => {
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-sm);
   padding: 1.5rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.info-card:hover {
+  border-color: var(--color-border-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .info-card-title {

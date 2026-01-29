@@ -34,13 +34,63 @@
 /* ==================== DIALOG / MODAL - Ultra Minimal Shadcn Style ==================== */
 .p-dialog-mask {
   background-color: rgba(0, 0, 0, 0.3);
+  transition: opacity 0.2s ease;
+}
+
+/* Dialog mask animations */
+.p-dialog-mask.p-component-overlay-enter {
+  animation: fadeIn 0.2s ease forwards;
+}
+
+.p-dialog-mask.p-component-overlay-leave {
+  animation: fadeOut 0.15s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 .p-dialog {
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-light);
-  box-shadow: none;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   max-width: 90vw;
+  animation: dialogEnter 0.25s ease forwards;
+  transform-origin: center center;
+}
+
+/* Dialog enter animation */
+@keyframes dialogEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Dialog leave animation */
+.p-dialog-mask.p-component-overlay-leave .p-dialog {
+  animation: dialogLeave 0.15s ease forwards;
+}
+
+@keyframes dialogLeave {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
 }
 
 .p-dialog .p-dialog-header {
@@ -225,9 +275,22 @@
 .p-dropdown-panel {
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-sm);
-  box-shadow: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   margin-top: 0.25rem !important;
   background: var(--color-bg-primary);
+  animation: dropdownEnter 0.15s ease forwards;
+  transform-origin: top center;
+}
+
+@keyframes dropdownEnter {
+  from {
+    opacity: 0;
+    transform: scaleY(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
 }
 
 .p-dropdown-panel .p-dropdown-items {
@@ -380,6 +443,19 @@
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   background: var(--color-bg-primary);
   padding: 0.5rem;
+  animation: calendarEnter 0.2s ease forwards;
+  transform-origin: top center;
+}
+
+@keyframes calendarEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .p-datepicker {
@@ -562,9 +638,22 @@
 .p-menu {
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-sm);
-  box-shadow: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   padding: 0.25rem;
   min-width: 10rem;
+  animation: menuEnter 0.15s ease forwards;
+  transform-origin: top left;
+}
+
+@keyframes menuEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .p-menu .p-menuitem-content {
@@ -656,6 +745,7 @@
   height: 45px !important;
   min-height: 45px !important;
   max-height: 45px !important;
+  transition: background-color 0.15s ease;
 }
 
 .p-datatable .p-datatable-tbody > tr > td {
@@ -663,6 +753,7 @@
   vertical-align: middle;
   height: 45px;
   line-height: normal;
+  transition: background-color 0.15s ease;
 }
 
 .p-datatable .p-datatable-tbody > tr:hover {
@@ -726,15 +817,26 @@
 .p-tooltip {
   background: #f5f5f5 !important;
   color: #333 !important;
-
   border: 1px solid #ddd !important;
   border-radius: 4px !important;
   font-size: 0.75rem !important;
   font-weight: 400 !important;
-  box-shadow: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
   max-width: 200px !important;
   z-index: 9999 !important;
   margin: 5px;
+  animation: tooltipEnter 0.15s ease forwards;
+}
+
+@keyframes tooltipEnter {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .p-tooltip .p-tooltip-arrow {

@@ -11,7 +11,7 @@
       <h2 class="modal-title">Order Details</h2>
     </template>
 
-    <div v-if="order" class="flex flex-column gap-4 order-details">
+    <div v-if="order" class="flex flex-column gap-4 order-details stagger-in">
       <!-- Order Summary -->
       <div class="order-summary">
         <div class="summary-grid">

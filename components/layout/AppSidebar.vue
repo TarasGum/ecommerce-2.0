@@ -6,20 +6,24 @@
       <div class="flex align-items-center justify-content-center user-avatar" @click="toggleUserMenu" :class="{ clickable: isCollapsed }">
         <span class="avatar-initials">{{ userInitials }}</span>
       </div>
-      <div v-if="!isCollapsed" class="flex flex-column user-details">
-        <div class="user-name">{{ userName }}</div>
-        <div class="user-role">{{ userRole }}</div>
-      </div>
-      <Button
-        v-if="!isCollapsed"
-        icon="pi pi-chevron-down"
-        text
-        rounded
-        size="small"
-        class="user-menu-toggle"
-        @click="toggleUserMenu"
-        aria-label="User menu"
-      />
+      <Transition name="fade">
+        <div v-if="!isCollapsed" class="flex flex-column user-details">
+          <div class="user-name">{{ userName }}</div>
+          <div class="user-role">{{ userRole }}</div>
+        </div>
+      </Transition>
+      <Transition name="fade">
+        <Button
+          v-if="!isCollapsed"
+          icon="pi pi-chevron-down"
+          text
+          rounded
+          size="small"
+          class="user-menu-toggle"
+          @click="toggleUserMenu"
+          aria-label="User menu"
+        />
+      </Transition>
       <Menu
         ref="userMenu"
         :model="userMenuItems"
@@ -31,14 +35,16 @@
     </div>
 
     <!-- Search Input -->
-    <div v-if="!isCollapsed" class="w-full search-container">
-      <InputText
-        v-model="searchQuery"
-        placeholder="Search…"
-        disabled
-        class="search-input"
-      />
-    </div>
+    <Transition name="fade">
+      <div v-if="!isCollapsed" class="w-full search-container">
+        <InputText
+          v-model="searchQuery"
+          placeholder="Search…"
+          disabled
+          class="search-input"
+        />
+      </div>
+    </Transition>
 
     <!-- Navigation Menu -->
     <nav class="flex flex-column gap-1 sidebar-nav">
@@ -51,13 +57,17 @@
         v-tooltip.right="isCollapsed ? item.label : ''"
       >
         <i :class="`pi ${item.icon}`"></i>
-        <span v-if="!isCollapsed" class="nav-label">{{ item.label }}</span>
-        <Tag
-          v-if="!isCollapsed && item.badge"
-          :value="item.badge"
-          severity="info"
-          class="nav-badge"
-        />
+        <Transition name="fade">
+          <span v-if="!isCollapsed" class="nav-label">{{ item.label }}</span>
+        </Transition>
+        <Transition name="pop">
+          <Tag
+            v-if="!isCollapsed && item.badge"
+            :value="item.badge"
+            severity="info"
+            class="nav-badge"
+          />
+        </Transition>
       </NuxtLink>
     </nav>
 
@@ -204,11 +214,36 @@ function toggleCollapse() {
   border-right: 1px solid #ededed;
   background: #fafafa;
   z-index: 100;
-  transition: width 0.2s ease;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar.collapsed {
   width: 64px;
+}
+
+/* Transition styles for sidebar content */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.pop-enter-active {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pop-leave-active {
+  transition: all 0.15s ease;
+}
+
+.pop-enter-from,
+.pop-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
 }
 
 /* ==================== USER HEADER ==================== */

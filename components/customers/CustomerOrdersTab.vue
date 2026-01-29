@@ -1,6 +1,6 @@
 <!-- components/customers/CustomerOrdersTab.vue -->
 <template>
-  <div class="tab-content">
+  <div class="tab-content animate-in">
     <!-- Search -->
     <div class="search-container">
       <IconField iconPosition="left">

@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
-  modules: ["@pinia/nuxt", "@vueuse/nuxt"],
+  modules: ["@pinia/nuxt", "@vueuse/nuxt", "@vueuse/motion/nuxt"],
 
   css: [
     // Order: PrimeVue -> PrimeFlex -> Custom
@@ -61,6 +61,37 @@ export default defineNuxtConfig({
           href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
         },
       ],
+    },
+    // Page transitions
+    pageTransition: { name: 'page', mode: 'out-in' },
+    layoutTransition: { name: 'layout', mode: 'out-in' },
+  },
+
+  // Motion configuration for smooth animations
+  motion: {
+    directives: {
+      'pop-bottom': {
+        initial: { opacity: 0, y: 20, scale: 0.95 },
+        enter: { opacity: 1, y: 0, scale: 1, transition: { duration: 300, ease: 'easeOut' } },
+        leave: { opacity: 0, y: 10, scale: 0.98, transition: { duration: 200, ease: 'easeIn' } },
+      },
+      'fade': {
+        initial: { opacity: 0 },
+        enter: { opacity: 1, transition: { duration: 250 } },
+        leave: { opacity: 0, transition: { duration: 150 } },
+      },
+      'slide-left': {
+        initial: { opacity: 0, x: -20 },
+        enter: { opacity: 1, x: 0, transition: { duration: 300, ease: 'easeOut' } },
+      },
+      'slide-right': {
+        initial: { opacity: 0, x: 20 },
+        enter: { opacity: 1, x: 0, transition: { duration: 300, ease: 'easeOut' } },
+      },
+      'scale': {
+        initial: { opacity: 0, scale: 0.9 },
+        enter: { opacity: 1, scale: 1, transition: { duration: 250, ease: 'easeOut' } },
+      },
     },
   },
 

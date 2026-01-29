@@ -96,100 +96,104 @@
             <ErrorMessage name="status" class="p-error text-sm mt-1" />
 
             <!-- Inline Status Manager (Absolute positioned) -->
-            <div v-if="showStatusManager" class="status-manager">
-              <!-- Status List -->
-              <div class="status-list">
-                <div
-                  v-for="status in localStatuses"
-                  :key="status.id"
-                  class="status-list-item"
-                >
-                  <!-- View Mode -->
-                  <div v-if="editingStatusId !== status.id" class="flex align-items-center gap-2">
-                    <span class="status-color-box" :style="{ backgroundColor: status.color }"></span>
-                    <span class="status-name flex-1">{{ status.name }}</span>
-                    <Tag v-if="status.is_default" value="Default" severity="secondary" style="font-size: 0.55rem; padding: 0.05rem 0.25rem;" />
-                    <Button
-                      v-if="!status.is_default"
-                      icon="pi pi-pencil"
-                      text
-                      rounded
-                      size="small"
-                      class="status-action-btn"
-                      @click="startEditStatus(status)"
-                    />
-                    <Button
-                      v-if="!status.is_default"
-                      icon="pi pi-trash"
-                      text
-                      rounded
-                      size="small"
-                      severity="danger"
-                      class="status-action-btn"
-                      @click="deleteStatus(status)"
-                    />
-                  </div>
+            <Transition name="slide-down">
+              <div v-if="showStatusManager" class="status-manager">
+                <!-- Status List -->
+                <div class="status-list">
+                  <TransitionGroup name="list" tag="div" class="status-list-inner">
+                    <div
+                      v-for="status in localStatuses"
+                      :key="status.id"
+                      class="status-list-item"
+                    >
+                      <!-- View Mode -->
+                      <div v-if="editingStatusId !== status.id" class="flex align-items-center gap-2">
+                        <span class="status-color-box" :style="{ backgroundColor: status.color }"></span>
+                        <span class="status-name flex-1">{{ status.name }}</span>
+                        <Tag v-if="status.is_default" value="Default" severity="secondary" style="font-size: 0.55rem; padding: 0.05rem 0.25rem;" />
+                        <Button
+                          v-if="!status.is_default"
+                          icon="pi pi-pencil"
+                          text
+                          rounded
+                          size="small"
+                          class="status-action-btn"
+                          @click="startEditStatus(status)"
+                        />
+                        <Button
+                          v-if="!status.is_default"
+                          icon="pi pi-trash"
+                          text
+                          rounded
+                          size="small"
+                          severity="danger"
+                          class="status-action-btn"
+                          @click="deleteStatus(status)"
+                        />
+                      </div>
 
-                  <!-- Edit Mode -->
-                  <div v-else class="flex align-items-center gap-2">
-                    <div class="color-input-wrapper">
-                      <input
-                        type="color"
-                        v-model="editStatusColorHex"
-                        class="color-input"
-                      />
+                      <!-- Edit Mode -->
+                      <div v-else class="flex align-items-center gap-2">
+                        <div class="color-input-wrapper">
+                          <input
+                            type="color"
+                            v-model="editStatusColorHex"
+                            class="color-input"
+                          />
+                        </div>
+                        <InputText
+                          v-model="editStatusName"
+                          placeholder="Status name"
+                          class="flex-1 p-inputtext-sm"
+                        />
+                        <Button
+                          icon="pi pi-check"
+                          size="small"
+                          text
+                          severity="secondary"
+                          :loading="statusLoading"
+                          @click="saveEditStatus"
+                          class="status-edit-btn"
+                        />
+                        <Button
+                          icon="pi pi-times"
+                          size="small"
+                          text
+                          severity="secondary"
+                          @click="cancelEditStatus"
+                          class="status-edit-btn"
+                        />
+                      </div>
                     </div>
-                    <InputText
-                      v-model="editStatusName"
-                      placeholder="Status name"
-                      class="flex-1 p-inputtext-sm"
-                    />
-                    <Button
-                      icon="pi pi-check"
-                      size="small"
-                      text
-                      severity="secondary"
-                      :loading="statusLoading"
-                      @click="saveEditStatus"
-                      class="status-edit-btn"
-                    />
-                    <Button
-                      icon="pi pi-times"
-                      size="small"
-                      text
-                      severity="secondary"
-                      @click="cancelEditStatus"
-                      class="status-edit-btn"
+                  </TransitionGroup>
+                </div>
+
+                <!-- Create New Status -->
+                <div class="create-status-row mt-2">
+                  <div class="color-input-wrapper">
+                    <input
+                      type="color"
+                      v-model="newStatusColorHex"
+                      class="color-input"
                     />
                   </div>
-                </div>
-              </div>
-
-              <!-- Create New Status -->
-              <div class="create-status-row mt-2">
-                <div class="color-input-wrapper">
-                  <input
-                    type="color"
-                    v-model="newStatusColorHex"
-                    class="color-input"
+                  <InputText
+                    v-model="newStatusName"
+                    placeholder="New status name..."
+                    class="flex-1 p-inputtext-sm"
+                    @keyup.enter="createStatus"
+                  />
+                  <Button
+                    icon="pi pi-plus"
+                    severity="success"
+                    :loading="statusLoading"
+                    :disabled="!newStatusName.trim()"
+                    @click="createStatus"
+                    class="add-status-btn"
                   />
                 </div>
-                <InputText
-                  v-model="newStatusName"
-                  placeholder="New status name..."
-                  class="flex-1 p-inputtext-sm"
-                  @keyup.enter="createStatus"
-                />
-                <Button
-                  icon="pi pi-plus"
-                  severity="success"
-                  :loading="statusLoading"
-                  :disabled="!newStatusName.trim()"
-                  @click="createStatus"
-                  class="add-status-btn"
-                />
               </div>
-            </div>
+            </Transition>
           </div>
 
           <!-- Responsible User -->
@@ -936,11 +940,34 @@ async function handleSubmit(values: any) {
 }
 
 .status-list {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.status-list-inner {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  max-height: 150px;
-  overflow-y: auto;
+}
+
+/* List item animations */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.2s ease;
+}
+
+.list-enter-from {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+.list-move {
+  transition: transform 0.2s ease;
 }
 
 .status-list-item {
@@ -948,6 +975,12 @@ async function handleSubmit(values: any) {
   padding: 0.375rem 0.5rem;
   border-radius: 4px;
   border: 1px solid var(--color-border-light);
+  transition: all 0.15s ease;
+}
+
+.status-list-item:hover {
+  background: var(--color-neutral-100);
+  border-color: var(--color-border-primary);
 }
 
 .status-list-item:hover .status-action-btn {
@@ -972,14 +1005,16 @@ async function handleSubmit(values: any) {
 
 .status-action-btn {
   opacity: 0.4;
-  transition: opacity 0.15s;
+  transition: all 0.15s ease;
   width: 1.25rem !important;
   height: 1.25rem !important;
   padding: 0 !important;
+  transform: scale(0.95);
 }
 
 .status-action-btn:hover {
   opacity: 1;
+  transform: scale(1);
 }
 
 .status-color-box {

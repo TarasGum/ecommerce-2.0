@@ -10,6 +10,72 @@
   cursor: not-allowed;
 }
 
+/* ==================== TRANSITION UTILITIES ==================== */
+.transition-fast {
+  transition: all 0.15s ease;
+}
+
+.transition-normal {
+  transition: all 0.2s ease;
+}
+
+.transition-slow {
+  transition: all 0.3s ease;
+}
+
+.transition-colors {
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.transition-transform {
+  transition: transform 0.2s ease;
+}
+
+.transition-opacity {
+  transition: opacity 0.2s ease;
+}
+
+.transition-shadow {
+  transition: box-shadow 0.2s ease;
+}
+
+/* ==================== HOVER UTILITIES ==================== */
+.hover-bg-light:hover {
+  background-color: var(--color-neutral-100);
+}
+
+.hover-bg-muted:hover {
+  background-color: var(--color-neutral-200);
+}
+
+.hover-scale-up:hover {
+  transform: scale(1.02);
+}
+
+.hover-scale-down:active {
+  transform: scale(0.98);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 0 3px rgba(109, 91, 208, 0.15);
+}
+
+/* ==================== FOCUS UTILITIES ==================== */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.1);
+}
+
+.focus-ring-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(109, 91, 208, 0.2);
+}
+
 /* ==================== TEXT TRUNCATION ==================== */
 .truncate {
   overflow: hidden;

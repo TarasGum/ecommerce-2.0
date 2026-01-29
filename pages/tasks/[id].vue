@@ -55,7 +55,7 @@
     </div>
 
     <!-- Task Content -->
-    <div v-else-if="task" class="task-card">
+    <div v-else-if="task" class="task-card animate-in">
       <!-- Header -->
       <div class="task-header">
         <div class="task-header-content">
@@ -639,6 +639,12 @@ function onDescriptionBlur() {
   background: white;
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-sm);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.task-card:hover {
+  border-color: var(--color-border-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* Header */

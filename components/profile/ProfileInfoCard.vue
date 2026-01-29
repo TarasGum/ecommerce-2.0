@@ -1,9 +1,9 @@
 <!-- components/profile/ProfileInfoCard.vue -->
 <template>
-  <div class="info-card">
+  <div class="info-card animate-in">
     <h3 class="info-card-title">Profile Information</h3>
 
-    <div class="flex flex-column gap-3">
+    <div class="flex flex-column gap-3 stagger-in">
       <!-- Email (read-only) -->
       <div class="flex flex-column gap-1">
         <span class="info-label">Email</span>
@@ -175,6 +175,12 @@ async function handleSave() {
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-sm);
   padding: 1.25rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.info-card:hover {
+  border-color: var(--color-border-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .info-card-title {
