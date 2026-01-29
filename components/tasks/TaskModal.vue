@@ -296,10 +296,10 @@
             
             <!-- Linked Order -->
             <div class="flex flex-column mb-3">
-              <label for="linked_order_id" class="field-label mb-1">Order</label>
-              <Field v-slot="{ field, errorMessage }" name="linked_order_id">
+              <label for="linked_order_autoid" class="field-label mb-1">Order</label>
+              <Field v-slot="{ field, errorMessage }" name="linked_order_autoid">
                 <Dropdown
-                  id="linked_order_id"
+                  id="linked_order_autoid"
                   :modelValue="field.value"
                   @update:modelValue="field.onChange"
                   :options="orderOptions"
@@ -342,10 +342,10 @@
 
             <!-- Linked Proposal -->
             <div class="flex flex-column mb-3">
-              <label for="linked_proposal_id" class="field-label mb-1">Proposal</label>
-              <Field v-slot="{ field, errorMessage }" name="linked_proposal_id">
+              <label for="linked_proposal_autoid" class="field-label mb-1">Proposal</label>
+              <Field v-slot="{ field, errorMessage }" name="linked_proposal_autoid">
                 <Dropdown
-                  id="linked_proposal_id"
+                  id="linked_proposal_autoid"
                   :modelValue="field.value"
                   @update:modelValue="field.onChange"
                   :options="proposalOptions"
@@ -388,10 +388,10 @@
 
             <!-- Linked Customer -->
             <div class="flex flex-column">
-              <label for="linked_customer_id" class="field-label mb-1">Customer</label>
-              <Field v-slot="{ field, errorMessage }" name="linked_customer_id">
+              <label for="linked_customer_autoid" class="field-label mb-1">Customer</label>
+              <Field v-slot="{ field, errorMessage }" name="linked_customer_autoid">
                 <Dropdown
-                  id="linked_customer_id"
+                  id="linked_customer_autoid"
                   :modelValue="field.value"
                   @update:modelValue="field.onChange"
                   :options="customerOptions"
@@ -470,7 +470,17 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { z } from "zod";
 import { storeToRefs } from "pinia";
 import { onClickOutside } from "@vueuse/core";
-import type { TaskListItem, TaskStatus, User, CreateTaskPayload, Order, Proposal, Customer } from "~/types/models";
+import type { TaskListItem, TaskStatus, User, CreateTaskPayload, Order, Proposal, Customer, LinkedOrderSummary, LinkedProposalSummary, LinkedCustomerSummary } from "~/types/models";
+
+// Extended TaskListItem with linked item details for edit mode
+interface TaskWithLinkedItems extends TaskListItem {
+  linked_order_autoid?: string | null;
+  linked_proposal_autoid?: string | null;
+  linked_customer_autoid?: string | null;
+  linked_order_details?: LinkedOrderSummary | null;
+  linked_proposal_details?: LinkedProposalSummary | null;
+  linked_customer_details?: LinkedCustomerSummary | null;
+}
 import { useProjectsStore } from "~/stores/projects";
 import { 
   TASK_PRIORITY, 
@@ -483,7 +493,7 @@ const props = withDefaults(
   defineProps<{
     visible: boolean;
     mode?: "create" | "edit";
-    initialTask?: TaskListItem | null;
+    initialTask?: TaskWithLinkedItems | null;
     statuses: TaskStatus[];
     users: User[];
   }>(),
@@ -575,6 +585,63 @@ async function preloadLinkedItems() {
     proposalsApi.list(params).then(res => { proposalOptions.value = res.results; }).catch(() => {}),
     customersApi.list(params).then(res => { customerOptions.value = res.results; }).catch(() => {}),
   ]);
+
+  // In edit mode, ensure the existing linked items are in the options
+  if (props.mode === 'edit' && props.initialTask) {
+    // Add linked order if not in options
+    if (props.initialTask.linked_order_details) {
+      const orderExists = orderOptions.value.some(o => o.autoid === props.initialTask!.linked_order_autoid);
+      if (!orderExists) {
+        const linkedOrder = props.initialTask.linked_order_details;
+        orderOptions.value.unshift({
+          autoid: linkedOrder.autoid,
+          id: '',
+          invoice: linkedOrder.invoice,
+          name: linkedOrder.name,
+          total: linkedOrder.total,
+          status: linkedOrder.status,
+          inv_date: null,
+          due_date: null,
+          tax: '0',
+          subtotal: linkedOrder.total,
+          balance: '0',
+        });
+      }
+    }
+
+    // Add linked proposal if not in options
+    if (props.initialTask.linked_proposal_details) {
+      const proposalExists = proposalOptions.value.some(p => p.autoid === props.initialTask!.linked_proposal_autoid);
+      if (!proposalExists) {
+        const linkedProposal = props.initialTask.linked_proposal_details;
+        proposalOptions.value.unshift({
+          autoid: linkedProposal.autoid,
+          b_id: '',
+          quote: linkedProposal.quote,
+          b_name: linkedProposal.b_name,
+          total: linkedProposal.total,
+          status: linkedProposal.status,
+          qt_date: null,
+          tax: '0',
+          subtotal: linkedProposal.total,
+        });
+      }
+    }
+
+    // Add linked customer if not in options
+    if (props.initialTask.linked_customer_details) {
+      const customerExists = customerOptions.value.some(c => c.id === props.initialTask!.linked_customer_autoid);
+      if (!customerExists) {
+        const linkedCustomer = props.initialTask.linked_customer_details;
+        customerOptions.value.unshift({
+          id: linkedCustomer.id,
+          l_name: linkedCustomer.l_name,
+          email: linkedCustomer.email,
+          phone: linkedCustomer.phone,
+        });
+      }
+    }
+  }
 }
 
 // Filter users: exclude superadmins and users with empty names
@@ -615,9 +682,9 @@ const schema = toTypedSchema(
     responsible_user: z.number().optional().nullable(),
     priority: z.enum(['low', 'medium', 'high', 'urgent'], { required_error: "Priority is required" }),
     due_date: z.date().optional().nullable(),
-    linked_order_id: z.string().optional().nullable(),
-    linked_proposal_id: z.string().optional().nullable(),
-    linked_customer_id: z.string().optional().nullable(),
+    linked_order_autoid: z.string().optional().nullable(),
+    linked_proposal_autoid: z.string().optional().nullable(),
+    linked_customer_autoid: z.string().optional().nullable(),
   })
 );
 
@@ -631,9 +698,9 @@ const initialFormValues = computed(() => {
       responsible_user: props.initialTask.responsible_user || null,
       priority: props.initialTask.priority || TASK_PRIORITY.MEDIUM,
       due_date: props.initialTask.due_date ? new Date(props.initialTask.due_date) : null,
-      linked_order_id: null,
-      linked_proposal_id: null,
-      linked_customer_id: null,
+      linked_order_autoid: props.initialTask.linked_order_autoid || null,
+      linked_proposal_autoid: props.initialTask.linked_proposal_autoid || null,
+      linked_customer_autoid: props.initialTask.linked_customer_autoid || null,
     };
   }
   
@@ -646,9 +713,9 @@ const initialFormValues = computed(() => {
     responsible_user: null,
     priority: TASK_PRIORITY.MEDIUM,
     due_date: null,
-    linked_order_id: null,
-    linked_proposal_id: null,
-    linked_customer_id: null,
+    linked_order_autoid: null,
+    linked_proposal_autoid: null,
+    linked_customer_autoid: null,
   };
 });
 
@@ -860,9 +927,9 @@ async function handleSubmit(values: any) {
     priority: values.priority,
     responsible_user: values.responsible_user || undefined,
     due_date: values.due_date ? values.due_date.toISOString().split('T')[0] : undefined,
-    linked_order_id: values.linked_order_id || undefined,
-    linked_proposal_id: values.linked_proposal_id || undefined,
-    linked_customer_id: values.linked_customer_id || undefined,
+    linked_order_autoid: values.linked_order_autoid || undefined,
+    linked_proposal_autoid: values.linked_proposal_autoid || undefined,
+    linked_customer_autoid: values.linked_customer_autoid || undefined,
   };
 
   // Add project for superadmin

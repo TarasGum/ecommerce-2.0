@@ -4,6 +4,12 @@
     <!-- Header -->
     <div class="flex justify-content-between align-items-center mb-3">
       <h1 class="page-title">Orders</h1>
+      <Button
+        label="Add Order"
+        icon="pi pi-plus"
+        severity="success"
+        @click="router.push('/orders/create')"
+      />
     </div>
 
     <!-- Status Filter Tabs -->
@@ -338,6 +344,7 @@ definePageMeta({
   middleware: "auth",
 });
 
+const router = useRouter();
 const ordersApi = useOrders();
 const toast = useToast();
 const auth = useAuth();

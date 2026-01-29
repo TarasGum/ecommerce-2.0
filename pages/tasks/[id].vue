@@ -211,17 +211,17 @@
       <div v-if="hasLinkedItems" class="task-section">
         <span class="section-label">Linked to</span>
         <div class="linked-items">
-          <span v-if="task.linked_order_id" class="linked-item">
+          <span v-if="task.linked_order_autoid" class="linked-item">
             <i class="pi pi-shopping-cart"></i>
-            Order {{ task.linked_order_id }}
+            Order {{ task.linked_order_autoid }}
           </span>
-          <span v-if="task.linked_proposal_id" class="linked-item">
+          <span v-if="task.linked_proposal_autoid" class="linked-item">
             <i class="pi pi-file"></i>
-            Proposal {{ task.linked_proposal_id }}
+            Proposal {{ task.linked_proposal_autoid }}
           </span>
-          <span v-if="task.linked_customer_id" class="linked-item">
+          <span v-if="task.linked_customer_autoid" class="linked-item">
             <i class="pi pi-user"></i>
-            Customer {{ task.linked_customer_id }}
+            Customer {{ task.linked_customer_autoid }}
           </span>
         </div>
       </div>
@@ -342,12 +342,12 @@ const descInputRef = ref<HTMLTextAreaElement | null>(null);
 
 // Computed
 const hasLinkedItems = computed(() => {
-  return task.value?.linked_order_id || 
-         task.value?.linked_proposal_id || 
-         task.value?.linked_customer_id;
+  return task.value?.linked_order_autoid || 
+         task.value?.linked_proposal_autoid || 
+         task.value?.linked_customer_autoid;
 });
 
-// Convert Task to TaskListItem format for the modal
+// Convert Task to TaskListItem format for the modal (with linked items)
 const taskAsListItem = computed(() => {
   if (!task.value) return null;
   return {
@@ -366,6 +366,13 @@ const taskAsListItem = computed(() => {
     attachment_count: task.value.attachment_count,
     created_at: task.value.created_at,
     updated_at: task.value.updated_at,
+    // Linked items
+    linked_order_autoid: task.value.linked_order_autoid,
+    linked_proposal_autoid: task.value.linked_proposal_autoid,
+    linked_customer_autoid: task.value.linked_customer_autoid,
+    linked_order_details: task.value.linked_order_details,
+    linked_proposal_details: task.value.linked_proposal_details,
+    linked_customer_details: task.value.linked_customer_details,
   };
 });
 

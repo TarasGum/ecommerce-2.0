@@ -300,15 +300,42 @@ export interface TaskAttachment {
   created_at: string;
 }
 
+// Linked Item Summary types (returned with Task details)
+export interface LinkedOrderSummary {
+  autoid: string;
+  invoice: string;
+  name: string;
+  total: string;
+  status: 'O' | 'X' | 'U';
+}
+
+export interface LinkedProposalSummary {
+  autoid: string;
+  quote: string;
+  b_name: string;
+  total: string;
+  status: 'O' | 'A' | 'L' | 'C' | 'E';
+}
+
+export interface LinkedCustomerSummary {
+  id: string;
+  l_name: string;
+  email?: string;
+  phone?: string;
+}
+
 // Task Detail (from GET /tasks/{id}/)
 export interface Task extends TaskListItem {
   description: string | null;
   status_details: TaskStatus;
   author_details: UserSummary;
   responsible_user_details: UserSummary | null;
-  linked_order_id: string | null;
-  linked_proposal_id: string | null;
-  linked_customer_id: string | null;
+  linked_order_autoid: string | null;
+  linked_proposal_autoid: string | null;
+  linked_customer_autoid: string | null;
+  linked_order_details: LinkedOrderSummary | null;
+  linked_proposal_details: LinkedProposalSummary | null;
+  linked_customer_details: LinkedCustomerSummary | null;
   attachments: TaskAttachment[];
 }
 
@@ -321,9 +348,9 @@ export interface CreateTaskPayload {
   priority: TaskPriority;
   due_date?: string | null;
   responsible_user?: number | null;
-  linked_order_id?: string | null;
-  linked_proposal_id?: string | null;
-  linked_customer_id?: string | null;
+  linked_order_autoid?: string | null;
+  linked_proposal_autoid?: string | null;
+  linked_customer_autoid?: string | null;
 }
 
 export interface UpdateTaskPayload extends Partial<CreateTaskPayload> {}
@@ -336,3 +363,25 @@ export interface CreateTaskStatusPayload {
 }
 
 export interface UpdateTaskStatusPayload extends Partial<CreateTaskStatusPayload> {}
+
+// Product types (Mirror DB - TEST API, will be changed)
+export interface Product {
+  autoid: string;
+  id: string; // product code / SKU
+  upc: string;
+  type: string; // Purchased, Manufactured, Service
+  descr_1: string; // primary description
+  descr_2: string; // secondary description
+  base: string; // base price (stringified decimal)
+  cost: string; // cost value (stringified decimal) - used as price for now
+  count: string; // inventory quantity (stringified decimal, may be negative)
+  location: string;
+  inactive: boolean;
+}
+
+export interface ProductsListResponse {
+  count: number;
+  limit: number;
+  offset: number;
+  results: Product[];
+}
