@@ -75,16 +75,16 @@ export default defineNuxtConfig({
         enter: { opacity: 1, y: 0, scale: 1, transition: { duration: 300, ease: 'easeOut' } },
         leave: { opacity: 0, y: 10, scale: 0.98, transition: { duration: 200, ease: 'easeIn' } },
       },
-      'fade': {
+      'custom-fade': {
         initial: { opacity: 0 },
         enter: { opacity: 1, transition: { duration: 250 } },
         leave: { opacity: 0, transition: { duration: 150 } },
       },
-      'slide-left': {
+      'custom-slide-left': {
         initial: { opacity: 0, x: -20 },
         enter: { opacity: 1, x: 0, transition: { duration: 300, ease: 'easeOut' } },
       },
-      'slide-right': {
+      'custom-slide-right': {
         initial: { opacity: 0, x: 20 },
         enter: { opacity: 1, x: 0, transition: { duration: 300, ease: 'easeOut' } },
       },

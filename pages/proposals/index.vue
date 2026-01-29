@@ -4,6 +4,13 @@
     <!-- Header -->
     <div class="flex justify-content-between align-items-center mb-3">
       <h1 class="page-title">Proposals</h1>
+      <Button
+        label="Create Proposal"
+        icon="pi pi-plus"
+        severity="success"
+        size="small"
+        @click="router.push('/proposals/create')"
+      />
     </div>
 
     <!-- Status Filter Tabs -->
@@ -313,6 +320,7 @@ definePageMeta({
   middleware: "auth",
 });
 
+const router = useRouter();
 const proposalsApi = useProposals();
 const toast = useToast();
 const auth = useAuth();

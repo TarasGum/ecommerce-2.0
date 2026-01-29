@@ -1,9 +1,9 @@
-<!-- pages/orders/create.vue -->
+<!-- pages/proposals/create.vue -->
 <template>
-  <div class="page-wrapper order-create-page">
+  <div class="page-wrapper proposal-create-page">
     <!-- Header -->
     <div class="flex justify-content-between align-items-center mb-3">
-      <h1 class="page-title">Create New Order</h1>
+      <h1 class="page-title">Create New Proposal</h1>
     </div>
 
     <!-- Info Banner -->
@@ -12,12 +12,12 @@
       <span>Test API - Product pricing uses cost field. This will be changed.</span>
     </div>
 
-    <!-- Order Card -->
-    <div class="order-card">
+    <!-- Proposal Card -->
+    <div class="proposal-card">
       <!-- Product Search Section -->
-      <div class="order-section">
+      <div class="proposal-section">
         <h3 class="section-title">Add Products</h3>
-        <p class="section-description">Search for products by ID or description to add them to this order.</p>
+        <p class="section-description">Search for products by ID or description to add them to this proposal.</p>
         
         <!-- Product Search Combobox -->
         <div class="product-search-wrapper">
@@ -76,25 +76,25 @@
       </div>
 
       <!-- Added Products List -->
-      <div class="order-section">
+      <div class="proposal-section">
         <div class="flex justify-content-between align-items-center mb-3">
-          <h3 class="section-title mb-0">Order Items</h3>
-          <span v-if="orderItems.length > 0" class="items-count">
-            {{ orderItems.length }} item{{ orderItems.length !== 1 ? 's' : '' }}
+          <h3 class="section-title mb-0">Proposal Items</h3>
+          <span v-if="proposalItems.length > 0" class="items-count">
+            {{ proposalItems.length }} item{{ proposalItems.length !== 1 ? 's' : '' }}
           </span>
         </div>
 
         <!-- Empty State -->
-        <div v-if="orderItems.length === 0" class="items-empty">
-          <i class="pi pi-shopping-cart"></i>
+        <div v-if="proposalItems.length === 0" class="items-empty">
+          <i class="pi pi-file-edit"></i>
           <span>No products added yet</span>
-          <span class="items-empty-hint">Use the search above to add products to this order</span>
+          <span class="items-empty-hint">Use the search above to add products to this proposal</span>
         </div>
 
         <!-- Items Table -->
         <div v-else class="items-table-wrapper">
           <DataTable 
-            :value="orderItems" 
+            :value="proposalItems" 
             class="items-table"
             dataKey="autoid"
           >
@@ -166,8 +166,8 @@
         </div>
       </div>
 
-      <!-- Order Summary -->
-      <div class="order-summary">
+      <!-- Proposal Summary -->
+      <div class="proposal-summary">
         <div class="summary-row">
           <span class="summary-label">Subtotal</span>
           <span class="summary-value">{{ formatCurrency(subtotal) }}</span>
@@ -179,26 +179,26 @@
       </div>
 
       <!-- Actions -->
-      <div class="order-actions">
+      <div class="proposal-actions">
         <Button
           label="Cancel"
           severity="secondary"
           text
-          @click="router.push('/orders')"
+          @click="router.push('/proposals')"
         />
         <Button
           label="Clear All"
           severity="secondary"
           outlined
-          :disabled="orderItems.length === 0"
+          :disabled="proposalItems.length === 0"
           @click="clearAllItems"
         />
         <Button
-          label="Create Order"
+          label="Create Proposal"
           severity="success"
           icon="pi pi-check"
-          :disabled="orderItems.length === 0"
-          @click="createOrder"
+          :disabled="proposalItems.length === 0"
+          @click="createProposal"
         />
       </div>
     </div>
@@ -224,8 +224,8 @@ definePageMeta({
   middleware: "auth",
 });
 
-// Extended product type with quantity for order items
-interface OrderItem extends Product {
+// Extended product type with quantity for proposal items
+interface ProposalItem extends Product {
   quantity: number;
 }
 
@@ -248,12 +248,12 @@ const productOptions = ref<Product[]>([]);
 const productSearchLoading = ref(false);
 const selectedProduct = ref<Product | null>(null);
 
-// Order items state
-const orderItems = ref<OrderItem[]>([]);
+// Proposal items state
+const proposalItems = ref<ProposalItem[]>([]);
 
 // Computed totals
 const subtotal = computed(() => {
-  return orderItems.value.reduce((sum, item) => {
+  return proposalItems.value.reduce((sum, item) => {
     const cost = parseFloat(item.cost) || 0;
     return sum + (cost * item.quantity);
   }, 0);
@@ -263,9 +263,9 @@ const subtotal = computed(() => {
 onMounted(async () => {
   // Set page header with back button
   uiStore.setPageHeader({
-    title: 'Orders / New',
+    title: 'Proposals / New',
     showBack: true,
-    backPath: '/orders',
+    backPath: '/proposals',
   });
 
   // Wait for projects to load if user is superadmin
@@ -337,22 +337,22 @@ async function searchProducts(event: { value: string }) {
 function onProductSelected() {
   if (!selectedProduct.value) return;
 
-  // Check if product already exists in order
-  const existingIndex = orderItems.value.findIndex(
+  // Check if product already exists in proposal
+  const existingIndex = proposalItems.value.findIndex(
     item => item.autoid === selectedProduct.value!.autoid
   );
 
   if (existingIndex !== -1) {
     // Increment quantity if already exists
-    orderItems.value[existingIndex].quantity += 1;
+    proposalItems.value[existingIndex].quantity += 1;
     toast.showInfo(`${selectedProduct.value.id} quantity increased`);
   } else {
     // Add new item with quantity 1
-    orderItems.value.push({
+    proposalItems.value.push({
       ...selectedProduct.value,
       quantity: 1,
     });
-    toast.showSuccess(`${selectedProduct.value.id} added to order`);
+    toast.showSuccess(`${selectedProduct.value.id} added to proposal`);
   }
 
   // Clear selection after adding
@@ -361,35 +361,35 @@ function onProductSelected() {
   });
 }
 
-function getLineTotal(item: OrderItem): number {
+function getLineTotal(item: ProposalItem): number {
   const cost = parseFloat(item.cost) || 0;
   return cost * item.quantity;
 }
 
 function removeItem(autoid: string) {
-  const index = orderItems.value.findIndex(item => item.autoid === autoid);
+  const index = proposalItems.value.findIndex(item => item.autoid === autoid);
   if (index !== -1) {
-    const removed = orderItems.value[index];
-    orderItems.value.splice(index, 1);
+    const removed = proposalItems.value[index];
+    proposalItems.value.splice(index, 1);
     toast.showInfo(`${removed.id} removed`);
   }
 }
 
 function clearAllItems() {
-  orderItems.value = [];
+  proposalItems.value = [];
   toast.showInfo('All items cleared');
 }
 
-function createOrder() {
-  // TODO: Implement order creation API
-  toast.showInfo('Order creation API coming soon!');
-  console.log('Order items:', orderItems.value);
+function createProposal() {
+  // TODO: Implement proposal creation API
+  toast.showInfo('Proposal creation API coming soon!');
+  console.log('Proposal items:', proposalItems.value);
   console.log('Total:', subtotal.value);
 }
 </script>
 
 <style scoped>
-.order-create-page {
+.proposal-create-page {
   padding: 1.5rem 1.5rem;
   min-height: 100vh;
   max-width: 1000px;
@@ -422,8 +422,8 @@ function createOrder() {
   color: var(--color-warning);
 }
 
-/* Order Card */
-.order-card {
+/* Proposal Card */
+.proposal-card {
   background: white;
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-sm);
@@ -431,7 +431,7 @@ function createOrder() {
 }
 
 /* Sections */
-.order-section {
+.proposal-section {
   padding: 1.5rem;
   border-bottom: 1px solid var(--color-border-light);
 }
@@ -684,8 +684,8 @@ function createOrder() {
   padding: 0.25rem;
 }
 
-/* Order Summary */
-.order-summary {
+/* Proposal Summary */
+.proposal-summary {
   padding: 1.5rem;
   background: var(--surface-50);
   border-bottom: 1px solid var(--color-border-light);
@@ -726,8 +726,8 @@ function createOrder() {
   color: var(--color-success);
 }
 
-/* Order Actions */
-.order-actions {
+/* Proposal Actions */
+.proposal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
@@ -736,7 +736,7 @@ function createOrder() {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .order-create-page {
+  .proposal-create-page {
     padding: 1rem;
   }
 
