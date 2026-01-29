@@ -435,7 +435,12 @@ const menuItems = computed(() => [
 
 // Track if we're initializing default filter to prevent race condition
 const route = useRoute();
-const shouldInitializeFilter = !route.query.status || route.query.status === '';
+
+// Check if autoid filter is present (from task link)
+const autoidFilter = computed(() => route.query.autoid as string | undefined);
+
+// Only initialize status filter if no autoid filter is present
+const shouldInitializeFilter = !route.query.autoid && (!route.query.status || route.query.status === '');
 const isInitializing = ref(shouldInitializeFilter);
 
 // Track if initial data load is ready (projects loaded for superadmin)
@@ -443,6 +448,10 @@ const isReadyToLoad = ref(false);
 
 // Effective status for UI rendering (prevents flickering during initialization)
 const effectiveStatus = computed(() => {
+  // If autoid filter is present, show "All Proposals" tab as active
+  if (autoidFilter.value) {
+    return '';
+  }
   // Only override during the brief initialization phase
   if (isInitializing.value && filters.value.status === '') {
     return PROPOSAL_STATUS.OPEN;
@@ -450,7 +459,7 @@ const effectiveStatus = computed(() => {
   return filters.value.status;
 });
 
-// Initialize status filter if not present in URL
+// Initialize status filter if not present in URL (and no autoid filter)
 if (shouldInitializeFilter) {
   setFilter('status', PROPOSAL_STATUS.OPEN as ProposalStatus | '');
 }
@@ -471,7 +480,7 @@ onMounted(async () => {
 
 // Watch for URL state changes and reload proposals
 watch(
-  [page, pageSize, search, () => filters.value.status, sortOrdering],
+  [page, pageSize, search, () => filters.value.status, sortOrdering, autoidFilter],
   () => {
     // Mark initialization as complete once the watcher fires
     if (isInitializing.value) {
@@ -542,9 +551,14 @@ async function loadProposals() {
     offset: offset.value,
   };
 
-  // Add status filter if not "All Proposals"
-  if (filters.value.status) {
-    params.status = filters.value.status;
+  // If autoid filter is present, use it and skip status filter
+  if (autoidFilter.value) {
+    params.autoid = autoidFilter.value;
+  } else {
+    // Add status filter if not "All Proposals"
+    if (filters.value.status) {
+      params.status = filters.value.status;
+    }
   }
 
   // Add search filter

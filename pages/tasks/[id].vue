@@ -211,18 +211,18 @@
       <div v-if="hasLinkedItems" class="task-section">
         <span class="section-label">Linked to</span>
         <div class="linked-items">
-          <span v-if="task.linked_order_autoid" class="linked-item">
+          <NuxtLink v-if="task.linked_order_autoid" :to="`/orders/?autoid=${task.linked_order_autoid}`" class="linked-item linked-item-link">
             <i class="pi pi-shopping-cart"></i>
             Order {{ task.linked_order_autoid }}
-          </span>
-          <span v-if="task.linked_proposal_autoid" class="linked-item">
+          </NuxtLink>
+          <NuxtLink v-if="task.linked_proposal_autoid" :to="`/proposals/?autoid=${task.linked_proposal_autoid}`" class="linked-item linked-item-link">
             <i class="pi pi-file"></i>
             Proposal {{ task.linked_proposal_autoid }}
-          </span>
-          <span v-if="task.linked_customer_autoid" class="linked-item">
+          </NuxtLink>
+          <NuxtLink v-if="task.linked_customer_autoid" :to="`/customers/${task.linked_customer_autoid}`" class="linked-item linked-item-link">
             <i class="pi pi-user"></i>
             Customer {{ task.linked_customer_autoid }}
-          </span>
+          </NuxtLink>
         </div>
       </div>
 
@@ -864,6 +864,22 @@ function onDescriptionBlur() {
 .linked-item i {
   font-size: 0.75rem;
   color: var(--color-text-tertiary);
+}
+
+.linked-item-link {
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.linked-item-link:hover {
+  background: var(--surface-100);
+  color: var(--color-primary);
+}
+
+.linked-item-link:hover i {
+  color: var(--color-primary);
 }
 
 /* Attachments */

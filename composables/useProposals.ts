@@ -12,6 +12,7 @@ export interface ProposalsListParams {
   status?: ProposalStatus;
   quote?: string;
   customer_id?: string;
+  autoid?: string;
   fields?: string;
   limit?: number;
   offset?: number;
@@ -28,7 +29,7 @@ export const useProposals = () => {
    * @param signal - optional AbortSignal for request cancellation
    */
   async function list(params: ProposalsListParams = {}, signal?: AbortSignal): Promise<PaginatedResponse<Proposal>> {
-    const { status, quote, customer_id, fields, limit = 50, offset = 0, ordering, project_id } = params;
+    const { status, quote, customer_id, autoid, fields, limit = 50, offset = 0, ordering, project_id } = params;
     
     // Build query string
     const queryParams = new URLSearchParams();
@@ -43,6 +44,9 @@ export const useProposals = () => {
     }
     if (customer_id) {
       queryParams.set("customer_id", customer_id);
+    }
+    if (autoid) {
+      queryParams.set("autoid", autoid);
     }
     if (fields) {
       queryParams.set("fields", fields);

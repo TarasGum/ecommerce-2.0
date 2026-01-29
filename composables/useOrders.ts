@@ -12,6 +12,7 @@ export interface OrdersListParams {
   status?: OrderStatus;
   invoice?: string;
   customer_id?: string;
+  autoid?: string;
   limit?: number;
   offset?: number;
   ordering?: string;
@@ -27,7 +28,7 @@ export const useOrders = () => {
    * @param signal - optional AbortSignal for request cancellation
    */
   async function list(params: OrdersListParams = {}, signal?: AbortSignal): Promise<PaginatedResponse<Order>> {
-    const { status, invoice, customer_id, limit = 50, offset = 0, ordering, project_id } = params;
+    const { status, invoice, customer_id, autoid, limit = 50, offset = 0, ordering, project_id } = params;
     
     // Build query string
     const queryParams = new URLSearchParams();
@@ -42,6 +43,9 @@ export const useOrders = () => {
     }
     if (customer_id) {
       queryParams.set("customer_id", customer_id);
+    }
+    if (autoid) {
+      queryParams.set("autoid", autoid);
     }
     if (ordering) {
       queryParams.set("ordering", ordering);
