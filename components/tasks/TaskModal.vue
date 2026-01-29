@@ -52,7 +52,7 @@
           </div>
 
           <!-- Status with Inline Management -->
-          <div class="flex flex-column mb-3 status-field-wrapper">
+          <div ref="statusFieldRef" class="flex flex-column mb-3 status-field-wrapper">
             <div class="flex justify-content-between align-items-center mb-2">
               <label for="status" class="field-label">Status <span class="required">*</span></label>
               <Button
@@ -76,6 +76,7 @@
                 placeholder="Select status"
                 class="w-full"
                 :class="{ 'p-invalid': errorMessage }"
+                @show="showStatusManager = false"
               >
                 <template #value="{ value, placeholder }">
                   <div v-if="value" class="flex align-items-center gap-2">
@@ -98,74 +99,83 @@
             <!-- Inline Status Manager (Absolute positioned) -->
             <Transition name="slide-down">
               <div v-if="showStatusManager" class="status-manager">
-                <!-- Status List -->
+                <!-- Status List with Drag & Drop -->
                 <div class="status-list">
-                  <TransitionGroup name="list" tag="div" class="status-list-inner">
-                    <div
-                      v-for="status in localStatuses"
-                      :key="status.id"
-                      class="status-list-item"
-                    >
-                      <!-- View Mode -->
-                      <div v-if="editingStatusId !== status.id" class="flex align-items-center gap-2">
-                        <span class="status-color-box" :style="{ backgroundColor: status.color }"></span>
-                        <span class="status-name flex-1">{{ status.name }}</span>
-                        <Tag v-if="status.is_default" value="Default" severity="secondary" style="font-size: 0.55rem; padding: 0.05rem 0.25rem;" />
-                        <Button
-                          v-if="!status.is_default"
-                          icon="pi pi-pencil"
-                          text
-                          rounded
-                          size="small"
-                          class="status-action-btn"
-                          @click="startEditStatus(status)"
-                        />
-                        <Button
-                          v-if="!status.is_default"
-                          icon="pi pi-trash"
-                          text
-                          rounded
-                          size="small"
-                          severity="danger"
-                          class="status-action-btn"
-                          @click="deleteStatus(status)"
-                        />
-                      </div>
-
-                      <!-- Edit Mode -->
-                      <div v-else class="flex align-items-center gap-2">
-                        <div class="color-input-wrapper">
-                          <input
-                            type="color"
-                            v-model="editStatusColorHex"
-                            class="color-input"
+                  <draggable
+                    v-model="localStatuses"
+                    item-key="id"
+                    handle=".drag-handle"
+                    ghost-class="status-ghost"
+                    drag-class="status-dragging"
+                    animation="200"
+                    class="status-list-inner"
+                    @end="onStatusReorder"
+                  >
+                    <template #item="{ element: status }">
+                      <div class="status-list-item">
+                        <!-- View Mode -->
+                        <div v-if="editingStatusId !== status.id" class="flex align-items-center gap-2">
+                          <i class="pi pi-bars drag-handle" />
+                          <span class="status-color-box" :style="{ backgroundColor: status.color }"></span>
+                          <span class="status-name flex-1">{{ status.name }}</span>
+                          <Tag v-if="status.is_default" value="Default" severity="secondary" style="font-size: 0.55rem; padding: 0.05rem 0.25rem;" />
+                          <Button
+                            v-if="!status.is_default"
+                            icon="pi pi-pencil"
+                            text
+                            rounded
+                            size="small"
+                            class="status-action-btn"
+                            @click="startEditStatus(status)"
+                          />
+                          <Button
+                            v-if="!status.is_default"
+                            icon="pi pi-trash"
+                            text
+                            rounded
+                            size="small"
+                            severity="danger"
+                            class="status-action-btn"
+                            @click="deleteStatus(status)"
                           />
                         </div>
-                        <InputText
-                          v-model="editStatusName"
-                          placeholder="Status name"
-                          class="flex-1 p-inputtext-sm"
-                        />
-                        <Button
-                          icon="pi pi-check"
-                          size="small"
-                          text
-                          severity="secondary"
-                          :loading="statusLoading"
-                          @click="saveEditStatus"
-                          class="status-edit-btn"
-                        />
-                        <Button
-                          icon="pi pi-times"
-                          size="small"
-                          text
-                          severity="secondary"
-                          @click="cancelEditStatus"
-                          class="status-edit-btn"
-                        />
+
+                        <!-- Edit Mode -->
+                        <div v-else class="flex align-items-center gap-2">
+                          <i class="pi pi-bars drag-handle disabled" />
+                          <div class="color-input-wrapper">
+                            <input
+                              type="color"
+                              v-model="editStatusColorHex"
+                              class="color-input"
+                            />
+                          </div>
+                          <InputText
+                            v-model="editStatusName"
+                            placeholder="Status name"
+                            class="flex-1 p-inputtext-sm"
+                          />
+                          <Button
+                            icon="pi pi-check"
+                            size="small"
+                            text
+                            severity="secondary"
+                            :loading="statusLoading"
+                            @click="saveEditStatus"
+                            class="status-edit-btn"
+                          />
+                          <Button
+                            icon="pi pi-times"
+                            size="small"
+                            text
+                            severity="secondary"
+                            @click="cancelEditStatus"
+                            class="status-edit-btn"
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </TransitionGroup>
+                    </template>
+                  </draggable>
                 </div>
 
                 <!-- Create New Status -->
@@ -454,10 +464,12 @@ import Dropdown from "primevue/dropdown";
 import Calendar from "primevue/calendar";
 import Button from "primevue/button";
 import Tag from "primevue/tag";
+import draggable from "vuedraggable";
 import { Form, Field, ErrorMessage } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import { z } from "zod";
 import { storeToRefs } from "pinia";
+import { onClickOutside } from "@vueuse/core";
 import type { TaskListItem, TaskStatus, User, CreateTaskPayload, Order, Proposal, Customer } from "~/types/models";
 import { useProjectsStore } from "~/stores/projects";
 import { 
@@ -516,6 +528,14 @@ const customerSearchLoading = ref(false);
 const showStatusManager = ref(false);
 const localStatuses = ref<TaskStatus[]>([]);
 const statusLoading = ref(false);
+const statusFieldRef = ref<HTMLElement | null>(null);
+
+// Hide status manager on click outside
+onClickOutside(statusFieldRef, () => {
+  if (showStatusManager.value) {
+    showStatusManager.value = false;
+  }
+});
 
 // New status form
 const newStatusName = ref('');
@@ -526,9 +546,9 @@ const editingStatusId = ref<number | null>(null);
 const editStatusName = ref('');
 const editStatusColorHex = ref('#6B7280');
 
-// Sync statuses from props
+// Sync statuses from props (sorted by order, 0 on top)
 watch(() => props.statuses, (newStatuses) => {
-  localStatuses.value = [...newStatuses];
+  localStatuses.value = [...newStatuses].sort((a, b) => a.order - b.order);
 }, { immediate: true, deep: true });
 
 // Reset status manager when modal closes, preload linked items when opens
@@ -654,9 +674,15 @@ async function createStatus() {
 
   statusLoading.value = true;
   try {
+    // Calculate order for new status (add at the end)
+    const maxOrder = localStatuses.value.length > 0
+      ? Math.max(...localStatuses.value.map(s => s.order))
+      : -1;
+    
     const payload: any = {
       name: newStatusName.value.trim(),
       color: newStatusColorHex.value,
+      order: maxOrder + 1,
     };
     // Add project_id for superadmin
     if (selectedProjectId.value !== null) {
@@ -720,6 +746,36 @@ async function deleteStatus(status: TaskStatus) {
     emit('statusesUpdated');
   } catch (error) {
     toast.showError(error, 'Failed to delete status');
+  } finally {
+    statusLoading.value = false;
+  }
+}
+
+// Handle status reorder via drag & drop
+async function onStatusReorder() {
+  // Update order values based on new positions (0 = first/top)
+  const updates = localStatuses.value.map((status, index) => ({
+    id: status.id,
+    order: index,
+  }));
+
+  // Optimistically update local state
+  localStatuses.value = localStatuses.value.map((status, index) => ({
+    ...status,
+    order: index,
+  }));
+
+  // Update each status order in parallel
+  statusLoading.value = true;
+  try {
+    await Promise.all(
+      updates.map(({ id, order }) => tasksApi.updateStatus(id, { order }))
+    );
+    emit('statusesUpdated');
+  } catch (error) {
+    toast.showError(error, 'Failed to update status order');
+    // Reload statuses on error
+    emit('statusesUpdated');
   } finally {
     statusLoading.value = false;
   }
@@ -985,6 +1041,37 @@ async function handleSubmit(values: any) {
 
 .status-list-item:hover .status-action-btn {
   opacity: 1;
+}
+
+/* Drag handle */
+.drag-handle {
+  cursor: grab;
+  color: var(--color-text-tertiary);
+  font-size: 0.75rem;
+  padding: 0.25rem;
+  transition: color 0.15s;
+}
+
+.drag-handle:hover {
+  color: var(--color-text-primary);
+}
+
+.drag-handle.disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+
+/* Drag states */
+.status-ghost {
+  opacity: 0.5;
+  background: var(--color-primary-50) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.status-dragging {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
 }
 
 /* Status edit buttons (icon-only) */

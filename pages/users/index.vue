@@ -43,14 +43,14 @@
           field="first_name"
           header="Name"
           sortable
-          :style="{ width: isSuperAdmin ? '20%' : '25%', minWidth: '150px' }"
+          :style="{ width: isSuperAdmin ? '22%' : '25%', minWidth: '120px' }"
           :pt="{
             sort: { class: 'cursor-pointer' },
           }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 120px;"></div>
-            <span v-else class="cell-name">{{
+            <div v-if="loading" class="skeleton skeleton-text" style="width: 100px;"></div>
+            <span v-else class="cell-name truncate">{{
               getFullName(data.first_name, data.last_name)
             }}</span>
           </template>
@@ -61,14 +61,14 @@
           field="email"
           header="E-mail"
           sortable
-          :style="{ width: isSuperAdmin ? '28%' : '35%', minWidth: '180px' }"
+          :style="{ width: isSuperAdmin ? '28%' : '35%', minWidth: '140px' }"
           :pt="{
             sort: { class: 'cursor-pointer' },
           }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 160px;"></div>
-            <span v-else class="cell-secondary">{{ data.email }}</span>
+            <div v-if="loading" class="skeleton skeleton-text" style="width: 140px;"></div>
+            <span v-else class="cell-secondary truncate">{{ data.email }}</span>
           </template>
         </Column>
 
@@ -77,7 +77,7 @@
           field="role"
           header="Type"
           sortable
-          :style="{ width: isSuperAdmin ? '12%' : '15%', minWidth: '100px' }"
+          :style="{ width: isSuperAdmin ? '12%' : '15%', minWidth: '80px' }"
           :pt="{
             sort: { class: 'cursor-pointer' },
           }"
@@ -94,14 +94,14 @@
           field="project_name"
           header="Project"
           sortable
-          :style="{ width: '15%', minWidth: '120px' }"
+          :style="{ width: '18%', minWidth: '100px' }"
           :pt="{
             sort: { class: 'cursor-pointer' },
           }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 100px;"></div>
-            <span v-else class="cell-secondary">{{ data.project_name || '—' }}</span>
+            <div v-if="loading" class="skeleton skeleton-text" style="width: 80px;"></div>
+            <span v-else class="cell-secondary truncate">{{ data.project_name || '—' }}</span>
           </template>
         </Column>
 
@@ -110,7 +110,7 @@
           field="is_active"
           header="State"
           sortable
-          :style="{ width: '15%', minWidth: '100px' }"
+          :style="{ width: '60px', minWidth: '60px' }"
           :pt="{
             sort: { class: 'cursor-pointer' },
           }"
@@ -132,7 +132,11 @@
         </Column>
 
         <!-- Actions Column -->
-        <Column header="Actions" :style="{ width: '10%', minWidth: '80px', textAlign: 'center' }">
+        <Column 
+          header="Actions" 
+          :style="{ width: '60px', minWidth: '50px', textAlign: 'center' }"
+          :pt="{ headerContent: { style: 'justify-content: center' } }"
+        >
           <template #body="{ data }">
             <div v-if="loading" class="skeleton skeleton-circle" ></div>
             <Button
@@ -450,7 +454,7 @@ async function deleteUser(userId: number) {
   padding: 1.5rem 1.5rem;
   min-height: 100vh;
   max-width: 1400px;
-  min-width: 700px;
+  min-width: 650px;
   margin: 0 auto;
 }
 
@@ -467,7 +471,7 @@ async function deleteUser(userId: number) {
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-sm);
   overflow: hidden;
-  min-width: 700px;
+  min-width: 600px;
 }
 
 .users-table {
@@ -477,6 +481,21 @@ async function deleteUser(userId: number) {
 .users-table :deep(table) {
   table-layout: fixed;
   width: 100%;
+}
+
+/* Ensure text truncation in table cells */
+.users-table :deep(td) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  max-width: 100%;
 }
 
 .user-name {

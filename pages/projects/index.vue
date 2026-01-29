@@ -132,7 +132,11 @@
         </Column>
 
         <!-- Actions Column -->
-        <Column header="Actions" :style="{ width: '10%', minWidth: '80px', textAlign: 'center' }">
+        <Column 
+          header="Actions" 
+          :style="{ width: '80px', minWidth: '80px', textAlign: 'center' }"
+          :pt="{ headerContent: { style: 'justify-content: center' } }"
+        >
           <template #body="{ data }">
             <div v-if="loading" class="skeleton skeleton-circle"></div>
             <Button
