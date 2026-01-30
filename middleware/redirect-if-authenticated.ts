@@ -1,13 +1,22 @@
 // middleware/redirect-if-authenticated.ts
 // Redirects authenticated users away from login page
 
-export default defineNuxtRouteMiddleware((to, from) => {
-  // Check if we have tokens in cookies
-  const accessCookie = useCookie("auth.access");
-  const refreshCookie = useCookie("auth.refresh");
+import { useAuthStore } from "~/stores/auth";
 
-  // If we have tokens, redirect to home
-  if (accessCookie.value || refreshCookie.value) {
+export default defineNuxtRouteMiddleware((to, from) => {
+  const nuxtApp = useNuxtApp();
+  const authStore = useAuthStore();
+
+  // If auth just failed (tokens were invalid), don't redirect back - let user see login page
+  const authState = (nuxtApp.payload as any)?._authState;
+  if (authState?.error) {
+    return; // Allow access to login page
+  }
+
+  // If user is already authenticated in the store, redirect to home
+  if (authStore.user) {
     return navigateTo("/");
   }
+
+  // No authenticated user, allow access to login page
 });
