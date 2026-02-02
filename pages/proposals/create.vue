@@ -22,8 +22,7 @@
         <!-- Product Search Combobox -->
         <div class="product-search-wrapper">
           <Dropdown
-            v-model="selectedProduct"
-            :options="productOptions"
+            v-model="selectedProduct" :options="productOptions"
             optionLabel="id"
             placeholder="Search product by ID..."
             class="product-dropdown"
