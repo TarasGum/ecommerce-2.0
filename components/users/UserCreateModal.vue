@@ -286,6 +286,8 @@ const roleOptions = computed(() => {
   const allRoles = [
     { label: USER_ROLE_LABELS[USER_ROLES.SUPERADMIN], value: USER_ROLES.SUPERADMIN },
     { label: USER_ROLE_LABELS[USER_ROLES.ADMIN], value: USER_ROLES.ADMIN },
+    { label: USER_ROLE_LABELS[USER_ROLES.SALE], value: USER_ROLES.SALE },
+    { label: USER_ROLE_LABELS[USER_ROLES.MANAGER], value: USER_ROLES.MANAGER },
   ];
   
   // Only superadmins can create other superadmins

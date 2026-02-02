@@ -19,6 +19,7 @@ export const loginSchema = z.object({
 export type LoginFormData = z.infer<typeof loginSchema>;
 
 // Create user form schema
+// Note: Project validation is handled in handleSubmit since regular admins don't see the project field
 export const createUserSchema = z
   .object({
     name: z.string().min(1, "Name is required"),
@@ -37,18 +38,7 @@ export const createUserSchema = z
   .refine((data) => data.password === data.password_confirm, {
     message: "Passwords do not match",
     path: ["password_confirm"],
-  })
-  .refine(
-    (data) => {
-      // Project is required for admin and user roles, but not for superadmin
-      if (data.role === USER_ROLES.SUPERADMIN) return true;
-      return data.project !== null && data.project !== undefined;
-    },
-    {
-      message: "Project is required for admin and user roles",
-      path: ["project"],
-    }
-  );
+  });
 
 export type CreateUserFormData = z.infer<typeof createUserSchema>;
 
@@ -79,6 +69,7 @@ export const changePasswordSchema = z
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
 // Edit user form schema (password optional)
+// Note: Project validation is handled in handleSubmit since regular admins don't see the project field
 export const editUserSchema = (changePassword: boolean) => {
   if (changePassword) {
     return z
@@ -96,46 +87,23 @@ export const editUserSchema = (changePassword: boolean) => {
           .min(8, "Password must be at least 8 characters"),
         password_confirm: z.string().min(1, "Please confirm your password"),
       })
-      .refine(
-        (data) => {
-          // Project is required for admin and user roles, but not for superadmin
-          if (data.role === USER_ROLES.SUPERADMIN) return true;
-          return data.project !== null && data.project !== undefined;
-        },
-        {
-          message: "Project is required for admin and user roles",
-          path: ["project"],
-        }
-      )
       .refine((data) => data.password === data.password_confirm, {
         message: "Passwords do not match",
         path: ["password_confirm"],
       });
   }
 
-  return z
-    .object({
-      name: z.string().min(1, "Name is required"),
-      email: z
-        .string()
-        .min(1, "Email is required")
-        .email("Please enter a valid email address"),
-      role: z.string().min(1, "User type is required"),
-      project: z.number().nullable().optional(),
-      password: z.string().optional(),
-      password_confirm: z.string().optional(),
-    })
-    .refine(
-      (data) => {
-        // Project is required for admin and user roles, but not for superadmin
-        if (data.role === USER_ROLES.SUPERADMIN) return true;
-        return data.project !== null && data.project !== undefined;
-      },
-      {
-        message: "Project is required for admin and user roles",
-        path: ["project"],
-      }
-    );
+  return z.object({
+    name: z.string().min(1, "Name is required"),
+    email: z
+      .string()
+      .min(1, "Email is required")
+      .email("Please enter a valid email address"),
+    role: z.string().min(1, "User type is required"),
+    project: z.number().nullable().optional(),
+    password: z.string().optional(),
+    password_confirm: z.string().optional(),
+  });
 };
 
 // ==================== PROJECT SCHEMAS ====================

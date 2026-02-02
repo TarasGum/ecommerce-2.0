@@ -104,19 +104,25 @@ export type ProposalStatus = typeof PROPOSAL_STATUS[keyof typeof PROPOSAL_STATUS
 export const USER_ROLES = {
   SUPERADMIN: 'superadmin',
   ADMIN: 'admin',
+  SALE: 'sale',
+  MANAGER: 'manager',
   USER: 'user',
 } as const;
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
-  [USER_ROLES.SUPERADMIN]: 'SuperAdmin',
+  [USER_ROLES.SUPERADMIN]: 'Super Admin',
   [USER_ROLES.ADMIN]: 'Admin',
+  [USER_ROLES.SALE]: 'Sale',
+  [USER_ROLES.MANAGER]: 'Manager',
   [USER_ROLES.USER]: 'User',
 } as const;
 
 export const USER_ROLE_SEVERITIES: Record<UserRole, string> = {
   [USER_ROLES.SUPERADMIN]: 'danger',
   [USER_ROLES.ADMIN]: 'warning',
-  [USER_ROLES.USER]: 'info',
+  [USER_ROLES.SALE]: 'info',
+  [USER_ROLES.MANAGER]: 'success',
+  [USER_ROLES.USER]: 'secondary',
 } as const;
 
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
