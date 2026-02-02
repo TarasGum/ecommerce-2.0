@@ -18,18 +18,18 @@
       class="user-form"
     >
       <!-- User Type -->
-      <div class="flex flex-column mb-5">
+      <div class="flex flex-column mb-4">
         <label class="field-label mb-2">User Type</label>
         <Field v-slot="{ field, errorMessage }" name="role">
-          <SelectButton
+          <Dropdown
             :modelValue="field.value"
-            @update:modelValue="(value) => { if (value !== null) { field.onChange(value); onRoleChange(value); } }"
+            @update:modelValue="(value) => { field.onChange(value); onRoleChange(value); }"
             :options="roleOptions"
             optionLabel="label"
             optionValue="value"
+            placeholder="Select user type"
             class="w-full"
             :class="{ 'p-invalid': errorMessage }"
-            :unselectable="false"
           />
         </Field>
         <ErrorMessage name="role" class="p-error text-sm mt-1" />
@@ -199,7 +199,6 @@ import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Password from "primevue/password";
 import Button from "primevue/button";
-import SelectButton from "primevue/selectbutton";
 import Dropdown from "primevue/dropdown";
 import { Form, Field, ErrorMessage } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
