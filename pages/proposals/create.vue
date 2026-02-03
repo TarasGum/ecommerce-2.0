@@ -9,7 +9,9 @@
     <!-- Info Banner -->
     <div class="info-banner mb-3">
       <i class="pi pi-info-circle"></i>
-      <span>Test API - Product pricing uses cost field. This will be changed.</span>
+      <span
+        >Test API - Product pricing uses cost field. This will be changed.</span
+      >
     </div>
 
     <!-- Proposal Card -->
@@ -17,12 +19,15 @@
       <!-- Product Search Section -->
       <div class="proposal-section">
         <h3 class="section-title">Add Products</h3>
-        <p class="section-description">Search for products by ID or description to add them to this proposal.</p>
-        
+        <p class="section-description">
+          Search for products by ID or description to add them to this proposal.
+        </p>
+
         <!-- Product Search Combobox -->
         <div class="product-search-wrapper">
           <Dropdown
-            v-model="selectedProduct" :options="productOptions"
+            v-model="selectedProduct"
+            :options="productOptions"
             optionLabel="id"
             placeholder="Search product by ID..."
             class="product-dropdown"
@@ -39,7 +44,9 @@
               <div v-if="value" class="product-value">
                 <span class="product-value-id">{{ value.id }}</span>
                 <span class="product-value-name">{{ value.descr_1 }}</span>
-                <span class="product-value-price">{{ formatCurrency(value.cost) }}</span>
+                <span class="product-value-price">{{
+                  formatCurrency(value.cost)
+                }}</span>
               </div>
               <span v-else class="text-placeholder">{{ placeholder }}</span>
             </template>
@@ -50,11 +57,13 @@
                   <span class="product-option-name">{{ option.descr_1 }}</span>
                 </div>
                 <div class="product-option-meta">
-                  <span class="product-option-price">{{ formatCurrency(option.cost) }}</span>
-                  <Tag 
-                    v-if="option.inactive" 
-                    value="Inactive" 
-                    severity="secondary" 
+                  <span class="product-option-price">{{
+                    formatCurrency(option.cost)
+                  }}</span>
+                  <Tag
+                    v-if="option.inactive"
+                    value="Inactive"
+                    severity="secondary"
                     class="product-option-tag"
                   />
                 </div>
@@ -79,7 +88,9 @@
         <div class="flex justify-content-between align-items-center mb-3">
           <h3 class="section-title mb-0">Proposal Items</h3>
           <span v-if="proposalItems.length > 0" class="items-count">
-            {{ proposalItems.length }} item{{ proposalItems.length !== 1 ? 's' : '' }}
+            {{ proposalItems.length }} item{{
+              proposalItems.length !== 1 ? "s" : ""
+            }}
           </span>
         </div>
 
@@ -87,13 +98,15 @@
         <div v-if="proposalItems.length === 0" class="items-empty">
           <i class="pi pi-file-edit"></i>
           <span>No products added yet</span>
-          <span class="items-empty-hint">Use the search above to add products to this proposal</span>
+          <span class="items-empty-hint"
+            >Use the search above to add products to this proposal</span
+          >
         </div>
 
         <!-- Items Table -->
         <div v-else class="items-table-wrapper">
-          <DataTable 
-            :value="proposalItems" 
+          <DataTable
+            :value="proposalItems"
             class="items-table"
             dataKey="autoid"
           >
@@ -105,11 +118,17 @@
             </Column>
 
             <!-- Description Column -->
-            <Column field="descr_1" header="Description" :style="{ width: '45%' }">
+            <Column
+              field="descr_1"
+              header="Description"
+              :style="{ width: '45%' }"
+            >
               <template #body="{ data }">
                 <div class="item-description-wrapper">
                   <span class="item-description">{{ data.descr_1 }}</span>
-                  <span v-if="data.descr_2" class="item-description-2">{{ data.descr_2 }}</span>
+                  <span v-if="data.descr_2" class="item-description-2">{{
+                    data.descr_2
+                  }}</span>
                 </div>
               </template>
             </Column>
@@ -143,22 +162,35 @@
             <!-- Line Total Column -->
             <Column header="Total" :style="{ width: '12%' }">
               <template #body="{ data }">
-                <span class="item-total">{{ formatCurrency(getLineTotal(data)) }}</span>
+                <span class="item-total">{{
+                  formatCurrency(getLineTotal(data))
+                }}</span>
               </template>
             </Column>
 
             <!-- Actions Column -->
-            <Column :style="{ width: '4%', textAlign: 'center' }">
+            <Column :style="{ width: '8%', textAlign: 'center' }">
               <template #body="{ data }">
-                <Button
-                  icon="pi pi-trash"
-                  text
-                  rounded
-                  severity="danger"
-                  size="small"
-                  @click="removeItem(data.autoid)"
-                  v-tooltip.top="'Remove'"
-                />
+                <div class="flex gap-2 justify-content-center">
+                  <Button
+                    icon="pi pi-pencil"
+                    text
+                    rounded
+                    severity="primary"
+                    size="small"
+                    @click="openEditModal(data)"
+                    v-tooltip.top="'Edit'"
+                  />
+                  <Button
+                    icon="pi pi-trash"
+                    text
+                    rounded
+                    severity="danger"
+                    size="small"
+                    @click="removeItem(data.autoid)"
+                    v-tooltip.top="'Remove'"
+                  />
+                </div>
               </template>
             </Column>
           </DataTable>
@@ -201,6 +233,12 @@
         />
       </div>
     </div>
+    <!-- Product Edit Modal -->
+    <ProductEditModal
+      v-model:visible="editModalVisible"
+      :product="editingProduct"
+      @close="closeEditModal"
+    />
   </div>
 </template>
 
@@ -211,6 +249,7 @@ import Dropdown from "primevue/dropdown";
 import Button from "primevue/button";
 import InputNumber from "primevue/inputnumber";
 import Tag from "primevue/tag";
+import ProductEditModal from "~/components/proposals/ProductEditModal.vue";
 import { storeToRefs } from "pinia";
 import { until } from "@vueuse/core";
 import type { Product } from "~/types/models";
@@ -235,12 +274,15 @@ const auth = useAuth();
 
 // Store management
 const projectsStore = useProjectsStore();
-const { selectedProjectId, loading: projectsLoading } = storeToRefs(projectsStore);
+const { selectedProjectId, loading: projectsLoading } =
+  storeToRefs(projectsStore);
 
 // UI Store for page header
 const uiStore = useUiStore();
 
-const isSuperAdmin = computed(() => auth.user.value?.role === USER_ROLES.SUPERADMIN);
+const isSuperAdmin = computed(
+  () => auth.user.value?.role === USER_ROLES.SUPERADMIN,
+);
 
 // Product search state
 const productOptions = ref<Product[]>([]);
@@ -250,11 +292,15 @@ const selectedProduct = ref<Product | null>(null);
 // Proposal items state
 const proposalItems = ref<ProposalItem[]>([]);
 
+// Edit modal state
+const editModalVisible = ref(false);
+const editingProduct = ref<ProposalItem | null>(null);
+
 // Computed totals
 const subtotal = computed(() => {
   return proposalItems.value.reduce((sum, item) => {
     const cost = parseFloat(item.cost) || 0;
-    return sum + (cost * item.quantity);
+    return sum + cost * item.quantity;
   }, 0);
 });
 
@@ -262,16 +308,16 @@ const subtotal = computed(() => {
 onMounted(async () => {
   // Set page header with back button
   uiStore.setPageHeader({
-    title: 'Proposals / New',
+    title: "Proposals / New",
     showBack: true,
-    backPath: '/proposals',
+    backPath: "/proposals",
   });
 
   // Wait for projects to load if user is superadmin
   if (isSuperAdmin.value && projectsLoading.value) {
     await until(projectsLoading).toBe(false);
   }
-  
+
   // Preload some products
   await loadInitialProducts();
 });
@@ -291,7 +337,7 @@ async function loadInitialProducts() {
     const response = await productsApi.list(params);
     productOptions.value = response.results;
   } catch (error) {
-    console.error('Failed to load products:', error);
+    console.error("Failed to load products:", error);
   } finally {
     productSearchLoading.value = false;
   }
@@ -301,8 +347,8 @@ async function loadInitialProducts() {
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 async function searchProducts(event: { value: string }) {
-  const query = event.value?.trim() || '';
-  
+  const query = event.value?.trim() || "";
+
   // Clear previous timeout
   if (searchTimeout) {
     clearTimeout(searchTimeout);
@@ -316,7 +362,7 @@ async function searchProducts(event: { value: string }) {
       if (selectedProjectId.value !== null) {
         params.project_id = selectedProjectId.value;
       }
-      
+
       if (query) {
         const response = await productsApi.searchById(query, params);
         productOptions.value = response.results;
@@ -325,7 +371,7 @@ async function searchProducts(event: { value: string }) {
         productOptions.value = response.results;
       }
     } catch (error) {
-      console.error('Failed to search products:', error);
+      console.error("Failed to search products:", error);
       productOptions.value = [];
     } finally {
       productSearchLoading.value = false;
@@ -338,7 +384,7 @@ function onProductSelected() {
 
   // Check if product already exists in proposal
   const existingIndex = proposalItems.value.findIndex(
-    item => item.autoid === selectedProduct.value!.autoid
+    (item) => item.autoid === selectedProduct.value!.autoid,
   );
 
   if (existingIndex !== -1) {
@@ -366,7 +412,7 @@ function getLineTotal(item: ProposalItem): number {
 }
 
 function removeItem(autoid: string) {
-  const index = proposalItems.value.findIndex(item => item.autoid === autoid);
+  const index = proposalItems.value.findIndex((item) => item.autoid === autoid);
   if (index !== -1) {
     const removed = proposalItems.value[index];
     proposalItems.value.splice(index, 1);
@@ -376,14 +422,24 @@ function removeItem(autoid: string) {
 
 function clearAllItems() {
   proposalItems.value = [];
-  toast.showInfo('All items cleared');
+  toast.showInfo("All items cleared");
 }
 
 function createProposal() {
   // TODO: Implement proposal creation API
-  toast.showInfo('Proposal creation API coming soon!');
-  console.log('Proposal items:', proposalItems.value);
-  console.log('Total:', subtotal.value);
+  toast.showInfo("Proposal creation API coming soon!");
+  console.log("Proposal items:", proposalItems.value);
+  console.log("Total:", subtotal.value);
+}
+
+function openEditModal(product: ProposalItem) {
+  editingProduct.value = product;
+  editModalVisible.value = true;
+}
+
+function closeEditModal() {
+  editModalVisible.value = false;
+  editingProduct.value = null;
 }
 </script>
 
@@ -455,12 +511,14 @@ function createProposal() {
 
 .product-dropdown {
   width: 100%;
+  height: 40px;
 }
 
 /* Override dropdown styles for larger combobox */
 .product-dropdown :deep(.p-dropdown-label) {
-  padding: 0.875rem 1rem;
+  padding: 0.5rem 1rem;
   font-size: var(--font-size-body-m);
+  line-height: 1.5;
 }
 
 .product-dropdown :deep(.p-dropdown-panel) {
@@ -632,7 +690,7 @@ function createProposal() {
 }
 
 .item-id {
-  font-family: var(--font-family-mono, 'Courier New', monospace);
+  font-family: var(--font-family-mono, "Courier New", monospace);
   font-size: var(--font-size-body-s);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
@@ -681,6 +739,7 @@ function createProposal() {
 .quantity-input :deep(.p-inputnumber-button) {
   width: 1.75rem;
   padding: 0.25rem;
+  margin: 0 0.25rem;
 }
 
 /* Proposal Summary */

@@ -353,7 +353,7 @@ export interface CreateTaskPayload {
   linked_customer_autoid?: string | null;
 }
 
-export interface UpdateTaskPayload extends Partial<CreateTaskPayload> {}
+export interface UpdateTaskPayload extends Partial<CreateTaskPayload> { }
 
 export interface CreateTaskStatusPayload {
   project?: number;
@@ -362,12 +362,12 @@ export interface CreateTaskStatusPayload {
   order?: number;
 }
 
-export interface UpdateTaskStatusPayload extends Partial<CreateTaskStatusPayload> {}
+export interface UpdateTaskStatusPayload extends Partial<CreateTaskStatusPayload> { }
 
 // Product types (Mirror DB - TEST API, will be changed)
 export interface Product {
-  autoid: string;
-  id: string; // product code / SKU
+  autoid: string; // superinvertory
+  id: string; // product code / SKU - current offer id
   upc: string;
   type: string; // Purchased, Manufactured, Service
   descr_1: string; // primary description
@@ -377,6 +377,14 @@ export interface Product {
   count: string; // inventory quantity (stringified decimal, may be negative)
   location: string;
   inactive: boolean;
+  ignoreCount: boolean;
+  specs: any[];
+  units: any[];
+  defUnit: string;
+  photo: string;
+  photos: any[];
+  color: string;
+  configurations: any[];
 }
 
 export interface ProductsListResponse {
