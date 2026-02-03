@@ -395,13 +395,8 @@ onMounted(async () => {
     await until(projectsLoading).toBe(false);
   }
 
-<<<<<<< HEAD
-  // Preload some products
-  await loadInitialProducts();
-=======
   // Preload customers and products
   await Promise.all([loadInitialCustomers(), loadInitialProducts()]);
->>>>>>> a90688d6912cc59d801c394e1d53e5f0a6429b37
 });
 
 // Clear page header when leaving
@@ -567,24 +562,9 @@ function createProposal() {
 
   // TODO: Implement proposal creation API
   toast.showInfo("Proposal creation API coming soon!");
-<<<<<<< HEAD
-  console.log("Proposal items:", proposalItems.value);
-  console.log("Total:", subtotal.value);
-}
-
-function openEditModal(product: ProposalItem) {
-  editingProduct.value = product;
-  editModalVisible.value = true;
-}
-
-function closeEditModal() {
-  editModalVisible.value = false;
-  editingProduct.value = null;
-=======
   console.log("Customer:", selectedCustomer.value);
   console.log("Proposal items:", proposalItems.value);
   console.log("Total:", subtotal.value);
->>>>>>> a90688d6912cc59d801c394e1d53e5f0a6429b37
 }
 </script>
 
