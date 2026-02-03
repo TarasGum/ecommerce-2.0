@@ -9,20 +9,95 @@
     <!-- Info Banner -->
     <div class="info-banner mb-3">
       <i class="pi pi-info-circle"></i>
-      <span>Test API - Product pricing uses cost field. This will be changed.</span>
+      <span
+        >Test API - Product pricing uses cost field. This will be changed.</span
+      >
     </div>
 
     <!-- Proposal Card -->
     <div class="proposal-card">
+      <!-- Customer Selection Section -->
+      <div class="proposal-section">
+        <h3 class="section-title">Select Customer</h3>
+        <p class="section-description">Choose a customer for this proposal.</p>
+
+        <!-- Customer Search Dropdown -->
+        <div class="customer-search-wrapper">
+          <Dropdown
+            v-model="selectedCustomer"
+            :options="customerOptions"
+            optionLabel="l_name"
+            placeholder="Search customer by name or ID..."
+            class="customer-dropdown"
+            :loading="customerSearchLoading"
+            filter
+            filterPlaceholder="Type to search..."
+            @filter="searchCustomers"
+            showClear
+            :filterFields="['id', 'l_name', 'email']"
+            emptyFilterMessage="No customers found"
+          >
+            <template #value="{ value, placeholder }">
+              <div v-if="value" class="customer-value">
+                <span class="customer-value-id">{{ value.id }}</span>
+                <span class="customer-value-name">{{ value.l_name }}</span>
+                <span v-if="value.email" class="customer-value-email">{{
+                  value.email
+                }}</span>
+              </div>
+              <span v-else class="text-placeholder">{{ placeholder }}</span>
+            </template>
+            <template #option="{ option }">
+              <div class="customer-option">
+                <div class="customer-option-main">
+                  <span class="customer-option-id">{{ option.id }}</span>
+                  <span class="customer-option-name">{{ option.l_name }}</span>
+                </div>
+                <div class="customer-option-meta">
+                  <span v-if="option.email" class="customer-option-email">{{
+                    option.email
+                  }}</span>
+                  <span
+                    v-if="option.city && option.state"
+                    class="customer-option-location"
+                  >
+                    {{ option.city }}, {{ option.state }}
+                  </span>
+                  <Tag
+                    v-if="option.inactive"
+                    value="Inactive"
+                    severity="secondary"
+                    class="customer-option-tag"
+                  />
+                </div>
+              </div>
+            </template>
+            <template #empty>
+              <div v-if="customerSearchLoading" class="customer-loading">
+                <i class="pi pi-spin pi-spinner"></i>
+                <span>Loading customers...</span>
+              </div>
+              <div v-else class="customer-empty">
+                <i class="pi pi-users"></i>
+                <span>Start typing to search customers</span>
+              </div>
+            </template>
+          </Dropdown>
+        </div>
+      </div>
+
       <!-- Product Search Section -->
       <div class="proposal-section">
         <h3 class="section-title">Add Products</h3>
-        <p class="section-description">Search for products by ID or description to add them to this proposal.</p>
-        
+        <p class="section-description">
+          Search for products by ID or description to add them to this proposal.
+        </p>
+
         <!-- Product Search Combobox -->
         <div class="product-search-wrapper">
           <Dropdown
-            v-model="selectedProduct" :options="productOptions"
+            v-model="selectedProduct"
+            :options="productOptions"
             optionLabel="id"
             placeholder="Search product by ID..."
             class="product-dropdown"
@@ -39,7 +114,9 @@
               <div v-if="value" class="product-value">
                 <span class="product-value-id">{{ value.id }}</span>
                 <span class="product-value-name">{{ value.descr_1 }}</span>
-                <span class="product-value-price">{{ formatCurrency(value.cost) }}</span>
+                <span class="product-value-price">{{
+                  formatCurrency(value.cost)
+                }}</span>
               </div>
               <span v-else class="text-placeholder">{{ placeholder }}</span>
             </template>
@@ -50,11 +127,13 @@
                   <span class="product-option-name">{{ option.descr_1 }}</span>
                 </div>
                 <div class="product-option-meta">
-                  <span class="product-option-price">{{ formatCurrency(option.cost) }}</span>
-                  <Tag 
-                    v-if="option.inactive" 
-                    value="Inactive" 
-                    severity="secondary" 
+                  <span class="product-option-price">{{
+                    formatCurrency(option.cost)
+                  }}</span>
+                  <Tag
+                    v-if="option.inactive"
+                    value="Inactive"
+                    severity="secondary"
                     class="product-option-tag"
                   />
                 </div>
@@ -79,7 +158,9 @@
         <div class="flex justify-content-between align-items-center mb-3">
           <h3 class="section-title mb-0">Proposal Items</h3>
           <span v-if="proposalItems.length > 0" class="items-count">
-            {{ proposalItems.length }} item{{ proposalItems.length !== 1 ? 's' : '' }}
+            {{ proposalItems.length }} item{{
+              proposalItems.length !== 1 ? "s" : ""
+            }}
           </span>
         </div>
 
@@ -87,13 +168,15 @@
         <div v-if="proposalItems.length === 0" class="items-empty">
           <i class="pi pi-file-edit"></i>
           <span>No products added yet</span>
-          <span class="items-empty-hint">Use the search above to add products to this proposal</span>
+          <span class="items-empty-hint"
+            >Use the search above to add products to this proposal</span
+          >
         </div>
 
         <!-- Items Table -->
         <div v-else class="items-table-wrapper">
-          <DataTable 
-            :value="proposalItems" 
+          <DataTable
+            :value="proposalItems"
             class="items-table"
             dataKey="autoid"
           >
@@ -105,11 +188,17 @@
             </Column>
 
             <!-- Description Column -->
-            <Column field="descr_1" header="Description" :style="{ width: '45%' }">
+            <Column
+              field="descr_1"
+              header="Description"
+              :style="{ width: '45%' }"
+            >
               <template #body="{ data }">
                 <div class="item-description-wrapper">
                   <span class="item-description">{{ data.descr_1 }}</span>
-                  <span v-if="data.descr_2" class="item-description-2">{{ data.descr_2 }}</span>
+                  <span v-if="data.descr_2" class="item-description-2">{{
+                    data.descr_2
+                  }}</span>
                 </div>
               </template>
             </Column>
@@ -143,7 +232,9 @@
             <!-- Line Total Column -->
             <Column header="Total" :style="{ width: '12%' }">
               <template #body="{ data }">
-                <span class="item-total">{{ formatCurrency(getLineTotal(data)) }}</span>
+                <span class="item-total">{{
+                  formatCurrency(getLineTotal(data))
+                }}</span>
               </template>
             </Column>
 
@@ -196,7 +287,7 @@
           label="Create Proposal"
           severity="success"
           icon="pi pi-check"
-          :disabled="proposalItems.length === 0"
+          :disabled="!selectedCustomer || proposalItems.length === 0"
           @click="createProposal"
         />
       </div>
@@ -213,11 +304,12 @@ import InputNumber from "primevue/inputnumber";
 import Tag from "primevue/tag";
 import { storeToRefs } from "pinia";
 import { until } from "@vueuse/core";
-import type { Product } from "~/types/models";
+import type { Product, Customer } from "~/types/models";
 import { formatCurrency } from "~/utils/formatters";
 import { useProjectsStore } from "~/stores/projects";
 import { useUiStore } from "~/stores/ui";
 import { USER_ROLES } from "~/utils/constants";
+import { useCustomers } from "~/composables/useCustomers";
 
 definePageMeta({
   middleware: "auth",
@@ -230,17 +322,26 @@ interface ProposalItem extends Product {
 
 const router = useRouter();
 const productsApi = useProducts();
+const customersApi = useCustomers();
 const toast = useToast();
 const auth = useAuth();
 
 // Store management
 const projectsStore = useProjectsStore();
-const { selectedProjectId, loading: projectsLoading } = storeToRefs(projectsStore);
+const { selectedProjectId, loading: projectsLoading } =
+  storeToRefs(projectsStore);
 
 // UI Store for page header
 const uiStore = useUiStore();
 
-const isSuperAdmin = computed(() => auth.user.value?.role === USER_ROLES.SUPERADMIN);
+const isSuperAdmin = computed(
+  () => auth.user.value?.role === USER_ROLES.SUPERADMIN,
+);
+
+// Customer search state
+const customerOptions = ref<Customer[]>([]);
+const customerSearchLoading = ref(false);
+const selectedCustomer = ref<Customer | null>(null);
 
 // Product search state
 const productOptions = ref<Product[]>([]);
@@ -254,32 +355,83 @@ const proposalItems = ref<ProposalItem[]>([]);
 const subtotal = computed(() => {
   return proposalItems.value.reduce((sum, item) => {
     const cost = parseFloat(item.cost) || 0;
-    return sum + (cost * item.quantity);
+    return sum + cost * item.quantity;
   }, 0);
 });
 
-// Load initial products on mount and set page header
+// Load initial data on mount and set page header
 onMounted(async () => {
   // Set page header with back button
   uiStore.setPageHeader({
-    title: 'Proposals / New',
+    title: "Proposals / New",
     showBack: true,
-    backPath: '/proposals',
+    backPath: "/proposals",
   });
 
   // Wait for projects to load if user is superadmin
   if (isSuperAdmin.value && projectsLoading.value) {
     await until(projectsLoading).toBe(false);
   }
-  
-  // Preload some products
-  await loadInitialProducts();
+
+  // Preload customers and products
+  await Promise.all([loadInitialCustomers(), loadInitialProducts()]);
 });
 
 // Clear page header when leaving
 onUnmounted(() => {
   uiStore.clearPageHeader();
 });
+
+async function loadInitialCustomers() {
+  customerSearchLoading.value = true;
+  try {
+    const params: any = { limit: 50 };
+    if (selectedProjectId.value !== null) {
+      params.project_id = selectedProjectId.value;
+    }
+    const response = await customersApi.list(params);
+    customerOptions.value = response.results;
+  } catch (error) {
+    console.error("Failed to load customers:", error);
+  } finally {
+    customerSearchLoading.value = false;
+  }
+}
+
+// Search customers with debounce
+let customerSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+async function searchCustomers(event: { value: string }) {
+  const query = event.value?.trim() || "";
+
+  // Clear previous timeout
+  if (customerSearchTimeout) {
+    clearTimeout(customerSearchTimeout);
+  }
+
+  // Debounce search
+  customerSearchTimeout = setTimeout(async () => {
+    customerSearchLoading.value = true;
+    try {
+      const params: any = { limit: 50 };
+      if (selectedProjectId.value !== null) {
+        params.project_id = selectedProjectId.value;
+      }
+
+      if (query) {
+        params.search = query;
+      }
+
+      const response = await customersApi.list(params);
+      customerOptions.value = response.results;
+    } catch (error) {
+      console.error("Failed to search customers:", error);
+      customerOptions.value = [];
+    } finally {
+      customerSearchLoading.value = false;
+    }
+  }, 300);
+}
 
 async function loadInitialProducts() {
   productSearchLoading.value = true;
@@ -291,7 +443,7 @@ async function loadInitialProducts() {
     const response = await productsApi.list(params);
     productOptions.value = response.results;
   } catch (error) {
-    console.error('Failed to load products:', error);
+    console.error("Failed to load products:", error);
   } finally {
     productSearchLoading.value = false;
   }
@@ -301,8 +453,8 @@ async function loadInitialProducts() {
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 async function searchProducts(event: { value: string }) {
-  const query = event.value?.trim() || '';
-  
+  const query = event.value?.trim() || "";
+
   // Clear previous timeout
   if (searchTimeout) {
     clearTimeout(searchTimeout);
@@ -316,7 +468,7 @@ async function searchProducts(event: { value: string }) {
       if (selectedProjectId.value !== null) {
         params.project_id = selectedProjectId.value;
       }
-      
+
       if (query) {
         const response = await productsApi.searchById(query, params);
         productOptions.value = response.results;
@@ -325,7 +477,7 @@ async function searchProducts(event: { value: string }) {
         productOptions.value = response.results;
       }
     } catch (error) {
-      console.error('Failed to search products:', error);
+      console.error("Failed to search products:", error);
       productOptions.value = [];
     } finally {
       productSearchLoading.value = false;
@@ -338,7 +490,7 @@ function onProductSelected() {
 
   // Check if product already exists in proposal
   const existingIndex = proposalItems.value.findIndex(
-    item => item.autoid === selectedProduct.value!.autoid
+    (item) => item.autoid === selectedProduct.value!.autoid,
   );
 
   if (existingIndex !== -1) {
@@ -366,7 +518,7 @@ function getLineTotal(item: ProposalItem): number {
 }
 
 function removeItem(autoid: string) {
-  const index = proposalItems.value.findIndex(item => item.autoid === autoid);
+  const index = proposalItems.value.findIndex((item) => item.autoid === autoid);
   if (index !== -1) {
     const removed = proposalItems.value[index];
     proposalItems.value.splice(index, 1);
@@ -376,14 +528,21 @@ function removeItem(autoid: string) {
 
 function clearAllItems() {
   proposalItems.value = [];
-  toast.showInfo('All items cleared');
+  toast.showInfo("All items cleared");
 }
 
 function createProposal() {
+  // Validate customer is selected
+  if (!selectedCustomer.value) {
+    toast.showWarning("Please select a customer for this proposal");
+    return;
+  }
+
   // TODO: Implement proposal creation API
-  toast.showInfo('Proposal creation API coming soon!');
-  console.log('Proposal items:', proposalItems.value);
-  console.log('Total:', subtotal.value);
+  toast.showInfo("Proposal creation API coming soon!");
+  console.log("Customer:", selectedCustomer.value);
+  console.log("Proposal items:", proposalItems.value);
+  console.log("Total:", subtotal.value);
 }
 </script>
 
@@ -446,6 +605,126 @@ function createProposal() {
   font-size: var(--font-size-body-s);
   color: var(--color-text-secondary);
   margin: 0 0 1rem 0;
+}
+
+/* Customer Search */
+.customer-search-wrapper {
+  max-width: 100%;
+}
+
+.customer-dropdown {
+  width: 100%;
+}
+
+/* Override dropdown styles for larger combobox */
+.customer-dropdown :deep(.p-dropdown-label) {
+  padding: 0.875rem 1rem;
+  font-size: var(--font-size-body-m);
+}
+
+.customer-dropdown :deep(.p-dropdown-panel) {
+  max-height: 400px;
+}
+
+.customer-dropdown :deep(.p-dropdown-items-wrapper) {
+  max-height: 350px;
+}
+
+/* Customer Value (selected) */
+.customer-value {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.customer-value-id {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  min-width: 80px;
+}
+
+.customer-value-name {
+  flex: 1;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customer-value-email {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-s);
+}
+
+/* Customer Option (dropdown item) */
+.customer-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  width: 100%;
+}
+
+.customer-option-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.customer-option-id {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  min-width: 80px;
+  font-size: var(--font-size-body-s);
+}
+
+.customer-option-name {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body-s);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customer-option-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.customer-option-email {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-xs);
+}
+
+.customer-option-location {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-body-xs);
+}
+
+.customer-option-tag {
+  font-size: 0.65rem;
+}
+
+/* Customer Empty/Loading states */
+.customer-empty,
+.customer-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: var(--color-text-tertiary);
+}
+
+.customer-empty i,
+.customer-loading i {
+  font-size: 1.5rem;
 }
 
 /* Product Search */
@@ -632,7 +911,7 @@ function createProposal() {
 }
 
 .item-id {
-  font-family: var(--font-family-mono, 'Courier New', monospace);
+  font-family: var(--font-family-mono, "Courier New", monospace);
   font-size: var(--font-size-body-s);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
@@ -739,14 +1018,22 @@ function createProposal() {
     padding: 1rem;
   }
 
+  .customer-option-main,
   .product-option-main {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.25rem;
   }
 
+  .customer-option-id,
   .product-option-id {
     min-width: auto;
+  }
+
+  .customer-option-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
   }
 
   .items-table :deep(.p-datatable-thead > tr > th),
