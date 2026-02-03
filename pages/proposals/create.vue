@@ -16,6 +16,76 @@
 
     <!-- Proposal Card -->
     <div class="proposal-card">
+      <!-- Customer Selection Section -->
+      <div class="proposal-section">
+        <h3 class="section-title">Select Customer</h3>
+        <p class="section-description">Choose a customer for this proposal.</p>
+
+        <!-- Customer Search Dropdown -->
+        <div class="customer-search-wrapper">
+          <Dropdown
+            v-model="selectedCustomer"
+            :options="customerOptions"
+            optionLabel="l_name"
+            placeholder="Search customer by name or ID..."
+            class="customer-dropdown"
+            :loading="customerSearchLoading"
+            filter
+            filterPlaceholder="Type to search..."
+            @filter="searchCustomers"
+            showClear
+            :filterFields="['id', 'l_name', 'email']"
+            emptyFilterMessage="No customers found"
+          >
+            <template #value="{ value, placeholder }">
+              <div v-if="value" class="customer-value">
+                <span class="customer-value-id">{{ value.id }}</span>
+                <span class="customer-value-name">{{ value.l_name }}</span>
+                <span v-if="value.email" class="customer-value-email">{{
+                  value.email
+                }}</span>
+              </div>
+              <span v-else class="text-placeholder">{{ placeholder }}</span>
+            </template>
+            <template #option="{ option }">
+              <div class="customer-option">
+                <div class="customer-option-main">
+                  <span class="customer-option-id">{{ option.id }}</span>
+                  <span class="customer-option-name">{{ option.l_name }}</span>
+                </div>
+                <div class="customer-option-meta">
+                  <span v-if="option.email" class="customer-option-email">{{
+                    option.email
+                  }}</span>
+                  <span
+                    v-if="option.city && option.state"
+                    class="customer-option-location"
+                  >
+                    {{ option.city }}, {{ option.state }}
+                  </span>
+                  <Tag
+                    v-if="option.inactive"
+                    value="Inactive"
+                    severity="secondary"
+                    class="customer-option-tag"
+                  />
+                </div>
+              </div>
+            </template>
+            <template #empty>
+              <div v-if="customerSearchLoading" class="customer-loading">
+                <i class="pi pi-spin pi-spinner"></i>
+                <span>Loading customers...</span>
+              </div>
+              <div v-else class="customer-empty">
+                <i class="pi pi-users"></i>
+                <span>Start typing to search customers</span>
+              </div>
+            </template>
+          </Dropdown>
+        </div>
+      </div>
+
       <!-- Product Search Section -->
       <div class="proposal-section">
         <h3 class="section-title">Add Products</h3>
@@ -228,7 +298,7 @@
           label="Create Proposal"
           severity="success"
           icon="pi pi-check"
-          :disabled="proposalItems.length === 0"
+          :disabled="!selectedCustomer || proposalItems.length === 0"
           @click="createProposal"
         />
       </div>
@@ -252,11 +322,12 @@ import Tag from "primevue/tag";
 import ProductEditModal from "~/components/proposals/ProductEditModal.vue";
 import { storeToRefs } from "pinia";
 import { until } from "@vueuse/core";
-import type { Product } from "~/types/models";
+import type { Product, Customer } from "~/types/models";
 import { formatCurrency } from "~/utils/formatters";
 import { useProjectsStore } from "~/stores/projects";
 import { useUiStore } from "~/stores/ui";
 import { USER_ROLES } from "~/utils/constants";
+import { useCustomers } from "~/composables/useCustomers";
 
 definePageMeta({
   middleware: "auth",
@@ -269,6 +340,7 @@ interface ProposalItem extends Product {
 
 const router = useRouter();
 const productsApi = useProducts();
+const customersApi = useCustomers();
 const toast = useToast();
 const auth = useAuth();
 
@@ -283,6 +355,11 @@ const uiStore = useUiStore();
 const isSuperAdmin = computed(
   () => auth.user.value?.role === USER_ROLES.SUPERADMIN,
 );
+
+// Customer search state
+const customerOptions = ref<Customer[]>([]);
+const customerSearchLoading = ref(false);
+const selectedCustomer = ref<Customer | null>(null);
 
 // Product search state
 const productOptions = ref<Product[]>([]);
@@ -304,7 +381,7 @@ const subtotal = computed(() => {
   }, 0);
 });
 
-// Load initial products on mount and set page header
+// Load initial data on mount and set page header
 onMounted(async () => {
   // Set page header with back button
   uiStore.setPageHeader({
@@ -318,14 +395,70 @@ onMounted(async () => {
     await until(projectsLoading).toBe(false);
   }
 
+<<<<<<< HEAD
   // Preload some products
   await loadInitialProducts();
+=======
+  // Preload customers and products
+  await Promise.all([loadInitialCustomers(), loadInitialProducts()]);
+>>>>>>> a90688d6912cc59d801c394e1d53e5f0a6429b37
 });
 
 // Clear page header when leaving
 onUnmounted(() => {
   uiStore.clearPageHeader();
 });
+
+async function loadInitialCustomers() {
+  customerSearchLoading.value = true;
+  try {
+    const params: any = { limit: 50 };
+    if (selectedProjectId.value !== null) {
+      params.project_id = selectedProjectId.value;
+    }
+    const response = await customersApi.list(params);
+    customerOptions.value = response.results;
+  } catch (error) {
+    console.error("Failed to load customers:", error);
+  } finally {
+    customerSearchLoading.value = false;
+  }
+}
+
+// Search customers with debounce
+let customerSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+async function searchCustomers(event: { value: string }) {
+  const query = event.value?.trim() || "";
+
+  // Clear previous timeout
+  if (customerSearchTimeout) {
+    clearTimeout(customerSearchTimeout);
+  }
+
+  // Debounce search
+  customerSearchTimeout = setTimeout(async () => {
+    customerSearchLoading.value = true;
+    try {
+      const params: any = { limit: 50 };
+      if (selectedProjectId.value !== null) {
+        params.project_id = selectedProjectId.value;
+      }
+
+      if (query) {
+        params.search = query;
+      }
+
+      const response = await customersApi.list(params);
+      customerOptions.value = response.results;
+    } catch (error) {
+      console.error("Failed to search customers:", error);
+      customerOptions.value = [];
+    } finally {
+      customerSearchLoading.value = false;
+    }
+  }, 300);
+}
 
 async function loadInitialProducts() {
   productSearchLoading.value = true;
@@ -426,8 +559,15 @@ function clearAllItems() {
 }
 
 function createProposal() {
+  // Validate customer is selected
+  if (!selectedCustomer.value) {
+    toast.showWarning("Please select a customer for this proposal");
+    return;
+  }
+
   // TODO: Implement proposal creation API
   toast.showInfo("Proposal creation API coming soon!");
+<<<<<<< HEAD
   console.log("Proposal items:", proposalItems.value);
   console.log("Total:", subtotal.value);
 }
@@ -440,6 +580,11 @@ function openEditModal(product: ProposalItem) {
 function closeEditModal() {
   editModalVisible.value = false;
   editingProduct.value = null;
+=======
+  console.log("Customer:", selectedCustomer.value);
+  console.log("Proposal items:", proposalItems.value);
+  console.log("Total:", subtotal.value);
+>>>>>>> a90688d6912cc59d801c394e1d53e5f0a6429b37
 }
 </script>
 
@@ -502,6 +647,126 @@ function closeEditModal() {
   font-size: var(--font-size-body-s);
   color: var(--color-text-secondary);
   margin: 0 0 1rem 0;
+}
+
+/* Customer Search */
+.customer-search-wrapper {
+  max-width: 100%;
+}
+
+.customer-dropdown {
+  width: 100%;
+}
+
+/* Override dropdown styles for larger combobox */
+.customer-dropdown :deep(.p-dropdown-label) {
+  padding: 0.875rem 1rem;
+  font-size: var(--font-size-body-m);
+}
+
+.customer-dropdown :deep(.p-dropdown-panel) {
+  max-height: 400px;
+}
+
+.customer-dropdown :deep(.p-dropdown-items-wrapper) {
+  max-height: 350px;
+}
+
+/* Customer Value (selected) */
+.customer-value {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.customer-value-id {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  min-width: 80px;
+}
+
+.customer-value-name {
+  flex: 1;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customer-value-email {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-s);
+}
+
+/* Customer Option (dropdown item) */
+.customer-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  width: 100%;
+}
+
+.customer-option-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.customer-option-id {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  min-width: 80px;
+  font-size: var(--font-size-body-s);
+}
+
+.customer-option-name {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body-s);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customer-option-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.customer-option-email {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-xs);
+}
+
+.customer-option-location {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-body-xs);
+}
+
+.customer-option-tag {
+  font-size: 0.65rem;
+}
+
+/* Customer Empty/Loading states */
+.customer-empty,
+.customer-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: var(--color-text-tertiary);
+}
+
+.customer-empty i,
+.customer-loading i {
+  font-size: 1.5rem;
 }
 
 /* Product Search */
@@ -798,14 +1063,22 @@ function closeEditModal() {
     padding: 1rem;
   }
 
+  .customer-option-main,
   .product-option-main {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.25rem;
   }
 
+  .customer-option-id,
   .product-option-id {
     min-width: auto;
+  }
+
+  .customer-option-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
   }
 
   .items-table :deep(.p-datatable-thead > tr > th),
