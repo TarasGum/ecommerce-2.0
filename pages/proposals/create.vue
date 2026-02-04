@@ -93,50 +93,78 @@
           Search for products by ID or description to add them to this proposal.
         </p>
 
-        <!-- Product Search Combobox -->
-        <div class="product-search-wrapper">
-          <Dropdown
-            v-model="selectedProduct"
-            :options="productOptions"
-            optionLabel="id"
-            :placeholder="
-              selectedCustomer
-                ? 'Search product by ID...'
-                : 'Select a customer first'
-            "
-            class="product-dropdown"
-            :loading="productSearchLoading || configurationsLoading"
-            :disabled="!selectedCustomer"
-            filter
-            filterPlaceholder="Type to search..."
-            @filter="searchProducts"
-            @change="onProductSelected"
-            showClear
-            :filterFields="['id', 'descr_1', 'autoid']"
-            emptyFilterMessage="No products found"
-          >
-            <template #value="{ value, placeholder }">
-              <div v-if="value" class="product-value">
-                <Tag severity="secondary" class="product-value-id">{{ value.id }}</Tag>
-                <span class="product-value-name">{{ value.descr_1 }}</span>
-                <PriceDisplay
-                  :price="value.price"
-                  :old-price="value.old_price"
-                  class="product-value-price"
-                />
-              </div>
-              <span v-else class="text-placeholder">{{ placeholder }}</span>
-            </template>
-            <template #option="{ option }">
-              <div class="product-option">
+        <!-- Product Search Input -->
+        <div ref="productSearchWrapper" class="product-search-wrapper">
+          <div class="product-search-input-wrapper">
+            <i
+              v-if="productSearchLoading || configurationsLoading"
+              class="pi pi-spin pi-spinner product-search-icon"
+            ></i>
+            <i v-else class="pi pi-search product-search-icon"></i>
+            <input
+              v-model="productSearchQuery"
+              type="text"
+              class="product-search-input"
+              :placeholder="
+                selectedCustomer
+                  ? 'Search product by ID...'
+                  : 'Select a customer first'
+              "
+              :disabled="!selectedCustomer"
+              @input="onProductSearchInput"
+              @focus="onProductSearchFocus"
+              @keydown.down.prevent="navigateResults(1)"
+              @keydown.up.prevent="navigateResults(-1)"
+              @keydown.enter.prevent="selectHighlightedProduct"
+              @keydown.escape="closeProductSearch"
+            />
+            <button
+              v-if="productSearchQuery"
+              class="product-search-clear"
+              @click="clearProductSearch"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+
+          <!-- Search Results Overlay -->
+          <div v-if="showProductResults" class="product-search-overlay">
+            <!-- Loading State -->
+            <div v-if="productSearchLoading" class="product-loading">
+              <i class="pi pi-spin pi-spinner"></i>
+              <span>Loading products...</span>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else-if="productOptions.length === 0" class="product-empty">
+              <i class="pi pi-inbox"></i>
+              <span>No products found</span>
+            </div>
+
+            <!-- Results List -->
+            <div v-else class="product-search-results">
+              <div
+                v-for="(option, index) in productOptions"
+                :key="option.autoid"
+                class="product-option"
+                :class="{
+                  'product-option--highlighted': highlightedIndex === index,
+                }"
+                @click="selectProduct(option)"
+                @mouseenter="highlightedIndex = index"
+              >
                 <div class="product-option-row">
                   <div class="product-option-main">
                     <Tag severity="secondary" class="product-option-id">
-                      <span v-html="highlightMatch(option.id, productSearchQuery)"></span>
+                      <span
+                        v-html="highlightMatch(option.id, productSearchQuery)"
+                      ></span>
                     </Tag>
                     <span
                       class="product-option-name"
-                      v-html="highlightMatch(option.descr_1, productSearchQuery)"
+                      v-html="
+                        highlightMatch(option.descr_1, productSearchQuery)
+                      "
                     ></span>
                   </div>
                   <div class="product-option-meta">
@@ -153,7 +181,10 @@
                     />
                   </div>
                 </div>
-                <div v-if="option.product_specs?.length" class="product-option-specs">
+                <div
+                  v-if="option.product_specs?.length"
+                  class="product-option-specs"
+                >
                   <span
                     v-for="(spec, idx) in option.product_specs.slice(0, 3)"
                     :key="spec.descr"
@@ -161,25 +192,25 @@
                   >
                     <span class="spec-label">{{ spec.descr }}:</span>
                     <span class="spec-value">{{ spec.info }}</span>
-                    <span v-if="Number(idx) < option.product_specs.slice(0, 3).length - 1" class="spec-separator">·</span>
+                    <span
+                      v-if="
+                        Number(idx) <
+                        option.product_specs.slice(0, 3).length - 1
+                      "
+                      class="spec-separator"
+                      >·</span
+                    >
                   </span>
-                  <span v-if="option.product_specs.length > 3" class="product-option-specs-more">
+                  <span
+                    v-if="option.product_specs.length > 3"
+                    class="product-option-specs-more"
+                  >
                     +{{ option.product_specs.length - 3 }} more
                   </span>
                 </div>
               </div>
-            </template>
-            <template #empty>
-              <div v-if="productSearchLoading" class="product-loading">
-                <i class="pi pi-spin pi-spinner"></i>
-                <span>Loading products...</span>
-              </div>
-              <div v-else class="product-empty">
-                <i class="pi pi-search"></i>
-                <span>Start typing to search products</span>
-              </div>
-            </template>
-          </Dropdown>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -221,11 +252,7 @@
 
         <!-- Items Table -->
         <div v-else class="items-table-wrapper">
-          <DataTable
-            :value="cartItems"
-            class="items-table"
-            dataKey="objectId"
-          >
+          <DataTable :value="cartItems" class="items-table" dataKey="objectId">
             <!-- Product ID Column -->
             <Column field="id" header="Product ID" :style="{ width: '15%' }">
               <template #body="{ data }">
@@ -368,7 +395,7 @@ import PriceDisplay from "~/components/offer/PriceDisplay.vue";
 import Tag from "primevue/tag";
 import ProductEditModal from "~/components/proposals/ProductEditModal.vue";
 import { storeToRefs } from "pinia";
-import { until } from "@vueuse/core";
+import { until, onClickOutside } from "@vueuse/core";
 import type { Product, Customer, CartItem, Cart } from "~/types/models";
 import { formatCurrency } from "~/utils/formatters";
 import { useProjectsStore } from "~/stores/projects";
@@ -408,8 +435,16 @@ const selectedCustomer = ref<Customer | null>(null);
 const productOptions = ref<Product[]>([]);
 const productSearchLoading = ref(false);
 const configurationsLoading = ref(false);
-const selectedProduct = ref<Product | null>(null);
 const productSearchQuery = ref("");
+const showProductResults = ref(false);
+const highlightedIndex = ref(-1);
+const productSearchWrapper = ref<HTMLElement | null>(null);
+
+// Close product search on click outside
+onClickOutside(productSearchWrapper, () => {
+  showProductResults.value = false;
+  highlightedIndex.value = -1;
+});
 
 // Cart state
 const cart = ref<Cart | null>(null);
@@ -538,20 +573,31 @@ function highlightMatch(text: string, query: string): string {
 // Search products with debounce
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
-async function searchProducts(event: { value: string }) {
+function onProductSearchInput() {
   if (!selectedCustomer.value) return;
 
-  const query = event.value?.trim() || "";
-  productSearchQuery.value = query;
+  const query = productSearchQuery.value.trim();
+  highlightedIndex.value = -1;
 
   // Clear previous timeout
   if (searchTimeout) {
     clearTimeout(searchTimeout);
   }
 
+  // Don't search if query is empty
+  if (!query) {
+    showProductResults.value = false;
+    productOptions.value = [];
+    productSearchLoading.value = false;
+    return;
+  }
+
+  // Show loading immediately
+  productSearchLoading.value = true;
+  showProductResults.value = true;
+
   // Debounce search
   searchTimeout = setTimeout(async () => {
-    productSearchLoading.value = true;
     try {
       const params: any = {
         limit: 50,
@@ -561,13 +607,8 @@ async function searchProducts(event: { value: string }) {
         params.project_id = selectedProjectId.value;
       }
 
-      if (query) {
-        const response = await productsApi.searchById(query, params);
-        productOptions.value = response.results;
-      } else {
-        const response = await productsApi.list(params);
-        productOptions.value = response.results;
-      }
+      const response = await productsApi.searchById(query, params);
+      productOptions.value = response.results;
     } catch (error) {
       console.error("Failed to search products:", error);
       productOptions.value = [];
@@ -577,26 +618,63 @@ async function searchProducts(event: { value: string }) {
   }, 300);
 }
 
-async function onProductSelected() {
-  if (!selectedProduct.value || !selectedCustomer.value) return;
+function onProductSearchFocus() {
+  // Show results only if there's a query and results exist
+  if (
+    selectedCustomer.value &&
+    productSearchQuery.value.trim() &&
+    productOptions.value.length > 0
+  ) {
+    showProductResults.value = true;
+  }
+}
 
-  const product = selectedProduct.value;
+function closeProductSearch() {
+  showProductResults.value = false;
+  highlightedIndex.value = -1;
+}
+
+function clearProductSearch() {
+  productSearchQuery.value = "";
+  productOptions.value = [];
+  highlightedIndex.value = -1;
+  showProductResults.value = false;
+}
+
+function navigateResults(direction: number) {
+  if (!showProductResults.value || productOptions.value.length === 0) return;
+
+  const newIndex = highlightedIndex.value + direction;
+  if (newIndex >= 0 && newIndex < productOptions.value.length) {
+    highlightedIndex.value = newIndex;
+  }
+}
+
+function selectHighlightedProduct() {
+  if (
+    highlightedIndex.value >= 0 &&
+    highlightedIndex.value < productOptions.value.length
+  ) {
+    selectProduct(productOptions.value[highlightedIndex.value]);
+  }
+}
+
+async function selectProduct(product: Product) {
+  if (!selectedCustomer.value) return;
+
+  closeProductSearch();
+  productSearchQuery.value = "";
+
   const hasConfigurations = Number(product.configurations) > 0;
   const hasMultipleUnits = (product.units?.length ?? 0) > 1;
   const needsModal = hasConfigurations || hasMultipleUnits;
 
-  // Clear selection immediately
   const selectedProductCopy = {
     ...product,
-    unit: product.unit || product.def_unit, // Initialize unit from def_unit
+    unit: product.unit || product.def_unit,
   };
-  nextTick(() => {
-    selectedProduct.value = null;
-  });
 
   if (needsModal) {
-    // Product needs modal (configurations or multiple units)
-    // Fetch configurations only if product has them
     if (hasConfigurations) {
       configurationsLoading.value = true;
       try {
@@ -604,7 +682,6 @@ async function onProductSelected() {
           selectedProductCopy.autoid,
           selectedCustomer.value.id,
         );
-
         selectedProductCopy.configurations = configData as any;
       } catch (error) {
         console.error("Failed to load configurations:", error);
@@ -615,12 +692,10 @@ async function onProductSelected() {
       }
     }
 
-    // Open modal with the product
     editingProduct.value = selectedProductCopy;
     editModalMode.value = "add";
     editModalVisible.value = true;
   } else {
-    // No configurations → add to cart directly
     const payload = getPayload(selectedProductCopy, 1, []);
 
     configurationsLoading.value = true;
@@ -644,7 +719,9 @@ function getLineTotal(item: CartItem): number {
 async function removeItem(objectId: string) {
   if (!cart.value) return;
 
-  const index = cart.value.items.findIndex((item) => item.objectId === objectId);
+  const index = cart.value.items.findIndex(
+    (item) => item.objectId === objectId,
+  );
   if (index !== -1) {
     const removed = cart.value.items[index];
     try {
@@ -690,11 +767,10 @@ function onProductSaved(payload: any) {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .proposal-create-page {
-  padding: 1.5rem 1.5rem;
+  padding: 1.5rem;
   min-height: 100vh;
-  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -706,7 +782,7 @@ function onProductSaved(payload: any) {
   letter-spacing: -0.5px;
 }
 
-/* Info Banner */
+// Info Banner
 .info-banner {
   display: flex;
   align-items: center;
@@ -717,14 +793,14 @@ function onProductSaved(payload: any) {
   border-radius: var(--radius-sm);
   font-size: var(--font-size-body-s);
   color: var(--color-warning-text, #856404);
+
+  i {
+    font-size: 1rem;
+    color: var(--color-warning);
+  }
 }
 
-.info-banner i {
-  font-size: 1rem;
-  color: var(--color-warning);
-}
-
-/* Proposal Card */
+// Proposal Card
 .proposal-card {
   background: white;
   border: 1px solid var(--color-border-light);
@@ -732,7 +808,7 @@ function onProductSaved(payload: any) {
   overflow: hidden;
 }
 
-/* Sections */
+// Sections
 .proposal-section {
   padding: 1.5rem;
   border-bottom: 1px solid var(--color-border-light);
@@ -751,57 +827,57 @@ function onProductSaved(payload: any) {
   margin: 0 0 1rem 0;
 }
 
-/* Customer Search */
+// Customer Search
 .customer-search-wrapper {
   max-width: 100%;
 }
 
 .customer-dropdown {
   width: 100%;
+  height: 40px;
+
+  :deep(.p-dropdown-label) {
+    padding: 0.875rem 1rem;
+    font-size: var(--font-size-body-m);
+  }
+
+  :deep(.p-dropdown-panel) {
+    max-height: 400px;
+  }
+
+  :deep(.p-dropdown-items-wrapper) {
+    max-height: 350px;
+  }
 }
 
-/* Override dropdown styles for larger combobox */
-.customer-dropdown :deep(.p-dropdown-label) {
-  padding: 0.875rem 1rem;
-  font-size: var(--font-size-body-m);
-}
-
-.customer-dropdown :deep(.p-dropdown-panel) {
-  max-height: 400px;
-}
-
-.customer-dropdown :deep(.p-dropdown-items-wrapper) {
-  max-height: 350px;
-}
-
-/* Customer Value (selected) */
+// Customer Value (selected)
 .customer-value {
   display: flex;
   align-items: center;
   gap: 1rem;
   width: 100%;
+
+  &-id {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    min-width: 80px;
+  }
+
+  &-name {
+    flex: 1;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &-email {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body-s);
+  }
 }
 
-.customer-value-id {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  min-width: 80px;
-}
-
-.customer-value-name {
-  flex: 1;
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.customer-value-email {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-body-s);
-}
-
-/* Customer Option (dropdown item) */
+// Customer Option (dropdown item)
 .customer-option {
   display: flex;
   justify-content: space-between;
@@ -809,53 +885,53 @@ function onProductSaved(payload: any) {
   gap: 1rem;
   padding: 0.5rem 0;
   width: 100%;
+
+  &-main {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &-id {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    min-width: 80px;
+    font-size: var(--font-size-body-s);
+  }
+
+  &-name {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-body-s);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  &-email {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body-xs);
+  }
+
+  &-location {
+    color: var(--color-text-tertiary);
+    font-size: var(--font-size-body-xs);
+  }
+
+  &-tag {
+    font-size: 0.65rem;
+  }
 }
 
-.customer-option-main {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.customer-option-id {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  min-width: 80px;
-  font-size: var(--font-size-body-s);
-}
-
-.customer-option-name {
-  color: var(--color-text-primary);
-  font-size: var(--font-size-body-s);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.customer-option-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-shrink: 0;
-}
-
-.customer-option-email {
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-body-xs);
-}
-
-.customer-option-location {
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-body-xs);
-}
-
-.customer-option-tag {
-  font-size: 0.65rem;
-}
-
-/* Customer Empty/Loading states */
+// Customer Empty/Loading states
 .customer-empty,
 .customer-loading {
   display: flex;
@@ -864,142 +940,188 @@ function onProductSaved(payload: any) {
   gap: 0.5rem;
   padding: 2rem;
   color: var(--color-text-tertiary);
+
+  i {
+    font-size: 1.5rem;
+  }
 }
 
-.customer-empty i,
-.customer-loading i {
-  font-size: 1.5rem;
-}
-
-/* Product Search */
+// Product Search
 .product-search-wrapper {
+  position: relative;
   max-width: 100%;
 }
 
-.product-dropdown,
-.customer-dropdown {
-  width: 100%;
-  height: 40px;
-}
-
-/* Override dropdown styles for larger combobox */
-.product-dropdown :deep(.p-dropdown-label) {
-  padding: 0.5rem 1rem;
-  font-size: var(--font-size-body-m);
-  line-height: 1.5;
-}
-
-.product-dropdown :deep(.p-dropdown-panel) {
-  max-height: 400px;
-}
-
-.product-dropdown :deep(.p-dropdown-items-wrapper) {
-  max-height: 350px;
-}
-
-/* Product Value (selected) */
-.product-value {
+.product-search-input-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 1rem;
+}
+
+.product-search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.product-search-input {
   width: 100%;
+  height: 40px;
+  padding: 0 36px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-body-m);
+  color: var(--color-text-primary);
+  background: white;
+  outline: none;
+  transition: border-color 0.2s;
+
+  &::placeholder {
+    color: var(--color-text-tertiary);
+  }
+
+  &:focus {
+    border-color: var(--color-primary);
+  }
+
+  &:disabled {
+    background: var(--color-neutral-100);
+    cursor: not-allowed;
+  }
 }
 
-.product-value-id {
-  font-size: var(--font-size-body-xs);
-  flex-shrink: 0;
+.product-search-clear {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--color-neutral-200);
+    color: var(--color-text-primary);
+  }
 }
 
-.product-value-name {
-  flex: 1;
-  color: var(--color-text-secondary);
-  white-space: nowrap;
+.product-search-overlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  max-height: 350px;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.product-value-price {
-  font-weight: var(--font-weight-medium);
+.product-search-results {
+  max-height: 350px;
+  overflow-y: auto;
 }
 
 .text-placeholder {
   color: var(--color-text-tertiary);
 }
 
-/* Product Option (dropdown item) */
+// Product Option (search result item)
 .product-option {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  padding: 0.5rem 0;
+  padding: 0.75rem 1rem;
   width: 100%;
   border-bottom: 1px solid var(--color-border-light);
-}
+  cursor: pointer;
+  transition: background-color 0.15s;
 
-.product-dropdown :deep(.p-dropdown-item:last-child) .product-option {
-  border-bottom: none;
-}
+  &:last-child {
+    border-bottom: none;
+  }
 
-.product-option-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-}
+  &:hover,
+  &--highlighted {
+    background-color: var(--color-neutral-200);
+  }
 
-.product-option-main {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1;
-  min-width: 0;
-}
+  &-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+  }
 
-.product-option-id {
-  font-size: var(--font-size-body-xs);
-  flex-shrink: 0;
-}
+  &-main {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+  }
 
-.product-option-name {
-  color: var(--color-text-primary);
-  font-size: var(--font-size-body-s);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+  &-id {
+    font-size: var(--font-size-body-xs);
+    flex-shrink: 0;
+  }
 
-.product-option-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
+  &-name {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-body-s);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-.product-option-price {
-  font-size: var(--font-size-body-s);
-  font-weight: var(--font-weight-semibold);
-}
+  &-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
 
-.product-option-tag {
-  font-size: 0.65rem;
-}
+  &-price {
+    font-size: var(--font-size-body-s);
+    font-weight: var(--font-weight-semibold);
+  }
 
-/* Product Option Specs */
-.product-option-specs {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: var(--font-size-body-xs);
-  color: var(--color-text-tertiary);
-  padding-left: 0.25rem;
-}
+  &-tag {
+    font-size: 0.65rem;
+  }
 
-.product-option-spec {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
+  &-specs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: var(--font-size-body-xs);
+    color: var(--color-text-tertiary);
+    padding-left: 0.25rem;
+
+    &-more {
+      color: var(--color-text-tertiary);
+      font-style: italic;
+    }
+  }
+
+  &-spec {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
 }
 
 .spec-label {
@@ -1015,12 +1137,7 @@ function onProductSaved(payload: any) {
   margin: 0 0.125rem;
 }
 
-.product-option-specs-more {
-  color: var(--color-text-tertiary);
-  font-style: italic;
-}
-
-/* Search highlight */
+// Search highlight
 :deep(.search-highlight) {
   background-color: var(--color-warning-100);
   color: var(--color-text-primary);
@@ -1028,7 +1145,7 @@ function onProductSaved(payload: any) {
   border-radius: 2px;
 }
 
-/* Product Empty/Loading states */
+// Product Empty/Loading states
 .product-empty,
 .product-loading {
   display: flex;
@@ -1037,14 +1154,14 @@ function onProductSaved(payload: any) {
   gap: 0.5rem;
   padding: 2rem;
   color: var(--color-text-tertiary);
+  font-size: 14px;
+
+  i {
+    font-size: 1.5rem;
+  }
 }
 
-.product-empty i,
-.product-loading i {
-  font-size: 1.5rem;
-}
-
-/* Items Count Badge */
+// Items Count Badge
 .items-count {
   font-size: var(--font-size-body-xs);
   color: var(--color-text-secondary);
@@ -1053,8 +1170,7 @@ function onProductSaved(payload: any) {
   border-radius: var(--radius-sm);
 }
 
-/* Items Empty State */
-/* Items Loading State */
+// Items Loading State
 .items-loading {
   display: flex;
   flex-direction: column;
@@ -1065,14 +1181,14 @@ function onProductSaved(payload: any) {
   background: var(--surface-50);
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border-light);
+
+  i {
+    font-size: 2rem;
+    color: var(--color-primary);
+  }
 }
 
-.items-loading i {
-  font-size: 2rem;
-  color: var(--color-primary);
-}
-
-/* Items Error State */
+// Items Error State
 .items-error {
   display: flex;
   flex-direction: column;
@@ -1083,13 +1199,13 @@ function onProductSaved(payload: any) {
   background: var(--color-danger-subtle, #fef2f2);
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-danger-border, #fecaca);
+
+  i {
+    font-size: 2rem;
+  }
 }
 
-.items-error i {
-  font-size: 2rem;
-}
-
-/* Items Empty State */
+// Items Empty State
 .items-empty {
   display: flex;
   flex-direction: column;
@@ -1100,24 +1216,24 @@ function onProductSaved(payload: any) {
   background: var(--surface-50);
   border-radius: var(--radius-sm);
   border: 1px dashed var(--color-border-light);
+
+  i {
+    font-size: 2.5rem;
+    opacity: 0.5;
+  }
+
+  span:first-of-type {
+    font-size: var(--font-size-body-m);
+    color: var(--color-text-secondary);
+  }
+
+  &-hint {
+    font-size: var(--font-size-body-xs);
+    color: var(--color-text-tertiary);
+  }
 }
 
-.items-empty i {
-  font-size: 2.5rem;
-  opacity: 0.5;
-}
-
-.items-empty span:first-of-type {
-  font-size: var(--font-size-body-m);
-  color: var(--color-text-secondary);
-}
-
-.items-empty-hint {
-  font-size: var(--font-size-body-xs);
-  color: var(--color-text-tertiary);
-}
-
-/* Items Table */
+// Items Table
 .items-table-wrapper {
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-sm);
@@ -1126,21 +1242,21 @@ function onProductSaved(payload: any) {
 
 .items-table {
   width: 100%;
-}
 
-.items-table :deep(.p-datatable-thead > tr > th) {
-  background: var(--surface-50);
-  font-size: var(--font-size-body-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  padding: 0.75rem 1rem;
-}
+  :deep(.p-datatable-thead > tr > th) {
+    background: var(--surface-50);
+    font-size: var(--font-size-body-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 0.75rem 1rem;
+  }
 
-.items-table :deep(.p-datatable-tbody > tr > td) {
-  padding: 0.875rem 1rem;
-  vertical-align: middle;
+  :deep(.p-datatable-tbody > tr > td) {
+    padding: 0.875rem 1rem;
+    vertical-align: middle;
+  }
 }
 
 .item-id {
@@ -1150,20 +1266,20 @@ function onProductSaved(payload: any) {
   color: var(--color-text-primary);
 }
 
-.item-description-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
 .item-description {
   font-size: var(--font-size-body-s);
   color: var(--color-text-primary);
-}
 
-.item-description-2 {
-  font-size: var(--font-size-body-xs);
-  color: var(--color-text-tertiary);
+  &-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &-2 {
+    font-size: var(--font-size-body-xs);
+    color: var(--color-text-tertiary);
+  }
 }
 
 .item-price {
@@ -1177,8 +1293,7 @@ function onProductSaved(payload: any) {
   color: var(--color-text-primary);
 }
 
-/* Quantity Input */
-/* Proposal Summary */
+// Proposal Summary
 .proposal-summary {
   padding: 1.5rem;
   background: var(--surface-50);
@@ -1206,18 +1321,18 @@ function onProductSaved(payload: any) {
   border-top: 1px solid var(--color-border-light);
   margin-top: 0.5rem;
   padding-top: 1rem;
-}
 
-.summary-total .summary-label {
-  font-size: var(--font-size-body-m);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-}
+  .summary-label {
+    font-size: var(--font-size-body-m);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+  }
 
-.summary-total .summary-value {
-  font-size: var(--font-size-heading-xs);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-success);
+  .summary-value {
+    font-size: var(--font-size-heading-xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-success);
+  }
 }
 
 .summary-old-price {
@@ -1225,7 +1340,7 @@ function onProductSaved(payload: any) {
   color: var(--color-text-tertiary);
 }
 
-/* Proposal Actions */
+// Proposal Actions
 .proposal-actions {
   display: flex;
   justify-content: flex-end;
@@ -1233,7 +1348,7 @@ function onProductSaved(payload: any) {
   padding: 1.25rem 1.5rem;
 }
 
-/* Responsive */
+// Responsive
 @media (max-width: 768px) {
   .proposal-create-page {
     padding: 1rem;
@@ -1257,10 +1372,11 @@ function onProductSaved(payload: any) {
     gap: 0.25rem;
   }
 
-  .items-table :deep(.p-datatable-thead > tr > th),
-  .items-table :deep(.p-datatable-tbody > tr > td) {
-    padding: 0.5rem;
+  .items-table {
+    :deep(.p-datatable-thead > tr > th),
+    :deep(.p-datatable-tbody > tr > td) {
+      padding: 0.5rem;
+    }
   }
-
-  }
+}
 </style>

@@ -400,7 +400,7 @@ export interface ProductsListResponse {
 }
 
 // CartItem - Product saved to cart with quantity and unique ID
-export interface CartItem extends Omit<Product, 'max_count'> {
+export interface CartItem extends Product {
   objectId: string; // unique identifier for cart item
   count: number; // quantity in cart
 }

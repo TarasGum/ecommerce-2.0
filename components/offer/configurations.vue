@@ -9,9 +9,14 @@
           'configuration--active': active === configurationParent.name,
           'configuration--required': !configurationParent.allownone,
           'configuration--has-selected': hasSelectedItem(configurationParent),
+          'configuration--loading': configurationParent.photosLoading,
         }"
         @click="active = configurationParent.name"
       >
+        <i
+          v-if="configurationParent.photosLoading"
+          class="pi pi-spin pi-spinner"
+        ></i>
         {{ configurationParent.name }}
       </div>
     </div>
@@ -32,14 +37,31 @@
         @click="selectItem(configurationParent, configurationItem)"
       >
         <div class="configuration-item__photo-wrapper">
-          <img
-            v-if="configurationItem.photo"
-            class="configuration-item__photo"
-            :src="configurationItem.photo"
-            :alt="configurationItem.descr_1"
-          />
+          <!-- Carousel for multiple photos -->
+          <Carousel
+            v-if="configurationItem.photos?.length"
+            :value="configurationItem.photos"
+            :numVisible="1"
+            :numScroll="1"
+            :showIndicators="configurationItem.photos.length > 1"
+            :showNavigators="configurationItem.photos.length > 1"
+            class="configuration-item__carousel"
+          >
+            <template #item="{ data: photoUrl }">
+              <img
+                class="configuration-item__photo"
+                :src="photoUrl"
+                :alt="configurationItem.descr_1"
+              />
+            </template>
+          </Carousel>
+          <!-- Placeholder when no photos -->
           <div v-else class="configuration-item__placeholder">
-            <i class="pi pi-image"></i>
+            <i
+              v-if="configurationParent.photosLoading"
+              class="pi pi-spin pi-spinner"
+            ></i>
+            <i v-else class="pi pi-image"></i>
           </div>
         </div>
         <span class="configuration-item__name">
@@ -54,15 +76,18 @@
 </template>
 
 <script setup lang="ts">
+import Carousel from "primevue/carousel";
 import { formatCurrency } from "~/utils/formatters";
 import type { Configuration, ConfigurationItem } from "~/types/models";
 
 const props = defineProps<{
   configuration: {
+    id: string;
     configurations: Configuration[];
   };
 }>();
 
+const productsApi = useProducts();
 const active = ref<string>();
 
 /**
@@ -86,6 +111,55 @@ onMounted(() => {
     }
   });
 });
+
+/**
+ * Fetch photos when parent becomes active
+ */
+watch(
+  active,
+  (newActive) => {
+    if (!newActive) return;
+
+    const parent = props.configuration.configurations.find(
+      (c) => c.name === newActive,
+    );
+    if (parent) {
+      fetchPhotosForParent(parent);
+    }
+  },
+  { immediate: true },
+);
+
+/**
+ * Fetch photos for configuration parent items (only once)
+ */
+async function fetchPhotosForParent(parent: Configuration) {
+  if (parent.photosRequested || parent.photosLoading) return;
+
+  parent.photosLoading = true;
+
+  try {
+    const response = await productsApi.getConfigurationPhotos(
+      props.configuration.id,
+      parent.name,
+    );
+
+    // Map photos to items
+    response.forEach((photoData) => {
+      const item = parent.items.find((i) => i.id === photoData.id);
+      if (item) {
+        item.photo = photoData.photos[0] || "";
+        item.photos = photoData.photos;
+      }
+    });
+
+    parent.photosRequested = true;
+  } catch (error) {
+    console.error("Failed to fetch configuration photos:", error);
+  } finally {
+    parent.photosLoading = false;
+  }
+}
 
 /**
  * Check if configuration has any selected item
@@ -182,6 +256,7 @@ function selectItem(configuration: Configuration, item: ConfigurationItem) {
     overflow: hidden;
     cursor: pointer;
     transition: all 0.2s;
+    background: var(--color-neutral-300);
 
     &:hover {
       border-color: var(--color-neutral-600);
@@ -196,14 +271,103 @@ function selectItem(configuration: Configuration, item: ConfigurationItem) {
     }
 
     &__photo-wrapper {
-      background: var(--color-neutral-300);
       aspect-ratio: 1 / 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    &__carousel {
+      width: 100%;
+      height: 100%;
+
+      :deep(.p-carousel-content) {
+        height: 100%;
+      }
+
+      :deep(.p-carousel-container) {
+        height: 100%;
+      }
+
+      :deep(.p-carousel-items-content) {
+        height: 100%;
+      }
+
+      :deep(.p-carousel-items-container) {
+        height: 100%;
+      }
+
+      :deep(.p-carousel-item) {
+        height: 100%;
+        background-color: var(--color-white);
+      }
+
+      :deep(.p-carousel-indicators) {
+        position: absolute;
+        bottom: 4px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 0;
+        gap: 4px;
+
+        .p-carousel-indicator {
+          margin: 0;
+
+          button {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            border: none;
+            padding: 0;
+            transition: all 0.2s;
+          }
+
+          &.p-highlight button {
+            background: white;
+          }
+        }
+      }
+
+      :deep(.p-carousel-prev),
+      :deep(.p-carousel-next) {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 24px;
+        height: 24px;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
+        border: none;
+        z-index: 1;
+        opacity: 0;
+        transition: opacity 0.2s;
+
+        .p-icon {
+          width: 12px;
+          height: 12px;
+        }
+      }
+
+      :deep(.p-carousel-prev) {
+        left: 4px;
+      }
+
+      :deep(.p-carousel-next) {
+        right: 4px;
+      }
+    }
+
+    &:hover &__carousel {
+      :deep(.p-carousel-prev),
+      :deep(.p-carousel-next) {
+        opacity: 1;
+      }
     }
 
     &__photo {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
     }
 
     &__placeholder {
