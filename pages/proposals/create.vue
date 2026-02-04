@@ -9,9 +9,9 @@
     <!-- Info Banner -->
     <div class="info-banner mb-3">
       <i class="pi pi-info-circle"></i>
-      <span
-        >Test API - Product pricing uses cost field. This will be changed.</span
-      >
+      <span>
+        Test API - Product pricing uses cost field. This will be changed.
+      </span>
     </div>
 
     <!-- Proposal Card -->
@@ -99,9 +99,14 @@
             v-model="selectedProduct"
             :options="productOptions"
             optionLabel="id"
-            placeholder="Search product by ID..."
+            :placeholder="
+              selectedCustomer
+                ? 'Search product by ID...'
+                : 'Select a customer first'
+            "
             class="product-dropdown"
-            :loading="productSearchLoading"
+            :loading="productSearchLoading || configurationsLoading"
+            :disabled="!selectedCustomer"
             filter
             filterPlaceholder="Type to search..."
             @filter="searchProducts"
@@ -112,30 +117,55 @@
           >
             <template #value="{ value, placeholder }">
               <div v-if="value" class="product-value">
-                <span class="product-value-id">{{ value.id }}</span>
+                <Tag severity="secondary" class="product-value-id">{{ value.id }}</Tag>
                 <span class="product-value-name">{{ value.descr_1 }}</span>
-                <span class="product-value-price">{{
-                  formatCurrency(value.cost)
-                }}</span>
+                <PriceDisplay
+                  :price="value.price"
+                  :old-price="value.old_price"
+                  class="product-value-price"
+                />
               </div>
               <span v-else class="text-placeholder">{{ placeholder }}</span>
             </template>
             <template #option="{ option }">
               <div class="product-option">
-                <div class="product-option-main">
-                  <span class="product-option-id">{{ option.id }}</span>
-                  <span class="product-option-name">{{ option.descr_1 }}</span>
+                <div class="product-option-row">
+                  <div class="product-option-main">
+                    <Tag severity="secondary" class="product-option-id">
+                      <span v-html="highlightMatch(option.id, productSearchQuery)"></span>
+                    </Tag>
+                    <span
+                      class="product-option-name"
+                      v-html="highlightMatch(option.descr_1, productSearchQuery)"
+                    ></span>
+                  </div>
+                  <div class="product-option-meta">
+                    <PriceDisplay
+                      :price="option.price"
+                      :old-price="option.old_price"
+                      class="product-option-price"
+                    />
+                    <Tag
+                      v-if="option.inactive"
+                      value="Inactive"
+                      severity="secondary"
+                      class="product-option-tag"
+                    />
+                  </div>
                 </div>
-                <div class="product-option-meta">
-                  <span class="product-option-price">{{
-                    formatCurrency(option.cost)
-                  }}</span>
-                  <Tag
-                    v-if="option.inactive"
-                    value="Inactive"
-                    severity="secondary"
-                    class="product-option-tag"
-                  />
+                <div v-if="option.product_specs?.length" class="product-option-specs">
+                  <span
+                    v-for="(spec, idx) in option.product_specs.slice(0, 3)"
+                    :key="spec.descr"
+                    class="product-option-spec"
+                  >
+                    <span class="spec-label">{{ spec.descr }}:</span>
+                    <span class="spec-value">{{ spec.info }}</span>
+                    <span v-if="Number(idx) < option.product_specs.slice(0, 3).length - 1" class="spec-separator">·</span>
+                  </span>
+                  <span v-if="option.product_specs.length > 3" class="product-option-specs-more">
+                    +{{ option.product_specs.length - 3 }} more
+                  </span>
                 </div>
               </div>
             </template>
@@ -157,15 +187,31 @@
       <div class="proposal-section">
         <div class="flex justify-content-between align-items-center mb-3">
           <h3 class="section-title mb-0">Proposal Items</h3>
-          <span v-if="proposalItems.length > 0" class="items-count">
-            {{ proposalItems.length }} item{{
-              proposalItems.length !== 1 ? "s" : ""
-            }}
+          <span v-if="cartItems.length > 0" class="items-count">
+            {{ cartItems.length }} item{{ cartItems.length !== 1 ? "s" : "" }}
           </span>
         </div>
 
+        <!-- Loading State -->
+        <div v-if="cartLoading" class="items-loading">
+          <i class="pi pi-spin pi-spinner"></i>
+          <span>Loading cart...</span>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="cartError" class="items-error">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>{{ cartError }}</span>
+          <Button
+            label="Retry"
+            severity="secondary"
+            size="small"
+            @click="selectedCustomer && getCart(selectedCustomer.id)"
+          />
+        </div>
+
         <!-- Empty State -->
-        <div v-if="proposalItems.length === 0" class="items-empty">
+        <div v-else-if="cartItems.length === 0" class="items-empty">
           <i class="pi pi-file-edit"></i>
           <span>No products added yet</span>
           <span class="items-empty-hint"
@@ -176,9 +222,9 @@
         <!-- Items Table -->
         <div v-else class="items-table-wrapper">
           <DataTable
-            :value="proposalItems"
+            :value="cartItems"
             class="items-table"
-            dataKey="autoid"
+            dataKey="objectId"
           >
             <!-- Product ID Column -->
             <Column field="id" header="Product ID" :style="{ width: '15%' }">
@@ -204,20 +250,12 @@
             </Column>
 
             <!-- Quantity Column -->
-            <Column field="quantity" header="Qty" :style="{ width: '12%' }">
+            <Column field="count" header="Qty" :style="{ width: '14%' }">
               <template #body="{ data }">
-                <InputNumber
-                  v-model="data.quantity"
-                  :min="1"
-                  :max="9999"
-                  class="quantity-input"
-                  showButtons
-                  buttonLayout="horizontal"
-                  :step="1"
-                  decrementButtonClass="p-button-secondary"
-                  incrementButtonClass="p-button-secondary"
-                  incrementButtonIcon="pi pi-plus"
-                  decrementButtonIcon="pi pi-minus"
+                <QuantityInput
+                  v-model="data.count"
+                  :max-count="data.max_count"
+                  :ignore-count="data.ignoreCount"
                 />
               </template>
             </Column>
@@ -232,24 +270,35 @@
             <!-- Line Total Column -->
             <Column header="Total" :style="{ width: '12%' }">
               <template #body="{ data }">
-                <span class="item-total">{{
-                  formatCurrency(getLineTotal(data))
-                }}</span>
+                <span class="item-total">
+                  {{ formatCurrency(getLineTotal(data)) }}
+                </span>
               </template>
             </Column>
 
             <!-- Actions Column -->
-            <Column :style="{ width: '4%', textAlign: 'center' }">
+            <Column :style="{ width: '8%', textAlign: 'center' }">
               <template #body="{ data }">
-                <Button
-                  icon="pi pi-trash"
-                  text
-                  rounded
-                  severity="danger"
-                  size="small"
-                  @click="removeItem(data.autoid)"
-                  v-tooltip.top="'Remove'"
-                />
+                <div class="flex gap-2 justify-content-center">
+                  <Button
+                    icon="pi pi-pencil"
+                    text
+                    rounded
+                    severity="primary"
+                    size="small"
+                    @click="openEditModal(data)"
+                    v-tooltip.top="'Edit'"
+                  />
+                  <Button
+                    icon="pi pi-trash"
+                    text
+                    rounded
+                    severity="danger"
+                    size="small"
+                    @click="removeItem(data.objectId)"
+                    v-tooltip.top="'Remove'"
+                  />
+                </div>
               </template>
             </Column>
           </DataTable>
@@ -257,14 +306,16 @@
       </div>
 
       <!-- Proposal Summary -->
-      <div class="proposal-summary">
-        <div class="summary-row">
-          <span class="summary-label">Subtotal</span>
-          <span class="summary-value">{{ formatCurrency(subtotal) }}</span>
+      <div v-if="cart" class="proposal-summary">
+        <div v-if="hasDiscount" class="summary-row">
+          <span class="summary-label">Original Price</span>
+          <span class="summary-value summary-old-price">
+            {{ formatCurrency(cart.oldTotal) }}
+          </span>
         </div>
         <div class="summary-row summary-total">
           <span class="summary-label">Total</span>
-          <span class="summary-value">{{ formatCurrency(subtotal) }}</span>
+          <span class="summary-value">{{ formatCurrency(cart.total) }}</span>
         </div>
       </div>
 
@@ -280,18 +331,30 @@
           label="Clear All"
           severity="secondary"
           outlined
-          :disabled="proposalItems.length === 0"
+          :disabled="cartItems.length === 0"
           @click="clearAllItems"
         />
         <Button
           label="Create Proposal"
           severity="success"
           icon="pi pi-check"
-          :disabled="!selectedCustomer || proposalItems.length === 0"
+          :disabled="!selectedCustomer || cartItems.length === 0"
           @click="createProposal"
         />
       </div>
     </div>
+    <!-- Product Edit Modal -->
+    <ProductEditModal
+      v-if="editingProduct"
+      v-model:visible="editModalVisible"
+      :product="editingProduct"
+      :mode="editModalMode"
+      :initial-quantity="
+        editModalMode === 'edit' ? (editingProduct as CartItem).count : 1
+      "
+      @close="closeEditModal"
+      @save="onProductSaved"
+    />
   </div>
 </template>
 
@@ -300,11 +363,13 @@ import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Dropdown from "primevue/dropdown";
 import Button from "primevue/button";
-import InputNumber from "primevue/inputnumber";
+import QuantityInput from "~/components/offer/QuantityInput.vue";
+import PriceDisplay from "~/components/offer/PriceDisplay.vue";
 import Tag from "primevue/tag";
+import ProductEditModal from "~/components/proposals/ProductEditModal.vue";
 import { storeToRefs } from "pinia";
 import { until } from "@vueuse/core";
-import type { Product, Customer } from "~/types/models";
+import type { Product, Customer, CartItem, Cart } from "~/types/models";
 import { formatCurrency } from "~/utils/formatters";
 import { useProjectsStore } from "~/stores/projects";
 import { useUiStore } from "~/stores/ui";
@@ -315,14 +380,10 @@ definePageMeta({
   middleware: "auth",
 });
 
-// Extended product type with quantity for proposal items
-interface ProposalItem extends Product {
-  quantity: number;
-}
-
 const router = useRouter();
 const productsApi = useProducts();
 const customersApi = useCustomers();
+const { getCart, addItem, deleteItem, getPayload } = useCart();
 const toast = useToast();
 const auth = useAuth();
 
@@ -348,17 +409,27 @@ const selectedCustomer = ref<Customer | null>(null);
 // Product search state
 const productOptions = ref<Product[]>([]);
 const productSearchLoading = ref(false);
+const configurationsLoading = ref(false);
 const selectedProduct = ref<Product | null>(null);
+const productSearchQuery = ref("");
 
-// Proposal items state
-const proposalItems = ref<ProposalItem[]>([]);
+// Cart state
+const cart = ref<Cart | null>(null);
+const cartLoading = ref(false);
+const cartError = ref<string | null>(null);
 
-// Computed totals
-const subtotal = computed(() => {
-  return proposalItems.value.reduce((sum, item) => {
-    const cost = parseFloat(item.cost) || 0;
-    return sum + cost * item.quantity;
-  }, 0);
+// Edit modal state
+const editModalVisible = ref(false);
+const editingProduct = ref<Product | CartItem | null>(null);
+const editModalMode = ref<"add" | "edit">("add");
+
+// Computed values
+const cartItems = computed(() => cart.value?.items ?? []);
+const hasDiscount = computed(() => {
+  if (!cart.value) return false;
+  const total = parseFloat(cart.value.total) || 0;
+  const oldTotal = parseFloat(cart.value.oldTotal) || 0;
+  return oldTotal > total;
 });
 
 // Load initial data on mount and set page header
@@ -375,8 +446,29 @@ onMounted(async () => {
     await until(projectsLoading).toBe(false);
   }
 
-  // Preload customers and products
-  await Promise.all([loadInitialCustomers(), loadInitialProducts()]);
+  // Preload customers only (products require customer_id)
+  await loadInitialCustomers();
+});
+
+// Load cart and clear products when customer is changed
+watch(selectedCustomer, async (customer) => {
+  productOptions.value = [];
+  cartError.value = null;
+
+  if (customer) {
+    cartLoading.value = true;
+    try {
+      cart.value = await getCart(customer.id);
+    } catch (error) {
+      console.error("Failed to load cart:", error);
+      cart.value = null;
+      cartError.value = "Failed to load cart";
+    } finally {
+      cartLoading.value = false;
+    }
+  } else {
+    cart.value = null;
+  }
 });
 
 // Clear page header when leaving
@@ -435,27 +527,24 @@ async function searchCustomers(event: { value: string }) {
   }, 300);
 }
 
-async function loadInitialProducts() {
-  productSearchLoading.value = true;
-  try {
-    const params: any = { limit: 50 };
-    if (selectedProjectId.value !== null) {
-      params.project_id = selectedProjectId.value;
-    }
-    const response = await productsApi.list(params);
-    productOptions.value = response.results;
-  } catch (error) {
-    console.error("Failed to load products:", error);
-  } finally {
-    productSearchLoading.value = false;
-  }
+// Highlight search matches in text
+function highlightMatch(text: string, query: string): string {
+  if (!query || !text) return text;
+  const regex = new RegExp(
+    `(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+    "gi",
+  );
+  return text.replace(regex, '<mark class="search-highlight">$1</mark>');
 }
 
 // Search products with debounce
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 async function searchProducts(event: { value: string }) {
+  if (!selectedCustomer.value) return;
+
   const query = event.value?.trim() || "";
+  productSearchQuery.value = query;
 
   // Clear previous timeout
   if (searchTimeout) {
@@ -466,7 +555,10 @@ async function searchProducts(event: { value: string }) {
   searchTimeout = setTimeout(async () => {
     productSearchLoading.value = true;
     try {
-      const params: any = { limit: 50 };
+      const params: any = {
+        limit: 50,
+        customer_id: selectedCustomer.value!.id,
+      };
       if (selectedProjectId.value !== null) {
         params.project_id = selectedProjectId.value;
       }
@@ -487,49 +579,91 @@ async function searchProducts(event: { value: string }) {
   }, 300);
 }
 
-function onProductSelected() {
-  if (!selectedProduct.value) return;
+async function onProductSelected() {
+  if (!selectedProduct.value || !selectedCustomer.value) return;
 
-  // Check if product already exists in proposal
-  const existingIndex = proposalItems.value.findIndex(
-    (item) => item.autoid === selectedProduct.value!.autoid,
-  );
+  const product = selectedProduct.value;
+  const hasConfigurations = Number(product.configurations) > 0;
+  const hasMultipleUnits = (product.units?.length ?? 0) > 1;
+  const needsModal = hasConfigurations || hasMultipleUnits;
 
-  if (existingIndex !== -1) {
-    // Increment quantity if already exists
-    proposalItems.value[existingIndex].quantity += 1;
-    toast.showInfo(`${selectedProduct.value.id} quantity increased`);
-  } else {
-    // Add new item with quantity 1
-    proposalItems.value.push({
-      ...selectedProduct.value,
-      quantity: 1,
-    });
-    toast.showSuccess(`${selectedProduct.value.id} added to proposal`);
-  }
-
-  // Clear selection after adding
+  // Clear selection immediately
+  const selectedProductCopy = {
+    ...product,
+    unit: product.unit || product.def_unit, // Initialize unit from def_unit
+  };
   nextTick(() => {
     selectedProduct.value = null;
   });
+
+  if (needsModal) {
+    // Product needs modal (configurations or multiple units)
+    // Fetch configurations only if product has them
+    if (hasConfigurations) {
+      configurationsLoading.value = true;
+      try {
+        const configData = await productsApi.getConfigurations(
+          selectedProductCopy.autoid,
+          selectedCustomer.value.id,
+        );
+
+        selectedProductCopy.configurations = configData as any;
+      } catch (error) {
+        console.error("Failed to load configurations:", error);
+        toast.showError("Failed to load product configurations");
+        return;
+      } finally {
+        configurationsLoading.value = false;
+      }
+    }
+
+    // Open modal with the product
+    editingProduct.value = selectedProductCopy;
+    editModalMode.value = "add";
+    editModalVisible.value = true;
+  } else {
+    // No configurations → add to cart directly
+    const payload = getPayload(selectedProductCopy, 1, []);
+
+    configurationsLoading.value = true;
+    try {
+      await addItem(payload);
+      toast.showSuccess(`${selectedProductCopy.id} added to cart`);
+    } catch (error) {
+      console.error("Failed to add product:", error);
+      toast.showError("Failed to add product to cart");
+    } finally {
+      configurationsLoading.value = false;
+    }
+  }
 }
 
-function getLineTotal(item: ProposalItem): number {
-  const cost = parseFloat(item.cost) || 0;
-  return cost * item.quantity;
+function getLineTotal(item: CartItem): number {
+  const price = parseFloat(item.price) || 0;
+  return price * item.count;
 }
 
-function removeItem(autoid: string) {
-  const index = proposalItems.value.findIndex((item) => item.autoid === autoid);
+async function removeItem(objectId: string) {
+  if (!cart.value) return;
+
+  const index = cart.value.items.findIndex((item) => item.objectId === objectId);
   if (index !== -1) {
-    const removed = proposalItems.value[index];
-    proposalItems.value.splice(index, 1);
-    toast.showInfo(`${removed.id} removed`);
+    const removed = cart.value.items[index];
+    try {
+      await deleteItem(objectId);
+      cart.value.items.splice(index, 1);
+      toast.showInfo(`${removed.id} removed`);
+    } catch (error) {
+      console.error("Failed to remove item:", error);
+      toast.showError("Failed to remove item from cart");
+    }
   }
 }
 
 function clearAllItems() {
-  proposalItems.value = [];
+  if (cart.value) {
+    cart.value.items = [];
+  }
   toast.showInfo("All items cleared");
 }
 
@@ -539,12 +673,22 @@ function createProposal() {
     toast.showWarning("Please select a customer for this proposal");
     return;
   }
+}
 
-  // TODO: Implement proposal creation API
-  toast.showInfo("Proposal creation API coming soon!");
-  console.log("Customer:", selectedCustomer.value);
-  console.log("Proposal items:", proposalItems.value);
-  console.log("Total:", subtotal.value);
+function openEditModal(product: CartItem) {
+  editingProduct.value = { ...product };
+  editModalMode.value = "edit";
+  editModalVisible.value = true;
+}
+
+function closeEditModal() {
+  editModalVisible.value = false;
+  editingProduct.value = null;
+}
+
+function onProductSaved(payload: any) {
+  editModalVisible.value = false;
+  editingProduct.value = null;
 }
 </script>
 
@@ -734,14 +878,17 @@ function createProposal() {
   max-width: 100%;
 }
 
-.product-dropdown {
+.product-dropdown,
+.customer-dropdown {
   width: 100%;
+  height: 40px;
 }
 
 /* Override dropdown styles for larger combobox */
 .product-dropdown :deep(.p-dropdown-label) {
-  padding: 0.875rem 1rem;
+  padding: 0.5rem 1rem;
   font-size: var(--font-size-body-m);
+  line-height: 1.5;
 }
 
 .product-dropdown :deep(.p-dropdown-panel) {
@@ -761,9 +908,8 @@ function createProposal() {
 }
 
 .product-value-id {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  min-width: 100px;
+  font-size: var(--font-size-body-xs);
+  flex-shrink: 0;
 }
 
 .product-value-name {
@@ -776,7 +922,6 @@ function createProposal() {
 
 .product-value-price {
   font-weight: var(--font-weight-medium);
-  color: var(--color-success);
 }
 
 .text-placeholder {
@@ -786,10 +931,22 @@ function createProposal() {
 /* Product Option (dropdown item) */
 .product-option {
   display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0;
+  width: 100%;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.product-dropdown :deep(.p-dropdown-item:last-child) .product-option {
+  border-bottom: none;
+}
+
+.product-option-row {
+  display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding: 0.5rem 0;
   width: 100%;
 }
 
@@ -802,14 +959,12 @@ function createProposal() {
 }
 
 .product-option-id {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  min-width: 100px;
-  font-size: var(--font-size-body-s);
+  font-size: var(--font-size-body-xs);
+  flex-shrink: 0;
 }
 
 .product-option-name {
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
   font-size: var(--font-size-body-s);
   white-space: nowrap;
   overflow: hidden;
@@ -824,13 +979,55 @@ function createProposal() {
 }
 
 .product-option-price {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-success);
   font-size: var(--font-size-body-s);
+  font-weight: var(--font-weight-semibold);
 }
 
 .product-option-tag {
   font-size: 0.65rem;
+}
+
+/* Product Option Specs */
+.product-option-specs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: var(--font-size-body-xs);
+  color: var(--color-text-tertiary);
+  padding-left: 0.25rem;
+}
+
+.product-option-spec {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.spec-label {
+  color: var(--color-text-secondary);
+}
+
+.spec-value {
+  color: var(--color-text-primary);
+}
+
+.spec-separator {
+  color: var(--color-text-tertiary);
+  margin: 0 0.125rem;
+}
+
+.product-option-specs-more {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+/* Search highlight */
+:deep(.search-highlight) {
+  background-color: var(--color-warning-100);
+  color: var(--color-text-primary);
+  padding: 0 2px;
+  border-radius: 2px;
 }
 
 /* Product Empty/Loading states */
@@ -856,6 +1053,42 @@ function createProposal() {
   background: var(--color-neutral-200);
   padding: 0.25rem 0.625rem;
   border-radius: var(--radius-sm);
+}
+
+/* Items Empty State */
+/* Items Loading State */
+.items-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 2rem;
+  color: var(--color-text-secondary);
+  background: var(--surface-50);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-light);
+}
+
+.items-loading i {
+  font-size: 2rem;
+  color: var(--color-primary);
+}
+
+/* Items Error State */
+.items-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 2rem;
+  color: var(--color-danger);
+  background: var(--color-danger-subtle, #fef2f2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-danger-border, #fecaca);
+}
+
+.items-error i {
+  font-size: 2rem;
 }
 
 /* Items Empty State */
@@ -947,23 +1180,6 @@ function createProposal() {
 }
 
 /* Quantity Input */
-.quantity-input {
-  width: 100%;
-  max-width: 110px;
-}
-
-.quantity-input :deep(.p-inputnumber-input) {
-  width: 2.5rem;
-  text-align: center;
-  padding: 0.375rem;
-  font-size: var(--font-size-body-s);
-}
-
-.quantity-input :deep(.p-inputnumber-button) {
-  width: 1.75rem;
-  padding: 0.25rem;
-}
-
 /* Proposal Summary */
 .proposal-summary {
   padding: 1.5rem;
@@ -1006,6 +1222,11 @@ function createProposal() {
   color: var(--color-success);
 }
 
+.summary-old-price {
+  text-decoration: line-through;
+  color: var(--color-text-tertiary);
+}
+
 /* Proposal Actions */
 .proposal-actions {
   display: flex;
@@ -1043,8 +1264,5 @@ function createProposal() {
     padding: 0.5rem;
   }
 
-  .quantity-input {
-    max-width: 90px;
   }
-}
 </style>
