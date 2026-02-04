@@ -4,11 +4,7 @@
     <div ref="cardRef" class="login-card">
       <h1 ref="titleRef" class="heading-s mb-6">Login</h1>
 
-      <Form
-        @submit="handleLogin"
-        :validation-schema="schema"
-        class="w-full"
-      >
+      <Form @submit="handleLogin" :validation-schema="schema" class="w-full">
         <div class="flex flex-column gap-2 mb-4">
           <label for="email" class="field-label">Email</label>
           <Field v-slot="{ field, errorMessage }" name="email">
@@ -109,31 +105,37 @@ const loading = ref(false);
 // Zod schema for VeeValidate
 const schema = toTypedSchema(loginSchema);
 
-async function handleLogin(
-  values: any,
-  actions: any
-) {
+async function handleLogin(values: any, actions: any) {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/daded37d-1917-4bfe-ab38-248d8de3a39a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.vue:108',message:'handleLogin called',data:{email:values.email},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
   const { setFieldError } = actions as FormActions<LoginFormValues>;
   const formValues = values as LoginFormValues;
 
   await useApiCall({
     fn: () => auth.login(formValues.email, formValues.password),
-    successMessage: 'Logged in successfully',
-    errorMessage: 'Login Failed',
+    successMessage: "Logged in successfully",
+    errorMessage: "Login Failed",
     showSuccess: true,
     loading,
     toast,
     onError: (error) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/daded37d-1917-4bfe-ab38-248d8de3a39a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.vue:119',message:'Login error',data:{error:String(error)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       // Handle server-side validation errors
       handleLoginValidationErrors(error, setFieldError);
     },
   });
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/daded37d-1917-4bfe-ab38-248d8de3a39a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.vue:124',message:'handleLogin completed',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
 }
 
 function handleLoginValidationErrors(error: unknown, setFieldError: any) {
   if (error instanceof ValidationError && error.fields) {
     const errorMessages: string[] = [];
-    
+
     // Set field errors in VeeValidate form
     Object.keys(error.fields).forEach((field) => {
       const fieldErrors = error.fields![field];
@@ -143,24 +145,24 @@ function handleLoginValidationErrors(error: unknown, setFieldError: any) {
           setFieldError(field, fieldErrors.join(", "));
           // Collect errors for toast
           const fieldLabel = field.charAt(0).toUpperCase() + field.slice(1);
-          fieldErrors.forEach(errorMsg => {
+          fieldErrors.forEach((errorMsg) => {
             errorMessages.push(`${fieldLabel}: ${errorMsg}`);
           });
         } else if (field === "non_field_errors") {
           // Show non-field errors as toast
-          fieldErrors.forEach(errorMsg => {
+          fieldErrors.forEach((errorMsg) => {
             errorMessages.push(errorMsg);
           });
         }
       }
     });
-    
+
     // Show all errors in toast
     if (errorMessages.length > 0) {
       toast.add({
         severity: "warn",
         summary: "Login Failed",
-        detail: errorMessages.join('\n'),
+        detail: errorMessages.join("\n"),
         life: 5000,
         closable: true,
       });

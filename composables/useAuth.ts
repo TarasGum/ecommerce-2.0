@@ -25,10 +25,13 @@ export const useAuth = () => {
 
   // Login
   async function login(email: string, password: string): Promise<void> {
-    const response = await $fetch<LoginResponse>(`${config.public.apiBase}/auth/login/`, {
-      method: 'POST',
-      body: { email, password },
-    });
+    const response = await $fetch<LoginResponse>(
+      `${config.public.apiBase}/auth/login/`,
+      {
+        method: "POST",
+        body: { email, password },
+      },
+    );
 
     // Update store
     authStore.setUser(response.user);
@@ -48,11 +51,13 @@ export const useAuth = () => {
     try {
       if (refreshCookie.value) {
         await $fetch(`${config.public.apiBase}/auth/logout/`, {
-          method: 'POST',
+          method: "POST",
           body: { refresh: refreshCookie.value },
-          headers: accessCookie.value ? {
-            Authorization: `Bearer ${accessCookie.value}`,
-          } : {},
+          headers: accessCookie.value
+            ? {
+                Authorization: `Bearer ${accessCookie.value}`,
+              }
+            : {},
         });
       }
     } catch (error) {
@@ -83,7 +88,10 @@ export const useAuth = () => {
     }
 
     // Sync tokens to store
-    authStore.setTokens(accessCookie.value || null, refreshCookie.value || null);
+    authStore.setTokens(
+      accessCookie.value || null,
+      refreshCookie.value || null,
+    );
 
     // Try to fetch user
     try {

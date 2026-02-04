@@ -6,6 +6,9 @@ import { useAuthStore } from "~/stores/auth";
 export default defineNuxtRouteMiddleware((to, from) => {
   const nuxtApp = useNuxtApp();
   const authStore = useAuthStore();
+  
+  const accessCookie = useCookie('auth.access');
+  const refreshCookie = useCookie('auth.refresh');
 
   // If auth just failed (tokens were invalid), don't redirect back - let user see login page
   const authState = (nuxtApp.payload as any)?._authState;
@@ -13,8 +16,8 @@ export default defineNuxtRouteMiddleware((to, from) => {
     return; // Allow access to login page
   }
 
-  // If user is already authenticated in the store, redirect to home
-  if (authStore.user) {
+  // Check if user is authenticated (either in store OR via cookies)
+  if (authStore.user || accessCookie.value || refreshCookie.value) {
     return navigateTo("/");
   }
 
