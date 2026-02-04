@@ -23,6 +23,11 @@ export interface Project {
   api_endpoint?: string;
   api_login?: string;
   extra_columns?: string;
+  price_field?: string;
+  markup_id_trigger?: string;
+  s3_bucket_name?: string;
+  s3_region?: string;
+  s3_access_key_id?: string;
   user_count: string;
   created_at: string;
   updated_at: string;
@@ -41,6 +46,12 @@ export interface CreateProjectPayload {
   api_login?: string;
   api_password?: string;
   extra_columns?: string;
+  price_field?: string;
+  markup_id_trigger?: string;
+  s3_bucket_name?: string;
+  s3_region?: string;
+  s3_access_key_id?: string;
+  s3_secret_key?: string;
 }
 
 // Project update payload
@@ -56,6 +67,12 @@ export interface UpdateProjectPayload {
   api_login?: string;
   api_password?: string;
   extra_columns?: string;
+  price_field?: string;
+  markup_id_trigger?: string;
+  s3_bucket_name?: string;
+  s3_region?: string;
+  s3_access_key_id?: string;
+  s3_secret_key?: string;
 }
 
 export interface PaginatedResponse<T> {
