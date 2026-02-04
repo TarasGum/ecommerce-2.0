@@ -123,6 +123,12 @@ export const createProjectSchema = z.object({
   api_endpoint: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   api_login: z.string().optional(),
   api_password: z.string().optional(),
+  price_field: z.string().optional(),
+  markup_id_trigger: z.string().optional(),
+  s3_bucket_name: z.string().optional(),
+  s3_region: z.string().optional(),
+  s3_access_key_id: z.string().optional(),
+  s3_secret_key: z.string().optional(),
 });
 
 export type CreateProjectFormData = z.infer<typeof createProjectSchema>;
@@ -139,6 +145,12 @@ export const editProjectSchema = z.object({
   api_endpoint: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   api_login: z.string().optional(),
   api_password: z.string().optional(),
+  price_field: z.string().optional(),
+  markup_id_trigger: z.string().optional(),
+  s3_bucket_name: z.string().optional(),
+  s3_region: z.string().optional(),
+  s3_access_key_id: z.string().optional(),
+  s3_secret_key: z.string().optional(),
 });
 
 export type EditProjectFormData = z.infer<typeof editProjectSchema>;

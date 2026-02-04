@@ -146,6 +146,107 @@
         <ErrorMessage name="db_password" class="p-error text-sm mt-1" />
       </div>
 
+      <!-- Pricing Configuration Section -->
+      <div class="section-title mb-3 mt-5">Pricing Configuration <span class="text-sm font-normal text-color-secondary">(Optional)</span></div>
+
+      <!-- Price Field -->
+      <div class="flex flex-column mb-4">
+        <label for="price_field" class="field-label mb-2">Price Field</label>
+        <Field v-slot="{ field, errorMessage }" name="price_field">
+          <InputText
+            id="price_field"
+            v-bind="field"
+            placeholder="Enter price field name"
+            class="w-full"
+            :class="{ 'p-invalid': errorMessage }"
+          />
+        </Field>
+        <ErrorMessage name="price_field" class="p-error text-sm mt-1" />
+      </div>
+
+      <!-- Markup ID Trigger -->
+      <div class="flex flex-column mb-4">
+        <label for="markup_id_trigger" class="field-label mb-2">Markup ID Trigger</label>
+        <Field v-slot="{ field, errorMessage }" name="markup_id_trigger">
+          <InputText
+            id="markup_id_trigger"
+            v-bind="field"
+            placeholder="Enter markup ID trigger"
+            class="w-full"
+            :class="{ 'p-invalid': errorMessage }"
+          />
+        </Field>
+        <ErrorMessage name="markup_id_trigger" class="p-error text-sm mt-1" />
+      </div>
+
+      <!-- S3 Configuration Section -->
+      <div class="section-title mb-3 mt-5">S3 Configuration <span class="text-sm font-normal text-color-secondary">(Optional)</span></div>
+
+      <!-- S3 Bucket Name -->
+      <div class="flex flex-column mb-4">
+        <label for="s3_bucket_name" class="field-label mb-2">Bucket Name</label>
+        <Field v-slot="{ field, errorMessage }" name="s3_bucket_name">
+          <InputText
+            id="s3_bucket_name"
+            v-bind="field"
+            placeholder="Enter S3 bucket name"
+            class="w-full"
+            :class="{ 'p-invalid': errorMessage }"
+          />
+        </Field>
+        <ErrorMessage name="s3_bucket_name" class="p-error text-sm mt-1" />
+      </div>
+
+      <!-- S3 Region -->
+      <div class="flex flex-column mb-4">
+        <label for="s3_region" class="field-label mb-2">Region</label>
+        <Field v-slot="{ field, errorMessage }" name="s3_region">
+          <InputText
+            id="s3_region"
+            v-bind="field"
+            placeholder="e.g., us-east-1"
+            class="w-full"
+            :class="{ 'p-invalid': errorMessage }"
+          />
+        </Field>
+        <ErrorMessage name="s3_region" class="p-error text-sm mt-1" />
+      </div>
+
+      <!-- S3 Access Key ID -->
+      <div class="flex flex-column mb-4">
+        <label for="s3_access_key_id" class="field-label mb-2">Access Key ID</label>
+        <Field v-slot="{ field, errorMessage }" name="s3_access_key_id">
+          <InputText
+            id="s3_access_key_id"
+            v-bind="field"
+            placeholder="Enter S3 access key ID"
+            class="w-full"
+            :class="{ 'p-invalid': errorMessage }"
+          />
+        </Field>
+        <ErrorMessage name="s3_access_key_id" class="p-error text-sm mt-1" />
+      </div>
+
+      <!-- S3 Secret Key -->
+      <div class="flex flex-column mb-4">
+        <label for="s3_secret_key" class="field-label mb-2">
+          Secret Key
+          <span v-if="mode === 'edit'" class="text-sm font-normal text-color-secondary ml-1">(leave blank to keep current)</span>
+        </label>
+        <Field v-slot="{ field, errorMessage }" name="s3_secret_key">
+          <Password
+            id="s3_secret_key"
+            :modelValue="field.value"
+            @update:modelValue="field.onChange"
+            :placeholder="mode === 'edit' ? '••••••••' : 'Enter S3 secret key'"
+            :feedback="false"
+            toggleMask
+            :inputClass="{ 'p-invalid': errorMessage }"
+          />
+        </Field>
+        <ErrorMessage name="s3_secret_key" class="p-error text-sm mt-1" />
+      </div>
+
       <!-- API Configuration Section -->
       <div class="section-title mb-3 mt-5">EBMS API Configuration <span class="text-sm font-normal text-color-secondary">(Optional)</span></div>
 
@@ -327,6 +428,12 @@ const initialFormValues = computed(() => {
       db_name: projectData.value.db_name || "",
       db_username: projectData.value.db_username || "",
       db_password: "", // Don't prefill password
+      price_field: projectData.value.price_field || "",
+      markup_id_trigger: projectData.value.markup_id_trigger || "",
+      s3_bucket_name: projectData.value.s3_bucket_name || "",
+      s3_region: projectData.value.s3_region || "",
+      s3_access_key_id: projectData.value.s3_access_key_id || "",
+      s3_secret_key: "", // Don't prefill secret key
       api_endpoint: projectData.value.api_endpoint || "",
       api_login: projectData.value.api_login || "",
       api_password: "", // Don't prefill password
@@ -341,6 +448,12 @@ const initialFormValues = computed(() => {
     db_name: "",
     db_username: "",
     db_password: "",
+    price_field: "",
+    markup_id_trigger: "",
+    s3_bucket_name: "",
+    s3_region: "",
+    s3_access_key_id: "",
+    s3_secret_key: "",
     api_endpoint: "",
     api_login: "",
     api_password: "",
@@ -370,6 +483,16 @@ async function handleSubmit(
       db_username: values.db_username,
       db_password: values.db_password,
     };
+
+    // Add optional pricing fields if provided
+    if (values.price_field) payload.price_field = values.price_field;
+    if (values.markup_id_trigger) payload.markup_id_trigger = values.markup_id_trigger;
+
+    // Add optional S3 fields if provided
+    if (values.s3_bucket_name) payload.s3_bucket_name = values.s3_bucket_name;
+    if (values.s3_region) payload.s3_region = values.s3_region;
+    if (values.s3_access_key_id) payload.s3_access_key_id = values.s3_access_key_id;
+    if (values.s3_secret_key) payload.s3_secret_key = values.s3_secret_key;
 
     // Add optional API fields if provided
     if (values.api_endpoint) payload.api_endpoint = values.api_endpoint;
@@ -408,11 +531,17 @@ async function handleSubmit(
     if (values.db_port !== project.db_port) payload.db_port = values.db_port;
     if (values.db_name !== (project.db_name || "")) payload.db_name = values.db_name;
     if (values.db_username !== (project.db_username || "")) payload.db_username = values.db_username;
+    if (values.price_field !== (project.price_field || "")) payload.price_field = values.price_field;
+    if (values.markup_id_trigger !== (project.markup_id_trigger || "")) payload.markup_id_trigger = values.markup_id_trigger;
+    if (values.s3_bucket_name !== (project.s3_bucket_name || "")) payload.s3_bucket_name = values.s3_bucket_name;
+    if (values.s3_region !== (project.s3_region || "")) payload.s3_region = values.s3_region;
+    if (values.s3_access_key_id !== (project.s3_access_key_id || "")) payload.s3_access_key_id = values.s3_access_key_id;
     if (values.api_endpoint !== (project.api_endpoint || "")) payload.api_endpoint = values.api_endpoint;
     if (values.api_login !== (project.api_login || "")) payload.api_login = values.api_login;
 
-    // Only send password if user entered a new one
+    // Only send password/secret fields if user entered a new one
     if (values.db_password) payload.db_password = values.db_password;
+    if (values.s3_secret_key) payload.s3_secret_key = values.s3_secret_key;
     if (values.api_password) payload.api_password = values.api_password;
 
     // Only send PATCH if there are changes

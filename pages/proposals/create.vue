@@ -429,6 +429,8 @@ const isSuperAdmin = computed(
 // Customer search state
 const customerOptions = ref<Customer[]>([]);
 const customerSearchLoading = ref(false);
+
+// For Yura. This is the customer that will be used to create the proposal.
 const selectedCustomer = ref<Customer | null>(null);
 
 // Product search state
