@@ -8,17 +8,21 @@ export interface CartConfiguration {
 export interface CartPayload {
   id: string | number;
   unit: string;
-  quantity: number;
+  count: number;
   configurations: CartConfiguration[];
 }
 
 export const useCart = () => {
   const api = useApi();
 
+  // Current customer ID for cart operations
+  let currentCustomerId: string | null = null;
+
   /**
    * Get cart for a customer
    */
   async function getCart(customerId: string): Promise<Cart> {
+    currentCustomerId = customerId;
     return api.get<Cart>(`/cart/?customer_id=${encodeURIComponent(customerId)}`);
   }
 
@@ -27,13 +31,13 @@ export const useCart = () => {
    */
   function getPayload(
     product: Product | CartItem,
-    quantity: number,
+    count: number,
     configurations: CartConfiguration[] = [],
   ): CartPayload {
     return {
       id: product.autoid,
       unit: product.unit || product.def_unit || "",
-      quantity,
+      count,
       configurations,
     };
   }
@@ -42,24 +46,30 @@ export const useCart = () => {
    * Add item to cart
    */
   async function addItem(payload: CartPayload) {
-    // TODO: implement API call
-    return api.post("/cart/add/", payload);
+    const url = currentCustomerId
+      ? `/cart/add/?customer_id=${encodeURIComponent(currentCustomerId)}`
+      : "/cart/add/";
+    return api.post(url, payload);
   }
 
   /**
    * Update cart item
    */
   async function changeItem(itemId: string | number, payload: Partial<CartPayload>) {
-    // TODO: implement API call
-    return api.patch(`/cart/${itemId}/`, payload);
+    const url = currentCustomerId
+      ? `/cart/${itemId}/?customer_id=${encodeURIComponent(currentCustomerId)}`
+      : `/cart/${itemId}/`;
+    return api.patch(url, payload);
   }
 
   /**
    * Delete cart item
    */
   async function deleteItem(itemId: string | number) {
-    // TODO: implement API call
-    return api.delete(`/cart/${itemId}/`);
+    const url = currentCustomerId
+      ? `/cart/${itemId}/?customer_id=${encodeURIComponent(currentCustomerId)}`
+      : `/cart/${itemId}/`;
+    return api.delete(url);
   }
 
   return {

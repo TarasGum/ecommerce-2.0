@@ -76,10 +76,28 @@ export const useProducts = () => {
     return api.get<ConfigurationProduct>(url);
   }
 
+  /**
+   * Fetch photos for configuration items
+   * @param configurationId - product configuration ID
+   * @param categoryName - configuration category name
+   */
+  async function getConfigurationPhotos(
+    configurationId: string,
+    categoryName: string,
+  ): Promise<Array<{ id: string; autoid: string; photos: string[] }>> {
+    const queryParams = new URLSearchParams();
+    queryParams.set("configuration_id", configurationId);
+    queryParams.set("category_name", categoryName);
+
+    const url = `/data/configurations-photos/?${queryParams.toString()}`;
+    return api.get(url);
+  }
+
   return {
     list,
     getByAutoid,
     searchById,
     getConfigurations,
+    getConfigurationPhotos,
   };
 };
