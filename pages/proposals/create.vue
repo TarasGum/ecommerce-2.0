@@ -379,6 +379,7 @@
       :initial-quantity="
         editModalMode === 'edit' ? (editingProduct as CartItem).count : 1
       "
+      :project-id="selectedProjectId"
       @close="closeEditModal"
       @save="onProductSaved"
     />
@@ -683,6 +684,7 @@ async function selectProduct(product: Product) {
         const configData = await productsApi.getConfigurations(
           selectedProductCopy.autoid,
           selectedCustomer.value.id,
+          selectedProjectId.value,
         );
         selectedProductCopy.configurations = configData as any;
       } catch (error) {
@@ -782,6 +784,15 @@ function onProductSaved(payload: any) {
   color: var(--color-text-primary);
   margin: 0;
   letter-spacing: -0.5px;
+}
+
+.project-dropdown {
+  min-width: 200px;
+  
+  :deep(.p-dropdown-label) {
+    padding: 0.625rem 1rem;
+    font-size: var(--font-size-body-s);
+  }
 }
 
 // Info Banner

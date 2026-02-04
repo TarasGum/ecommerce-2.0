@@ -106,9 +106,6 @@ const loading = ref(false);
 const schema = toTypedSchema(loginSchema);
 
 async function handleLogin(values: any, actions: any) {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/daded37d-1917-4bfe-ab38-248d8de3a39a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.vue:108',message:'handleLogin called',data:{email:values.email},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   const { setFieldError } = actions as FormActions<LoginFormValues>;
   const formValues = values as LoginFormValues;
 
@@ -120,16 +117,10 @@ async function handleLogin(values: any, actions: any) {
     loading,
     toast,
     onError: (error) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/daded37d-1917-4bfe-ab38-248d8de3a39a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.vue:119',message:'Login error',data:{error:String(error)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       // Handle server-side validation errors
       handleLoginValidationErrors(error, setFieldError);
     },
   });
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/daded37d-1917-4bfe-ab38-248d8de3a39a',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.vue:124',message:'handleLogin completed',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
 }
 
 function handleLoginValidationErrors(error: unknown, setFieldError: any) {

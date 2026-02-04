@@ -23,7 +23,7 @@
         <!-- Project Selector (SuperAdmin only) -->
         <ClientOnly>
           <Dropdown
-            v-if="!!isSuperAdmin && !pageTitleParts"
+            v-if="!!isSuperAdmin"
             v-model="selectedProjectId"
             :options="projectOptions"
             optionLabel="label"

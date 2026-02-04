@@ -100,7 +100,7 @@
         <!-- Configurations -->
         <div v-if="hasConfigurations" class="product-section">
           <h3 class="section-title">Configurations</h3>
-          <OfferConfigurations :configuration="product.configurations as any" />
+          <OfferConfigurations :configuration="product.configurations as any" :project-id="projectId" />
         </div>
       </div>
     </div>
@@ -200,10 +200,12 @@ const props = withDefaults(
     product: Product | CartItem;
     mode?: "add" | "edit";
     initialQuantity?: number;
+    projectId?: number | null;
   }>(),
   {
     mode: "add",
     initialQuantity: 1,
+    projectId: null,
   },
 );
 

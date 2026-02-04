@@ -70,9 +70,17 @@ export const useProducts = () => {
    * Fetch product configurations
    * @param autoid - product autoid
    * @param customerId - customer ID for pricing
+   * @param projectId - optional project ID for filtering
    */
-  async function getConfigurations(autoid: string, customerId: string): Promise<ConfigurationProduct> {
-    const url = `/data/products-with-price/${autoid}/configurations/?customer_id=${customerId}`;
+  async function getConfigurations(autoid: string, customerId: string, projectId?: number | null): Promise<ConfigurationProduct> {
+    const queryParams = new URLSearchParams();
+    queryParams.set("customer_id", customerId);
+    
+    if (projectId !== undefined && projectId !== null) {
+      queryParams.set("project_id", projectId.toString());
+    }
+
+    const url = `/data/products-with-price/${autoid}/configurations/?${queryParams.toString()}`;
     return api.get<ConfigurationProduct>(url);
   }
 
@@ -80,14 +88,20 @@ export const useProducts = () => {
    * Fetch photos for configuration items
    * @param configurationId - product configuration ID
    * @param categoryName - configuration category name
+   * @param projectId - optional project ID for filtering
    */
   async function getConfigurationPhotos(
     configurationId: string,
     categoryName: string,
+    projectId?: number | null,
   ): Promise<Array<{ id: string; autoid: string; photos: string[] }>> {
     const queryParams = new URLSearchParams();
     queryParams.set("configuration_id", configurationId);
     queryParams.set("category_name", categoryName);
+
+    if (projectId !== undefined && projectId !== null) {
+      queryParams.set("project_id", projectId.toString());
+    }
 
     const url = `/data/configurations-photos/?${queryParams.toString()}`;
     return api.get(url);

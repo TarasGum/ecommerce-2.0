@@ -85,6 +85,7 @@ const props = defineProps<{
     id: string;
     configurations: Configuration[];
   };
+  projectId?: number | null;
 }>();
 
 const productsApi = useProducts();
@@ -142,6 +143,7 @@ async function fetchPhotosForParent(parent: Configuration) {
     const response = await productsApi.getConfigurationPhotos(
       props.configuration.id,
       parent.name,
+      props.projectId,
     );
 
     // Map photos to items
