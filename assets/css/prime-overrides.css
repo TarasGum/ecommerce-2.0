@@ -318,6 +318,16 @@
   outline: none;
 }
 
+/* Dropdown Empty Message */
+.p-dropdown-empty-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  font-size: var(--font-size-body-xs);
+  color: var(--color-text-tertiary);
+}
+
 /* ==================== TAG (BADGE) - Ultra Minimal Shadcn Style with Consistent Colors ==================== */
 .p-tag {
   font-size: 0.6875rem;
@@ -361,7 +371,7 @@
 
 /* Secondary Tag - Light gray */
 .p-tag.p-tag-secondary {
-  color: var(--color-neutral-600);
+  color: var(--color-neutral-700);
   border-color: var(--color-neutral-400);
 }
 
