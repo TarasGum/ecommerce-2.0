@@ -374,13 +374,18 @@ export interface Product {
   descr_2: string; // secondary description
   base: string; // base price (stringified decimal)
   cost: string; // cost value (stringified decimal) - used as price for now
-  count: string; // inventory quantity (stringified decimal, may be negative)
+  price: string; // product price
+  old_price: string; // original price (before discounts)
+  base_price: string; // base price for configurations
+  base_old_price: string; // base old price for configurations
+  max_count: string; // inventory quantity (stringified decimal, may be negative)
   location: string;
   inactive: boolean;
   ignoreCount: boolean;
-  specs: any[];
+  product_specs: any[];
   units: any[];
-  defUnit: string;
+  def_unit: string;
+  unit: string; // selected unit
   photo: string;
   photos: any[];
   color: string;
@@ -392,4 +397,79 @@ export interface ProductsListResponse {
   limit: number;
   offset: number;
   results: Product[];
+}
+
+// CartItem - Product saved to cart with quantity and unique ID
+export interface CartItem extends Omit<Product, 'max_count'> {
+  objectId: string; // unique identifier for cart item
+  count: number; // quantity in cart
+}
+
+// Cart response from backend
+export interface Cart {
+  items: CartItem[];
+  total: string; // current total price
+  oldTotal: string; // original price (before discounts)
+}
+
+// Configuration types
+export interface ConfigurationItem {
+  id: string;
+  descr_1: string;
+  int_note: string;
+  def_unit: string;
+  c_type: string;
+  quan: string;
+  price: string;
+  old_price: string;
+  components: number;
+  // UI state
+  active?: boolean;
+  isLoading?: boolean;
+  photo?: string;
+  photos?: string[];
+}
+
+export interface Configuration {
+  name: string;
+  allownone: boolean;
+  default: string;
+  items: ConfigurationItem[];
+  // UI state
+  active?: boolean;
+  photosRequested?: boolean;
+  photosLoading?: boolean;
+}
+
+export interface ConfigurationUnit {
+  autoid: string;
+  id: string;
+  unit: string;
+  multiplier: string;
+  price: string;
+  old_price: string;
+}
+
+export interface ConfigurationProduct {
+  id: string;
+  autoid: string;
+  descr_1: string;
+  c_type: string;
+  cto_prompt: string;
+  ostk_msg: string;
+  super_id: string;
+  def_unit: string;
+  weight: string;
+  show_web: boolean;
+  markup_id: string;
+  configurations_count: number;
+  single_components: number;
+  max_count: number;
+  ignore_count: boolean;
+  price: string;
+  old_price: string;
+  base_price: string;
+  base_old_price: string;
+  units: ConfigurationUnit[];
+  configurations: Configuration[];
 }
