@@ -20,7 +20,7 @@
           <div class="product-gallery-photo">
             <img
               :src="product.photos[currentPhotoIndex]"
-              :alt="product.descr_1"
+              :alt="displayName"
               @click="showFullscreen = true"
             />
             <button
@@ -46,7 +46,7 @@
               :class="{ active: index === currentPhotoIndex }"
               @click="currentPhotoIndex = index"
             >
-              <img :src="photo" :alt="`${product.descr_1} - ${index + 1}`" />
+              <img :src="photo" :alt="`${displayName} - ${index + 1}`" />
             </div>
           </div>
         </template>
@@ -63,7 +63,7 @@
       </div>
 
       <div class="product-data">
-        <h1>{{ product.descr_1 }}</h1>
+        <h1>{{ displayName }}</h1>
 
         <!-- Loading Skeletons -->
         <template v-if="loading">
@@ -128,7 +128,7 @@
             <QuantityInput
               v-model="quantity"
               :max-count="maxCount"
-              :ignore-count="product.ignoreCount"
+              :ignore-count="isCartItem(product) ? product.ignore_count : (product as Product).ignoreCount"
             />
           </div>
 
@@ -194,14 +194,14 @@
       <template #item="{ item }">
         <img
           :src="item"
-          :alt="product.descr_1"
+          :alt="displayName"
           style="width: 100%; max-height: 80vh; object-fit: contain"
         />
       </template>
       <template #thumbnail="{ item }">
         <img
           :src="item"
-          :alt="product.descr_1"
+          :alt="displayName"
           style="width: 80px; height: 60px; object-fit: cover"
         />
       </template>
@@ -219,9 +219,9 @@ import Galleria from "primevue/galleria";
 import Skeleton from "primevue/skeleton";
 import QuantityInput from "~/components/offer/QuantityInput.vue";
 import PriceDisplay from "~/components/offer/PriceDisplay.vue";
-import type { Product, CartItem, Configuration } from "~/types/models";
+import type { Product, CartItem, Configuration, CartConfiguration } from "~/types/models";
 import { useConfigurations } from "~/composables/useConfigurations";
-import { useCart, type CartPayload } from "~/composables/useCart";
+import { useCart, type AddToCartPayload, type UpdateCartItemPayload } from "~/composables/useCart";
 import { useToast } from "~/composables/useToast";
 
 const currentPhotoIndex = ref(0);
@@ -254,15 +254,49 @@ const props = withDefaults(
   },
 );
 
-// Local quantity state
-const quantity = ref(props.initialQuantity);
+// Helper to check if product is a CartItem (has cart item id)
+const isCartItem = (p: Product | CartItem): p is CartItem => {
+  return 'id' in p && typeof p.id === 'number' && 'product_autoid' in p;
+};
+
+// Local quantity state - use CartItem.quantity in edit mode
+const quantity = ref(
+  props.mode === 'edit' && isCartItem(props.product)
+    ? props.product.quantity
+    : props.initialQuantity
+);
+
+// Track initial state for change detection
+const initialQuantity = ref(quantity.value);
+const initialConfigIds = ref<Set<string>>(new Set());
+
+// Get product identifier (autoid for Product, product_autoid for CartItem)
+const productIdentifier = computed(() => {
+  if (isCartItem(props.product)) {
+    return props.product.product_autoid;
+  }
+  return props.product?.autoid;
+});
+
+// Get display name (descr_1 for Product, name for CartItem)
+const displayName = computed(() => {
+  if (isCartItem(props.product)) {
+    return props.product.name;
+  }
+  return props.product?.descr_1;
+});
 
 // Reset state when product changes
 watch(
-  () => props.product?.autoid,
+  () => productIdentifier.value,
   () => {
     currentPhotoIndex.value = 0;
-    quantity.value = props.initialQuantity;
+    const newQuantity = props.mode === 'edit' && isCartItem(props.product)
+      ? props.product.quantity
+      : props.initialQuantity;
+    quantity.value = newQuantity;
+    initialQuantity.value = newQuantity;
+    initialConfigIds.value = new Set();
   },
 );
 
@@ -295,21 +329,63 @@ const {
   baseOldPrice: computed(() => configData.value?.base_old_price || "0"),
 });
 
-// Cart payload
+// Capture initial config IDs once configurations are loaded
+watch(
+  () => activeConfigurations.value,
+  (configs) => {
+    // Only set initial state if it hasn't been set yet (empty set)
+    if (initialConfigIds.value.size === 0 && configs.length > 0) {
+      initialConfigIds.value = new Set(configs.map(c => c.id));
+    }
+  },
+  { immediate: true },
+);
+
+// Check if any changes were made
+const hasChanges = computed(() => {
+  // Quantity changed
+  if (quantity.value !== initialQuantity.value) return true;
+  
+  // Configuration changed
+  const currentIds = new Set(activeConfigurations.value.map(c => c.id));
+  if (currentIds.size !== initialConfigIds.value.size) return true;
+  for (const id of currentIds) {
+    if (!initialConfigIds.value.has(id)) return true;
+  }
+  
+  return false;
+});
+
+// Cart operations
 const toast = useToast();
-const { getPayload, addItem, changeItem } = useCart();
+const { buildAddPayload, addItem, updateItem } = useCart();
 
 // Confirm dialog state
 const showConfirmClose = ref(false);
-const cartPayload = computed(() =>
-  getPayload(props.product, quantity.value, activeConfigurations.value),
-);
 const isSaving = ref(false);
+
+// Build cart payload for display/debug
+const cartPayload = computed(() => {
+  if (isCartItem(props.product)) {
+    // Edit mode - return update payload shape
+    return {
+      quantity: quantity.value,
+      configurations: activeConfigurations.value as CartConfiguration[],
+    } satisfies UpdateCartItemPayload;
+  }
+  // Add mode - build full add payload
+  return buildAddPayload(
+    props.product,
+    quantity.value,
+    props.product.unit || props.product.def_unit || '',
+    activeConfigurations.value as CartConfiguration[],
+  );
+});
 
 const emit = defineEmits<{
   "update:visible": [value: boolean];
   close: [];
-  save: [payload: CartPayload];
+  save: [payload: AddToCartPayload | UpdateCartItemPayload];
 }>();
 
 const isVisible = computed({
@@ -330,7 +406,12 @@ function doClose() {
 }
 
 function handleClose() {
-  showConfirmClose.value = true;
+  // Only show confirmation if there are unsaved changes
+  if (hasChanges.value) {
+    showConfirmClose.value = true;
+  } else {
+    doClose();
+  }
 }
 
 function confirmClose() {
@@ -343,18 +424,30 @@ function cancelClose() {
 }
 
 async function handleSave() {
-  const payload = cartPayload.value;
   isSaving.value = true;
 
   try {
-    // TODO: Call API based on mode
     if (props.mode === "add") {
-      await addItem(payload, props.customerId ?? undefined);
+      // Add mode - use full add payload
+      const addPayload = buildAddPayload(
+        props.product as Product,
+        quantity.value,
+        props.product.unit || (props.product as Product).def_unit || '',
+        activeConfigurations.value as CartConfiguration[],
+      );
+      await addItem(addPayload, props.customerId ?? undefined);
+      emit("save", addPayload);
     } else {
-      await changeItem(payload.product_autoid, payload, props.customerId ?? undefined);
+      // Edit mode - use cart item id and update payload
+      const cartItem = props.product as CartItem;
+      const updatePayload: UpdateCartItemPayload = {
+        quantity: quantity.value,
+        configurations: activeConfigurations.value as CartConfiguration[],
+      };
+      await updateItem(cartItem.id, updatePayload, props.customerId ?? undefined);
+      emit("save", updatePayload);
     }
 
-    emit("save", payload);
     doClose();
   } catch (error) {
     console.error("Failed to save:", error);

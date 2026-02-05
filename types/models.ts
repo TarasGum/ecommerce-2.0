@@ -416,17 +416,36 @@ export interface ProductsListResponse {
   results: Product[];
 }
 
-// CartItem - Product saved to cart with quantity and unique ID
-export interface CartItem extends Product {
-  objectId: string; // unique identifier for cart item
-  count: number; // quantity in cart
+// Cart Configuration (attached to cart items)
+export interface CartConfiguration {
+  id: string;
+  name: string;
+  active: boolean;
 }
 
-// Cart response from backend
+// CartItem - Item in cart with computed prices from EBMS
+export interface CartItem {
+  id: number;
+  product_autoid: string;
+  product_id: string;
+  name: string;
+  unit: string;
+  quantity: number;
+  price: number;
+  old_price: number;
+  amount: number; // quantity * price (computed server-side)
+  max_count: number;
+  ignore_count: boolean;
+  configurations: CartConfiguration[];
+  created_at: string;
+  updated_at: string;
+}
+
+// Cart response from backend (prices fetched fresh from EBMS)
 export interface Cart {
+  total: number;
+  old_total: number;
   items: CartItem[];
-  total: string; // current total price
-  oldTotal: string; // original price (before discounts)
 }
 
 // Configuration types

@@ -7,9 +7,19 @@
     </div>
 
     <!-- Proposal Card -->
-    <div class="proposal-card">
+    <div
+      class="proposal-card"
+      v-motion
+      :initial="fadeInUp.initial"
+      :enter="fadeInUp.enter"
+    >
       <!-- Customer Selection Section -->
-      <div class="proposal-section">
+      <div
+        class="proposal-section"
+        v-motion
+        :initial="cardEnter(0).initial"
+        :enter="cardEnter(0).enter"
+      >
         <h3 class="section-title">Select Customer</h3>
         <p class="section-description">Choose a customer for this proposal.</p>
 
@@ -78,7 +88,7 @@
         </div>
       </div>
 
-      <!-- Product Search Section -->
+      <!-- Product Search Section (no motion - transform breaks dropdown overlay positioning) -->
       <div class="proposal-section">
         <h3 class="section-title">Add Products</h3>
         <p class="section-description">
@@ -207,34 +217,45 @@
       </div>
 
       <!-- Added Products List -->
-      <div class="proposal-section">
+      <div
+        class="proposal-section"
+        v-motion
+        :initial="cardEnter(2).initial"
+        :enter="cardEnter(2).enter"
+      >
         <div class="flex justify-content-between align-items-center mb-3">
           <h3 class="section-title mb-0">Proposal Items</h3>
-          <span v-if="cartItems.length > 0" class="items-count">
-            {{ cartItems.length }} item{{ cartItems.length !== 1 ? "s" : "" }}
-          </span>
-        </div>
-
-        <!-- Loading State -->
-        <div v-if="cartLoading" class="items-loading">
-          <i class="pi pi-spin pi-spinner"></i>
-          <span>Loading cart...</span>
+          <div class="flex align-items-center gap-2">
+            <i
+              v-if="cartUpdating"
+              class="pi pi-spin pi-spinner cart-updating-indicator"
+            ></i>
+            <span
+              v-if="cartItems.length > 0 && !cartLoading"
+              class="items-count"
+            >
+              {{ cartItems.length }} item{{ cartItems.length !== 1 ? "s" : "" }}
+            </span>
+          </div>
         </div>
 
         <!-- Error State -->
-        <div v-else-if="cartError" class="items-error">
+        <div v-if="cartError" class="items-error">
           <i class="pi pi-exclamation-triangle"></i>
           <span>{{ cartError }}</span>
           <Button
             label="Retry"
             severity="secondary"
             size="small"
-            @click="selectedCustomer && getCart(selectedCustomer.id)"
+            @click="selectedCustomer && retryLoadCart()"
           />
         </div>
 
-        <!-- Empty State -->
-        <div v-else-if="cartItems.length === 0" class="items-empty">
+        <!-- Empty State (only when not loading) -->
+        <div
+          v-else-if="!cartLoading && cartItems.length === 0"
+          class="items-empty"
+        >
           <i class="pi pi-file-edit"></i>
           <span>No products added yet</span>
           <span class="items-empty-hint"
@@ -242,69 +263,106 @@
           >
         </div>
 
-        <!-- Items Table -->
-        <div v-else class="items-table-wrapper">
-          <DataTable :value="cartItems" class="items-table" dataKey="objectId">
+        <!-- Items Table (show with skeletons when loading) -->
+        <div
+          v-else
+          class="items-table-wrapper"
+          :class="{ 'table-updating': cartUpdating }"
+        >
+          <DataTable
+            :value="cartLoading ? skeletonRows : cartItems"
+            :class="['items-table data-table', { loading: cartLoading }]"
+            dataKey="id"
+            tableStyle="table-layout: fixed"
+          >
             <!-- Product ID Column -->
-            <Column field="id" header="Product ID" :style="{ width: '15%' }">
+            <Column
+              field="product_id"
+              header="Product ID"
+              :style="{ width: '120px', minWidth: '100px' }"
+            >
               <template #body="{ data }">
-                <span class="item-id">{{ data.id }}</span>
+                <div
+                  v-if="cartLoading"
+                  class="skeleton skeleton-text"
+                  style="width: 80px"
+                ></div>
+                <span v-else class="item-id">{{ data.product_id }}</span>
               </template>
             </Column>
 
             <!-- Description Column -->
-            <Column
-              field="descr_1"
-              header="Description"
-              :style="{ width: '45%' }"
-            >
+            <Column field="name" header="Description" class="description-column">
               <template #body="{ data }">
-                <div class="item-description-wrapper">
-                  <span class="item-description">{{ data.descr_1 }}</span>
-                  <span v-if="data.descr_2" class="item-description-2">{{
-                    data.descr_2
-                  }}</span>
+                <div
+                  v-if="cartLoading"
+                  class="skeleton skeleton-text"
+                  style="width: 200px"
+                ></div>
+                <div v-else class="item-description-wrapper">
+                  <span class="item-description">{{ data.name }}</span>
                 </div>
               </template>
             </Column>
 
             <!-- Quantity Column -->
-            <Column field="count" header="Qty" :style="{ width: '14%' }">
+            <Column field="quantity" header="Qty" :style="{ width: '140px', minWidth: '120px' }">
               <template #body="{ data }">
+                <div
+                  v-if="cartLoading"
+                  class="skeleton skeleton-text"
+                  style="width: 60px"
+                ></div>
                 <QuantityInput
-                  v-model="data.count"
+                  v-else
+                  v-model="data.quantity"
                   :max-count="data.max_count"
-                  :ignore-count="data.ignoreCount"
+                  :ignore-count="data.ignore_count"
+                  :disabled="cartUpdating"
                 />
               </template>
             </Column>
 
             <!-- Unit Price Column -->
-            <Column field="cost" header="Unit Price" :style="{ width: '12%' }">
+            <Column field="price" header="Unit Price" :style="{ width: '100px', minWidth: '90px' }" class="hide-on-mobile">
               <template #body="{ data }">
-                <span class="item-price">{{ formatCurrency(data.cost) }}</span>
+                <div
+                  v-if="cartLoading"
+                  class="skeleton skeleton-text"
+                  style="width: 70px"
+                ></div>
+                <span v-else class="item-price">{{
+                  formatCurrency(data.price)
+                }}</span>
               </template>
             </Column>
 
             <!-- Line Total Column -->
-            <Column header="Total" :style="{ width: '12%' }">
+            <Column header="Total" :style="{ width: '100px', minWidth: '90px' }">
               <template #body="{ data }">
-                <span class="item-total">
+                <div
+                  v-if="cartLoading"
+                  class="skeleton skeleton-text"
+                  style="width: 70px"
+                ></div>
+                <span v-else class="item-total">
                   {{ formatCurrency(getLineTotal(data)) }}
                 </span>
               </template>
             </Column>
 
             <!-- Actions Column -->
-            <Column :style="{ width: '8%', textAlign: 'center' }">
+            <Column :style="{ width: '80px', minWidth: '80px', textAlign: 'center' }">
               <template #body="{ data }">
-                <div class="flex gap-2 justify-content-center">
+                <div v-if="cartLoading" class="skeleton skeleton-circle"></div>
+                <div v-else class="flex gap-1 justify-content-center item-actions">
                   <Button
                     icon="pi pi-pencil"
                     text
                     rounded
                     severity="primary"
                     size="small"
+                    :disabled="cartUpdating"
                     @click="openEditModal(data)"
                     v-tooltip.top="'Edit'"
                   />
@@ -314,7 +372,8 @@
                     rounded
                     severity="danger"
                     size="small"
-                    @click="removeItem(data.objectId)"
+                    :disabled="cartUpdating"
+                    @click="removeItem(data.id)"
                     v-tooltip.top="'Remove'"
                   />
                 </div>
@@ -325,21 +384,49 @@
       </div>
 
       <!-- Proposal Summary -->
-      <div v-if="cart" class="proposal-summary">
-        <div v-if="hasDiscount" class="summary-row">
-          <span class="summary-label">Original Price</span>
-          <span class="summary-value summary-old-price">
-            {{ formatCurrency(cart.oldTotal) }}
-          </span>
-        </div>
-        <div class="summary-row summary-total">
-          <span class="summary-label">Total</span>
-          <span class="summary-value">{{ formatCurrency(cart.total) }}</span>
-        </div>
+      <div
+        v-if="cart || cartLoading"
+        class="proposal-summary"
+        v-motion
+        :initial="cardEnter(3).initial"
+        :enter="cardEnter(3).enter"
+      >
+        <!-- Loading/Updating State -->
+        <template v-if="cartLoading">
+          <div class="summary-row">
+            <div class="skeleton skeleton-text" style="width: 80px"></div>
+            <div class="skeleton skeleton-text" style="width: 100px"></div>
+          </div>
+        </template>
+        <template v-else>
+          <div v-if="hasDiscount" class="summary-row">
+            <span class="summary-label">Original Price</span>
+            <span
+              class="summary-value summary-old-price"
+              :class="{ 'value-updating': cartUpdating }"
+            >
+              {{ formatCurrency(cart!.old_total) }}
+            </span>
+          </div>
+          <div class="summary-row summary-total">
+            <span class="summary-label">Total</span>
+            <span
+              class="summary-value"
+              :class="{ 'value-updating': cartUpdating }"
+            >
+              {{ formatCurrency(cart!.total) }}
+            </span>
+          </div>
+        </template>
       </div>
 
       <!-- Actions -->
-      <div class="proposal-actions">
+      <div
+        class="proposal-actions"
+        v-motion
+        :initial="cardEnter(4).initial"
+        :enter="cardEnter(4).enter"
+      >
         <Button
           label="Cancel"
           severity="secondary"
@@ -350,14 +437,20 @@
           label="Clear All"
           severity="secondary"
           outlined
-          :disabled="cartItems.length === 0"
+          :disabled="cartItems.length === 0 || cartUpdating || cartLoading"
+          :loading="clearingCart"
           @click="clearAllItems"
         />
         <Button
           label="Create Proposal"
           severity="success"
           icon="pi pi-check"
-          :disabled="!selectedCustomer || cartItems.length === 0"
+          :disabled="
+            !selectedCustomer ||
+            cartItems.length === 0 ||
+            cartUpdating ||
+            cartLoading
+          "
           @click="createProposal"
         />
       </div>
@@ -369,7 +462,7 @@
       :product="editingProduct"
       :mode="editModalMode"
       :initial-quantity="
-        editModalMode === 'edit' ? (editingProduct as CartItem).count : 1
+        editModalMode === 'edit' ? (editingProduct as CartItem).quantity : 1
       "
       :project-id="selectedProjectId"
       :loading="configurationsLoading"
@@ -397,17 +490,22 @@ import { useProjectsStore } from "~/stores/projects";
 import { useUiStore } from "~/stores/ui";
 import { USER_ROLES } from "~/utils/constants";
 import { useCustomers } from "~/composables/useCustomers";
+import { useMotionPresets } from "~/composables/useMotion";
 
 definePageMeta({
   middleware: "auth",
 });
 
+const route = useRoute();
 const router = useRouter();
 const productsApi = useProducts();
 const customersApi = useCustomers();
-const { getCart, addItem, deleteItem, getPayload } = useCart();
+const { getCart, addItem, deleteItem, flushCart, buildAddPayload } = useCart();
 const toast = useToast();
 const auth = useAuth();
+
+// Animation presets
+const { fadeInUp, cardEnter } = useMotionPresets();
 
 // Store management
 const projectsStore = useProjectsStore();
@@ -425,8 +523,24 @@ const isSuperAdmin = computed(
 const customerOptions = ref<Customer[]>([]);
 const customerSearchLoading = ref(false);
 
-// For Yura. This is the customer that will be used to create the proposal.
+// Selected customer - persisted in URL
 const selectedCustomer = ref<Customer | null>(null);
+
+// Get customer_id from URL query parameter
+const customerIdFromUrl = computed(
+  () => route.query.customer_id as string | undefined,
+);
+
+// Update URL when customer is selected
+function updateCustomerInUrl(customerId: string | null) {
+  const query = { ...route.query };
+  if (customerId) {
+    query.customer_id = customerId;
+  } else {
+    delete query.customer_id;
+  }
+  router.replace({ query });
+}
 
 // Product search state
 const productOptions = ref<Product[]>([]);
@@ -447,19 +561,36 @@ onClickOutside(productSearchWrapper, () => {
 // Cart state
 const cart = ref<Cart | null>(null);
 const cartLoading = ref(false);
+const cartUpdating = ref(false); // For cart operations (add/remove/update)
 const cartError = ref<string | null>(null);
+
+// Skeleton rows for loading state
+const skeletonRows = computed(() => {
+  return Array.from({ length: 3 }, (_, i) => ({
+    id: `skeleton-${i}`,
+    product_id: "",
+    name: "",
+    quantity: 0,
+    price: 0,
+    max_count: 999,
+    ignore_count: false,
+  }));
+});
 
 // Edit modal state
 const editModalVisible = ref(false);
 const editingProduct = ref<Product | CartItem | null>(null);
 const editModalMode = ref<"add" | "edit">("add");
 
+// Clear cart state
+const clearingCart = ref(false);
+
 // Computed values
 const cartItems = computed(() => cart.value?.items ?? []);
 const hasDiscount = computed(() => {
   if (!cart.value) return false;
-  const total = parseFloat(cart.value.total) || 0;
-  const oldTotal = parseFloat(cart.value.oldTotal) || 0;
+  const total = cart.value.total || 0;
+  const oldTotal = cart.value.old_total || 0;
   return oldTotal > total;
 });
 
@@ -477,14 +608,92 @@ onMounted(async () => {
     await until(projectsLoading).toBe(false);
   }
 
-  // Preload customers only (products require customer_id)
-  await loadInitialCustomers();
+  // If customer_id is in URL, load cart first, then customer data in parallel with customers list
+  if (customerIdFromUrl.value) {
+    await loadFromUrlCustomer(customerIdFromUrl.value);
+  } else {
+    // No customer in URL - just load customers list
+    await loadInitialCustomers();
+  }
 });
 
+// Flag to skip cart loading when setting customer from URL (cart already loaded)
+let skipNextCartLoad = false;
+
+// Reset to clean state (as if no customer_id in URL)
+function resetToCleanState() {
+  skipNextCartLoad = false;
+  selectedCustomer.value = null;
+  cart.value = null;
+  cartLoading.value = false;
+  updateCustomerInUrl(null);
+}
+
+// Load cart and customer from URL (cart first for faster UX)
+async function loadFromUrlCustomer(customerId: string) {
+  const projectId =
+    isSuperAdmin.value && selectedProjectId.value !== null
+      ? selectedProjectId.value
+      : undefined;
+
+  // Show customer ID in dropdown immediately (placeholder with just ID)
+  const placeholderCustomer: Customer = {
+    id: customerId,
+    l_name: customerId, // Show ID as name until full data loads
+  };
+  skipNextCartLoad = true;
+  selectedCustomer.value = placeholderCustomer;
+  customerOptions.value = [placeholderCustomer];
+
+  // Load cart first (most important for UX)
+  cartLoading.value = true;
+  try {
+    cart.value = await getCart(customerId);
+  } catch {
+    // Cart failed - customer ID is likely invalid, reset to clean state
+    resetToCleanState();
+    await loadInitialCustomers();
+    return;
+  }
+  cartLoading.value = false;
+
+  // Cart loaded successfully - now load customer data and customers list in parallel
+  const [customer] = await Promise.all([
+    customersApi.getById(customerId, undefined, projectId).catch(() => null),
+    loadInitialCustomers(),
+  ]);
+
+  if (customer) {
+    // Update with full customer data
+    selectedCustomer.value = customer;
+    // Update in options list
+    const index = customerOptions.value.findIndex((c) => c.id === customer.id);
+    if (index >= 0) {
+      customerOptions.value[index] = customer;
+    } else {
+      customerOptions.value = [customer, ...customerOptions.value];
+    }
+  } else {
+    // Customer not found (404) - reset to clean state
+    resetToCleanState();
+  }
+}
+
 // Load cart and clear products when customer is changed
-watch(selectedCustomer, async (customer) => {
+watch(selectedCustomer, async (customer, oldCustomer) => {
   productOptions.value = [];
   cartError.value = null;
+
+  // Update URL when customer changes
+  if (customer?.id !== oldCustomer?.id) {
+    updateCustomerInUrl(customer?.id ?? null);
+  }
+
+  // Skip cart loading if flag is set (cart was already loaded from URL)
+  if (skipNextCartLoad) {
+    skipNextCartLoad = false;
+    return;
+  }
 
   if (customer) {
     cartLoading.value = true;
@@ -710,50 +919,97 @@ async function selectProduct(product: Product) {
       }
     }
   } else {
-    const payload = getPayload(selectedProductCopy, 1, []);
+    const unit = selectedProductCopy.unit || selectedProductCopy.def_unit || "";
+    const payload = buildAddPayload(selectedProductCopy, 1, unit, []);
 
+    cartUpdating.value = true;
     configurationsLoading.value = true;
     try {
-      await addItem(payload);
+      const updatedCart = await addItem(payload, selectedCustomer.value?.id);
+      cart.value = updatedCart;
       toast.showSuccess(`${selectedProductCopy.id} added to cart`);
     } catch (error) {
       console.error("Failed to add product:", error);
       toast.showError("Failed to add product to cart");
     } finally {
       configurationsLoading.value = false;
+      cartUpdating.value = false;
     }
   }
 }
 
 function getLineTotal(item: CartItem): number {
-  const price = parseFloat(item.price) || 0;
-  return price * item.count;
+  // price is already a number from API, quantity replaces count
+  return (item.price || 0) * (item.quantity || 0);
 }
 
-async function removeItem(objectId: string) {
-  if (!cart.value) return;
+async function removeItem(itemId: number) {
+  if (!cart.value || !selectedCustomer.value) return;
 
-  const index = cart.value.items.findIndex(
-    (item) => item.objectId === objectId,
-  );
+  const index = cart.value.items.findIndex((item) => item.id === itemId);
   if (index !== -1) {
     const removed = cart.value.items[index];
+    cartUpdating.value = true;
     try {
-      await deleteItem(objectId);
-      cart.value.items.splice(index, 1);
-      toast.showInfo(`${removed.id} removed`);
+      const updatedCart = await deleteItem(itemId, selectedCustomer.value.id);
+      cart.value = updatedCart;
+      toast.showSuccess(`${removed.product_id} removed from cart`);
     } catch (error) {
       console.error("Failed to remove item:", error);
       toast.showError("Failed to remove item from cart");
+    } finally {
+      cartUpdating.value = false;
     }
   }
 }
 
-function clearAllItems() {
-  if (cart.value) {
-    cart.value.items = [];
+async function clearAllItems() {
+  if (!cart.value || !selectedCustomer.value || cartItems.value.length === 0)
+    return;
+
+  clearingCart.value = true;
+  cartUpdating.value = true;
+  try {
+    await flushCart(selectedCustomer.value.id);
+    cart.value = { ...cart.value, items: [], total: 0, old_total: 0 };
+    toast.showSuccess("All items cleared from cart");
+  } catch (error) {
+    console.error("Failed to clear cart:", error);
+    toast.showError("Failed to clear cart");
+  } finally {
+    clearingCart.value = false;
+    cartUpdating.value = false;
   }
-  toast.showInfo("All items cleared");
+}
+
+async function retryLoadCart() {
+  if (!selectedCustomer.value) return;
+
+  cartLoading.value = true;
+  cartError.value = null;
+  try {
+    cart.value = await getCart(selectedCustomer.value.id);
+  } catch (error) {
+    console.error("Failed to load cart:", error);
+    cartError.value = "Failed to load cart";
+    toast.showError("Failed to load cart");
+  } finally {
+    cartLoading.value = false;
+  }
+}
+
+// Refresh cart after any operation to get updated totals
+async function refreshCart() {
+  if (!selectedCustomer.value) return;
+
+  cartUpdating.value = true;
+  try {
+    cart.value = await getCart(selectedCustomer.value.id);
+  } catch (error) {
+    console.error("Failed to refresh cart:", error);
+  } finally {
+    cartUpdating.value = false;
+  }
 }
 
 function createProposal() {
@@ -764,10 +1020,54 @@ function createProposal() {
   }
 }
 
-function openEditModal(product: CartItem) {
+async function openEditModal(product: CartItem) {
+  // Set product FIRST, then open modal (template has v-if="editingProduct")
   editingProduct.value = { ...product };
   editModalMode.value = "edit";
   editModalVisible.value = true;
+
+  // CartItem only has saved selections, need to fetch full configuration data
+  if (product.configurations?.length > 0 && selectedCustomer.value) {
+    configurationsLoading.value = true;
+
+    try {
+      const configData = await productsApi.getConfigurations(
+        product.product_autoid,
+        selectedCustomer.value.id,
+        selectedProjectId.value,
+      );
+
+      // Mark saved selections as active in the full configuration data
+      if (configData.configurations) {
+        // Build map from group name to saved item ID (each group has one selection)
+        const savedByGroup = new Map<string, string>();
+        for (const config of product.configurations as any[]) {
+          savedByGroup.set(config.name, config.id);
+        }
+
+        // Mark the correct item for each group (only ONE per group)
+        for (const group of configData.configurations) {
+          const savedItemId = savedByGroup.get(group.name);
+          for (const item of group.items || []) {
+            item.active = item.id === savedItemId;
+          }
+        }
+      }
+
+      // Update product with full configuration structure
+      editingProduct.value = {
+        ...product,
+        configurations: configData as any,
+      };
+    } catch (error) {
+      console.error("Failed to load configurations:", error);
+      toast.showError("Failed to load product configurations");
+      editModalVisible.value = false;
+      editingProduct.value = null;
+    } finally {
+      configurationsLoading.value = false;
+    }
+  }
 }
 
 function closeEditModal() {
@@ -775,9 +1075,19 @@ function closeEditModal() {
   editingProduct.value = null;
 }
 
-function onProductSaved(payload: any) {
+async function onProductSaved(payload: any) {
   editModalVisible.value = false;
   editingProduct.value = null;
+
+  // Refresh cart to get updated data and totals
+  await refreshCart();
+
+  // Show appropriate toast based on mode
+  if (editModalMode.value === "add") {
+    toast.showSuccess("Product added to cart");
+  } else {
+    toast.showSuccess("Product updated");
+  }
 }
 </script>
 
@@ -1193,6 +1503,42 @@ function onProductSaved(payload: any) {
   border-radius: var(--radius-sm);
 }
 
+// Cart updating indicator
+.cart-updating-indicator {
+  font-size: 0.875rem;
+  color: var(--color-primary);
+}
+
+// Table updating state
+.table-updating {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.5);
+    pointer-events: none;
+    z-index: 10;
+  }
+}
+
+// Value updating state (pulsing animation)
+.value-updating {
+  opacity: 0.6;
+  animation: pulse-opacity 1s ease-in-out infinite;
+}
+
+@keyframes pulse-opacity {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
 // Items Loading State
 .items-loading {
   display: flex;
@@ -1260,11 +1606,13 @@ function onProductSaved(payload: any) {
 .items-table-wrapper {
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-sm);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .items-table {
   width: 100%;
+  min-width: 600px;
 
   :deep(.p-datatable-thead > tr > th) {
     background: var(--surface-50);
@@ -1273,12 +1621,19 @@ function onProductSaved(payload: any) {
     color: var(--color-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.3px;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 0.75rem;
+    white-space: nowrap;
   }
 
   :deep(.p-datatable-tbody > tr > td) {
-    padding: 0.875rem 1rem;
+    padding: 0.75rem 0.75rem;
     vertical-align: middle;
+  }
+
+  // Description column takes remaining space
+  :deep(.description-column) {
+    width: auto;
+    min-width: 150px;
   }
 }
 
@@ -1287,11 +1642,13 @@ function onProductSaved(payload: any) {
   font-size: var(--font-size-body-s);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
+  word-break: break-all;
 }
 
 .item-description {
   font-size: var(--font-size-body-s);
   color: var(--color-text-primary);
+  line-height: 1.4;
 
   &-wrapper {
     display: flex;
@@ -1308,12 +1665,18 @@ function onProductSaved(payload: any) {
 .item-price {
   font-size: var(--font-size-body-s);
   color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 .item-total {
   font-size: var(--font-size-body-s);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.item-actions {
+  flex-wrap: nowrap;
 }
 
 // Proposal Summary
@@ -1372,8 +1735,28 @@ function onProductSaved(payload: any) {
 }
 
 // Responsive
+@media (max-width: 1024px) {
+  .items-table {
+    min-width: 550px;
+
+    :deep(.p-datatable-thead > tr > th),
+    :deep(.p-datatable-tbody > tr > td) {
+      padding: 0.625rem 0.5rem;
+    }
+
+    // Hide unit price on tablets
+    :deep(.hide-on-mobile) {
+      display: none;
+    }
+  }
+}
+
 @media (max-width: 768px) {
   .proposal-create-page {
+    padding: 1rem;
+  }
+
+  .proposal-section {
     padding: 1rem;
   }
 
@@ -1396,10 +1779,49 @@ function onProductSaved(payload: any) {
   }
 
   .items-table {
+    min-width: 480px;
+
     :deep(.p-datatable-thead > tr > th),
     :deep(.p-datatable-tbody > tr > td) {
-      padding: 0.5rem;
+      padding: 0.5rem 0.375rem;
+      font-size: var(--font-size-body-xs);
     }
+
+    :deep(.hide-on-mobile) {
+      display: none;
+    }
+  }
+
+  .item-id {
+    font-size: var(--font-size-body-xs);
+  }
+
+  .item-description {
+    font-size: var(--font-size-body-xs);
+  }
+
+  .item-total {
+    font-size: var(--font-size-body-xs);
+  }
+
+  .item-actions {
+    gap: 0;
+    
+    :deep(.p-button) {
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  .proposal-summary {
+    padding: 1rem;
+  }
+
+  .proposal-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 1rem;
+    gap: 0.5rem;
   }
 }
 </style>

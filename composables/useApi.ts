@@ -32,8 +32,12 @@ export const useApi = () => {
     });
   };
 
-  const del = <T>(url: string, options?: RequestInit) => {
-    return apiClient<T>(url, { ...options, method: "DELETE" });
+  const del = <T>(url: string, data?: any, options?: RequestInit) => {
+    return apiClient<T>(url, {
+      ...options,
+      method: "DELETE",
+      body: data ? JSON.stringify(data) : undefined,
+    });
   };
 
   return {

@@ -1,10 +1,10 @@
 <!-- components/offer/QuantityInput.vue -->
 <template>
-  <div class="quantity-container" :class="{ 'quantity-error': hasError }">
+  <div class="quantity-container" :class="{ 'quantity-error': hasError, 'quantity-disabled': isDisabled }">
     <button
       type="button"
       class="quantity-btn quantity-btn--minus"
-      :disabled="modelValue <= 1"
+      :disabled="isDisabled || modelValue <= 1"
       @click="decrement"
     >
       <i class="pi pi-minus" />
@@ -15,13 +15,14 @@
       :value="modelValue"
       :min="1"
       :max="maxAllowed"
+      :disabled="isDisabled"
       @input="onInput"
       @blur="onBlur"
     />
     <button
       type="button"
       class="quantity-btn quantity-btn--plus"
-      :disabled="!ignoreCount && modelValue >= maxCount"
+      :disabled="isDisabled || (!ignoreCount && modelValue >= maxCount)"
       @click="increment"
     >
       <i class="pi pi-plus" />
@@ -39,10 +40,12 @@ const props = withDefaults(
     modelValue: number;
     maxCount?: number;
     ignoreCount?: boolean;
+    disabled?: boolean;
   }>(),
   {
     maxCount: 9999,
     ignoreCount: false,
+    disabled: false,
   },
 );
 
@@ -55,6 +58,13 @@ const maxAllowed = computed(() => (props.ignoreCount ? 9999 : props.maxCount));
 const hasError = computed(() => {
   if (props.ignoreCount) return false;
   return props.modelValue > props.maxCount;
+});
+
+// Disable when explicitly disabled, has error, or max is 0
+const isDisabled = computed(() => {
+  if (props.disabled) return true;
+  if (props.ignoreCount) return false;
+  return props.maxCount <= 0 || props.modelValue > props.maxCount;
 });
 
 function decrement() {
@@ -118,6 +128,12 @@ function onBlur(event: Event) {
   border-color: var(--color-error-900);
 }
 
+.quantity-container.quantity-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+  background: var(--surface-100);
+}
+
 .quantity-btn {
   display: flex;
   align-items: center;
@@ -171,6 +187,10 @@ function onBlur(event: Event) {
 
 .quantity-error .quantity-input {
   color: var(--color-error-900);
+}
+
+.quantity-disabled .quantity-input {
+  cursor: not-allowed;
 }
 
 .quantity-error-message {

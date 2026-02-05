@@ -1,15 +1,15 @@
-import type { Product, CartItem, Cart } from "~/types/models";
+import type { Product, CartItem, Cart, CartConfiguration } from "~/types/models";
 
-export interface CartConfiguration {
-  name: string;
-  id: string | number;
+export interface AddToCartPayload {
+  product_autoid: string;
+  quantity: number;
+  unit: string;
+  configurations?: CartConfiguration[];
 }
 
-export interface CartPayload {
-  product_autoid: string | number;
-  unit: string;
-  quantity: number;
-  configurations: CartConfiguration[];
+export interface UpdateCartItemPayload {
+  quantity?: number;
+  configurations?: CartConfiguration[];
 }
 
 export const useCart = () => {
@@ -20,6 +20,7 @@ export const useCart = () => {
 
   /**
    * Get cart for a customer
+   * Returns cart snapshot with totals and items (prices fetched fresh from EBMS)
    */
   async function getCart(customerId: string): Promise<Cart> {
     currentCustomerId = customerId;
@@ -31,60 +32,96 @@ export const useCart = () => {
   /**
    * Build cart payload from product data
    */
-  function getPayload(
-    product: Product | CartItem,
+  function buildAddPayload(
+    product: Product,
     quantity: number,
+    unit: string,
     configurations: CartConfiguration[] = [],
-  ): CartPayload {
+  ): AddToCartPayload {
     return {
       product_autoid: product.autoid,
-      unit: product.unit || product.def_unit || "",
       quantity,
-      configurations,
+      unit,
+      configurations: configurations.length > 0 ? configurations : undefined,
     };
   }
 
   /**
    * Add item to cart
+   * If same product + unit + configurations exists, quantity is merged
+   * Returns updated cart snapshot
    */
-  async function addItem(payload: CartPayload, customerId?: string) {
-    const customerIdToUse = customerId ?? currentCustomerId;
-    const url = customerIdToUse
-      ? `/cart?customer_id=${encodeURIComponent(customerIdToUse)}`
-      : "/cart/";
-    return api.post(url, payload);
-  }
-
-  /**
-   * Update cart item
-   */
-  async function changeItem(
-    itemId: string | number,
-    payload: Partial<CartPayload>,
+  async function addItem(
+    payload: AddToCartPayload,
     customerId?: string,
-  ) {
+  ): Promise<Cart> {
     const customerIdToUse = customerId ?? currentCustomerId;
-    const url = customerIdToUse
-      ? `/cart/${itemId}/?customer_id=${encodeURIComponent(customerIdToUse)}`
-      : `/cart/${itemId}/`;
-    return api.patch(url, payload);
+    if (!customerIdToUse) {
+      throw new Error("customer_id is required for cart operations");
+    }
+    return api.post<Cart>(
+      `/cart/?customer_id=${encodeURIComponent(customerIdToUse)}`,
+      payload,
+    );
   }
 
   /**
-   * Delete cart item
+   * Update cart item quantity and/or configurations
+   * Returns updated cart snapshot
    */
-  async function deleteItem(itemId: string | number) {
-    const url = currentCustomerId
-      ? `/cart/${itemId}/?customer_id=${encodeURIComponent(currentCustomerId)}`
-      : `/cart/${itemId}/`;
-    return api.delete(url);
+  async function updateItem(
+    itemId: number,
+    payload: UpdateCartItemPayload,
+    customerId?: string,
+  ): Promise<Cart> {
+    const customerIdToUse = customerId ?? currentCustomerId;
+    if (!customerIdToUse) {
+      throw new Error("customer_id is required for cart operations");
+    }
+    return api.patch<Cart>(
+      `/cart/${itemId}/?customer_id=${encodeURIComponent(customerIdToUse)}`,
+      payload,
+    );
+  }
+
+  /**
+   * Delete a single cart item
+   * Returns updated cart snapshot
+   */
+  async function deleteItem(
+    itemId: number,
+    customerId?: string,
+  ): Promise<Cart> {
+    const customerIdToUse = customerId ?? currentCustomerId;
+    if (!customerIdToUse) {
+      throw new Error("customer_id is required for cart operations");
+    }
+    return api.delete<Cart>(
+      `/cart/${itemId}/?customer_id=${encodeURIComponent(customerIdToUse)}`,
+    );
+  }
+
+  /**
+   * Flush cart (delete all items)
+   * Requires { flush: true } in request body
+   */
+  async function flushCart(customerId?: string): Promise<void> {
+    const customerIdToUse = customerId ?? currentCustomerId;
+    if (!customerIdToUse) {
+      throw new Error("customer_id is required for cart operations");
+    }
+    return api.delete(
+      `/cart/?customer_id=${encodeURIComponent(customerIdToUse)}`,
+      { flush: true },
+    );
   }
 
   return {
     getCart,
-    getPayload,
+    buildAddPayload,
     addItem,
-    changeItem,
+    updateItem,
     deleteItem,
+    flushCart,
   };
 };
