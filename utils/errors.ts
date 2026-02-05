@@ -99,6 +99,11 @@ export function getErrorMessage(error: unknown): string {
   }
 
   if (error instanceof Error) {
+    // Check for FetchError with data.detail (from Nuxt $fetch / ofetch)
+    const fetchError = error as Error & { data?: { detail?: string } };
+    if (fetchError.data?.detail) {
+      return fetchError.data.detail;
+    }
     return error.message;
   }
 
