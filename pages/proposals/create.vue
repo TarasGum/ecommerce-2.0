@@ -389,7 +389,7 @@ import PriceDisplay from "~/components/offer/PriceDisplay.vue";
 import Tag from "primevue/tag";
 import ProductEditModal from "~/components/proposals/ProductEditModal.vue";
 import { storeToRefs } from "pinia";
-import { until, onClickOutside } from "@vueuse/core";
+import { until, onClickOutside, useDebounceFn } from "@vueuse/core";
 import type { Product, Customer, CartItem, Cart } from "~/types/models";
 import { formatCurrency } from "~/utils/formatters";
 import { useProjectsStore } from "~/stores/projects";
@@ -435,6 +435,7 @@ const productSearchQuery = ref("");
 const showProductResults = ref(false);
 const highlightedIndex = ref(-1);
 const productSearchWrapper = ref<HTMLElement | null>(null);
+let productSearchRequestId = 0; // Track latest request to ignore stale responses
 
 // Close product search on click outside
 onClickOutside(productSearchWrapper, () => {
@@ -566,19 +567,44 @@ function highlightMatch(text: string, query: string): string {
   return text.replace(regex, '<mark class="search-highlight">$1</mark>');
 }
 
-// Search products with debounce
-let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+// Debounced product search
+const debouncedProductSearch = useDebounceFn(async (query: string) => {
+  const currentRequestId = ++productSearchRequestId;
+
+  try {
+    const params: any = {
+      limit: 50,
+      customer_id: selectedCustomer.value!.id,
+    };
+    if (selectedProjectId.value !== null) {
+      params.project_id = selectedProjectId.value;
+    }
+
+    const response = await productsApi.searchById(query, params);
+
+    // Only update if this is still the latest request
+    if (currentRequestId === productSearchRequestId) {
+      productOptions.value = response.results;
+    }
+  } catch (error) {
+    // Only handle error if this is still the latest request
+    if (currentRequestId === productSearchRequestId) {
+      console.error("Failed to search products:", error);
+      productOptions.value = [];
+    }
+  } finally {
+    // Only update loading state if this is still the latest request
+    if (currentRequestId === productSearchRequestId) {
+      productSearchLoading.value = false;
+    }
+  }
+}, 300);
 
 function onProductSearchInput() {
   if (!selectedCustomer.value) return;
 
   const query = productSearchQuery.value.trim();
   highlightedIndex.value = -1;
-
-  // Clear previous timeout
-  if (searchTimeout) {
-    clearTimeout(searchTimeout);
-  }
 
   // Don't search if query is empty
   if (!query) {
@@ -592,26 +618,8 @@ function onProductSearchInput() {
   productSearchLoading.value = true;
   showProductResults.value = true;
 
-  // Debounce search
-  searchTimeout = setTimeout(async () => {
-    try {
-      const params: any = {
-        limit: 50,
-        customer_id: selectedCustomer.value!.id,
-      };
-      if (selectedProjectId.value !== null) {
-        params.project_id = selectedProjectId.value;
-      }
-
-      const response = await productsApi.searchById(query, params);
-      productOptions.value = response.results;
-    } catch (error) {
-      console.error("Failed to search products:", error);
-      productOptions.value = [];
-    } finally {
-      productSearchLoading.value = false;
-    }
-  }, 300);
+  // Trigger debounced search
+  debouncedProductSearch(query);
 }
 
 function onProductSearchFocus() {
