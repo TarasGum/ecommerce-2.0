@@ -6,9 +6,9 @@ export interface CartConfiguration {
 }
 
 export interface CartPayload {
-  id: string | number;
+  product_autoid: string | number;
   unit: string;
-  count: number;
+  quantity: number;
   configurations: CartConfiguration[];
 }
 
@@ -31,13 +31,13 @@ export const useCart = () => {
    */
   function getPayload(
     product: Product | CartItem,
-    count: number,
+    quantity: number,
     configurations: CartConfiguration[] = [],
   ): CartPayload {
     return {
-      id: product.autoid,
+      product_autoid: product.autoid,
       unit: product.unit || product.def_unit || "",
-      count,
+      quantity,
       configurations,
     };
   }

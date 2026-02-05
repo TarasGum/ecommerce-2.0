@@ -351,7 +351,7 @@ async function handleSave() {
     if (props.mode === "add") {
       await addItem(payload, props.customerId ?? undefined);
     } else {
-      await changeItem(payload.id, payload, props.customerId ?? undefined);
+      await changeItem(payload.product_autoid, payload, props.customerId ?? undefined);
     }
 
     emit("save", payload);
