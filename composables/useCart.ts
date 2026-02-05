@@ -23,7 +23,9 @@ export const useCart = () => {
    */
   async function getCart(customerId: string): Promise<Cart> {
     currentCustomerId = customerId;
-    return api.get<Cart>(`/cart/?customer_id=${encodeURIComponent(customerId)}`);
+    return api.get<Cart>(
+      `/cart/?customer_id=${encodeURIComponent(customerId)}`,
+    );
   }
 
   /**
@@ -48,15 +50,19 @@ export const useCart = () => {
   async function addItem(payload: CartPayload, customerId?: string) {
     const customerIdToUse = customerId ?? currentCustomerId;
     const url = customerIdToUse
-      ? `/cart/add/?customer_id=${encodeURIComponent(customerIdToUse)}`
-      : "/cart/add/";
+      ? `/cart?customer_id=${encodeURIComponent(customerIdToUse)}`
+      : "/cart/";
     return api.post(url, payload);
   }
 
   /**
    * Update cart item
    */
-  async function changeItem(itemId: string | number, payload: Partial<CartPayload>, customerId?: string) {
+  async function changeItem(
+    itemId: string | number,
+    payload: Partial<CartPayload>,
+    customerId?: string,
+  ) {
     const customerIdToUse = customerId ?? currentCustomerId;
     const url = customerIdToUse
       ? `/cart/${itemId}/?customer_id=${encodeURIComponent(customerIdToUse)}`
