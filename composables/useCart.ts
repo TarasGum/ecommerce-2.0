@@ -45,9 +45,10 @@ export const useCart = () => {
   /**
    * Add item to cart
    */
-  async function addItem(payload: CartPayload) {
-    const url = currentCustomerId
-      ? `/cart/add/?customer_id=${encodeURIComponent(currentCustomerId)}`
+  async function addItem(payload: CartPayload, customerId?: string) {
+    const customerIdToUse = customerId ?? currentCustomerId;
+    const url = customerIdToUse
+      ? `/cart/add/?customer_id=${encodeURIComponent(customerIdToUse)}`
       : "/cart/add/";
     return api.post(url, payload);
   }
@@ -55,9 +56,10 @@ export const useCart = () => {
   /**
    * Update cart item
    */
-  async function changeItem(itemId: string | number, payload: Partial<CartPayload>) {
-    const url = currentCustomerId
-      ? `/cart/${itemId}/?customer_id=${encodeURIComponent(currentCustomerId)}`
+  async function changeItem(itemId: string | number, payload: Partial<CartPayload>, customerId?: string) {
+    const customerIdToUse = customerId ?? currentCustomerId;
+    const url = customerIdToUse
+      ? `/cart/${itemId}/?customer_id=${encodeURIComponent(customerIdToUse)}`
       : `/cart/${itemId}/`;
     return api.patch(url, payload);
   }

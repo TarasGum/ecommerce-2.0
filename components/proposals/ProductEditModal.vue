@@ -243,12 +243,14 @@ const props = withDefaults(
     initialQuantity?: number;
     projectId?: number | null;
     loading?: boolean;
+    customerId?: string | null;
   }>(),
   {
     mode: "add",
     initialQuantity: 1,
     projectId: null,
     loading: false,
+    customerId: null,
   },
 );
 
@@ -347,9 +349,9 @@ async function handleSave() {
   try {
     // TODO: Call API based on mode
     if (props.mode === "add") {
-      await addItem(payload);
+      await addItem(payload, props.customerId ?? undefined);
     } else {
-      await changeItem(payload.id, payload);
+      await changeItem(payload.id, payload, props.customerId ?? undefined);
     }
 
     emit("save", payload);

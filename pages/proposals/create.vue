@@ -373,6 +373,7 @@
       "
       :project-id="selectedProjectId"
       :loading="configurationsLoading"
+      :customer-id="selectedCustomer?.id"
       @close="closeEditModal"
       @save="onProductSaved"
     />
