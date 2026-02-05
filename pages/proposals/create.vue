@@ -684,14 +684,22 @@ watch(selectedCustomer, async (customer, oldCustomer) => {
   productOptions.value = [];
   cartError.value = null;
 
-  // Update URL when customer changes
-  if (customer?.id !== oldCustomer?.id) {
+  // Check if customer ID actually changed (not just the object reference)
+  const customerIdChanged = customer?.id !== oldCustomer?.id;
+
+  // Update URL when customer ID changes
+  if (customerIdChanged) {
     updateCustomerInUrl(customer?.id ?? null);
   }
 
   // Skip cart loading if flag is set (cart was already loaded from URL)
   if (skipNextCartLoad) {
     skipNextCartLoad = false;
+    return;
+  }
+
+  // Only load cart if customer ID actually changed (not just updating customer details)
+  if (!customerIdChanged) {
     return;
   }
 
