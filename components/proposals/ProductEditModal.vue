@@ -65,56 +65,93 @@
       <div class="product-data">
         <h1>{{ product.descr_1 }}</h1>
 
-        <!-- Price -->
-        <PriceDisplay
-          v-if="hasConfigurations || !hasMultipleUnits"
-          class="product-price"
-          :price="
-            hasConfigurations ? totalPrice : product.price || product.cost
-          "
-          :old-price="hasConfigurations ? totalOldPrice : product.old_price"
-        />
+        <!-- Loading Skeletons -->
+        <template v-if="loading">
+          <!-- Price Skeleton -->
+          <Skeleton width="140px" height="28px" class="product-price" />
 
-        <!-- Units (shown when multiple units exist) -->
-        <div v-if="hasMultipleUnits" class="product-section">
-          <h3 class="section-title">Unit of Meassure</h3>
-          <OfferUnits v-model="product.unit" :units="product.units" />
-        </div>
+          <!-- Specs Skeleton -->
+          <div v-if="product.product_specs?.length" class="product-section">
+            <Skeleton width="100px" height="14px" />
+            <div class="specs-skeleton">
+              <Skeleton v-for="i in 3" :key="i" width="100%" height="18px" />
+            </div>
+          </div>
 
-        <!-- Specs -->
-        <div v-if="product.product_specs?.length" class="product-section">
-          <h3 class="section-title">Specifications</h3>
-          <OfferSpecs :specs="product.product_specs" />
-        </div>
+          <!-- Quantity Skeleton -->
+          <div class="product-section">
+            <Skeleton width="70px" height="14px" />
+            <Skeleton width="130px" height="38px" borderRadius="6px" />
+          </div>
 
-        <!-- Quantity -->
-        <div class="product-section">
-          <h3 class="section-title">Quantity</h3>
-          <QuantityInput
-            v-model="quantity"
-            :max-count="maxCount"
-            :ignore-count="product.ignoreCount"
+          <!-- Configurations Skeleton -->
+          <div class="product-section">
+            <Skeleton width="110px" height="14px" />
+            <div class="configurations-skeleton">
+              <div v-for="i in 3" :key="i" class="config-skeleton-group">
+                <Skeleton width="120px" height="12px" />
+                <div class="config-skeleton-options">
+                  <Skeleton v-for="j in 4" :key="j" width="90px" height="32px" borderRadius="16px" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Actual Content -->
+        <template v-else>
+          <!-- Price -->
+          <PriceDisplay
+            v-if="hasConfigurations || !hasMultipleUnits"
+            class="product-price"
+            :price="
+              hasConfigurations ? totalPrice : product.price || product.cost
+            "
+            :old-price="hasConfigurations ? totalOldPrice : product.old_price"
           />
-        </div>
 
-        <!-- Configurations -->
-        <div v-if="hasConfigurations" class="product-section">
-          <h3 class="section-title">Configurations</h3>
-          <OfferConfigurations :configuration="product.configurations as any" :project-id="projectId" />
-        </div>
+          <!-- Units (shown when multiple units exist) -->
+          <div v-if="hasMultipleUnits" class="product-section">
+            <h3 class="section-title">Unit of Meassure</h3>
+            <OfferUnits v-model="product.unit" :units="product.units" />
+          </div>
+
+          <!-- Specs -->
+          <div v-if="product.product_specs?.length" class="product-section">
+            <h3 class="section-title">Specifications</h3>
+            <OfferSpecs :specs="product.product_specs" />
+          </div>
+
+          <!-- Quantity -->
+          <div class="product-section">
+            <h3 class="section-title">Quantity</h3>
+            <QuantityInput
+              v-model="quantity"
+              :max-count="maxCount"
+              :ignore-count="product.ignoreCount"
+            />
+          </div>
+
+          <!-- Configurations -->
+          <div v-if="hasConfigurations" class="product-section">
+            <h3 class="section-title">Configurations</h3>
+            <OfferConfigurations :configuration="product.configurations as any" :project-id="projectId" />
+          </div>
+        </template>
       </div>
     </div>
 
     <template #footer>
-      <span v-if="hasUncheckedRequired" class="validation-message">
+      <span v-if="hasUncheckedRequired && !loading" class="validation-message">
         <i class="pi pi-exclamation-circle" />
         Please select all required configurations
       </span>
       <Button label="Cancel" severity="secondary" text @click="handleClose" />
       <Button
         label="Save"
-        :disabled="hasUncheckedRequired"
-        :loading="isSaving"
+        severity="contrast"
+        :disabled="hasUncheckedRequired || loading"
+        :loading="isSaving || loading"
         @click="handleSave"
       />
     </template>
@@ -124,18 +161,21 @@
   <Dialog
     v-model:visible="showConfirmClose"
     modal
-    :closable="false"
+    :closable="true"
     :draggable="false"
-    header="Confirmation"
-    :style="{ width: '400px' }"
+    class="modal-sm"
   >
-    <div class="confirm-content">
-      <i class="pi pi-exclamation-triangle confirm-icon" />
-      <span>Are you sure you want to close without saving?</span>
-    </div>
+    <template #header>
+      <h2 class="modal-title">Unsaved Changes</h2>
+    </template>
+
+    <p class="dialog-description">
+      Are you sure you want to close without saving? Your changes will be lost.
+    </p>
+
     <template #footer>
-      <Button label="No" severity="secondary" text @click="cancelClose" />
-      <Button label="Yes" severity="danger" @click="confirmClose" />
+      <Button label="Cancel" severity="secondary" text @click="cancelClose" />
+      <Button label="Discard" severity="danger" @click="confirmClose" />
     </template>
   </Dialog>
 
@@ -176,6 +216,7 @@
 import Dialog from "primevue/dialog";
 import Button from "primevue/button";
 import Galleria from "primevue/galleria";
+import Skeleton from "primevue/skeleton";
 import QuantityInput from "~/components/offer/QuantityInput.vue";
 import PriceDisplay from "~/components/offer/PriceDisplay.vue";
 import type { Product, CartItem, Configuration } from "~/types/models";
@@ -201,11 +242,13 @@ const props = withDefaults(
     mode?: "add" | "edit";
     initialQuantity?: number;
     projectId?: number | null;
+    loading?: boolean;
   }>(),
   {
     mode: "add",
     initialQuantity: 1,
     projectId: null,
+    loading: false,
   },
 );
 
@@ -495,6 +538,33 @@ async function handleSave() {
   font-size: 12px;
 }
 
+// Skeleton styles
+.specs-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.configurations-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.config-skeleton-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.config-skeleton-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .section-title {
   margin: 0;
   font-size: 14px;
@@ -515,15 +585,11 @@ async function handleSave() {
   }
 }
 
-.confirm-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.confirm-icon {
-  font-size: 2rem;
-  color: var(--color-warning-500, #f59e0b);
+.dialog-description {
+  font-size: var(--font-size-body-s);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
 }
 </style>
 

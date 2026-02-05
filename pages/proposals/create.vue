@@ -6,14 +6,6 @@
       <h1 class="page-title">Create New Proposal</h1>
     </div>
 
-    <!-- Info Banner -->
-    <div class="info-banner mb-3">
-      <i class="pi pi-info-circle"></i>
-      <span>
-        Test API - Product pricing uses cost field. This will be changed.
-      </span>
-    </div>
-
     <!-- Proposal Card -->
     <div class="proposal-card">
       <!-- Customer Selection Section -->
@@ -380,6 +372,7 @@
         editModalMode === 'edit' ? (editingProduct as CartItem).count : 1
       "
       :project-id="selectedProjectId"
+      :loading="configurationsLoading"
       @close="closeEditModal"
       @save="onProductSaved"
     />
@@ -678,6 +671,12 @@ async function selectProduct(product: Product) {
   };
 
   if (needsModal) {
+    // Open modal immediately with loading state
+    editingProduct.value = selectedProductCopy;
+    editModalMode.value = "add";
+    editModalVisible.value = true;
+
+    // Then load configurations in the background
     if (hasConfigurations) {
       configurationsLoading.value = true;
       try {
@@ -686,19 +685,21 @@ async function selectProduct(product: Product) {
           selectedCustomer.value.id,
           selectedProjectId.value,
         );
-        selectedProductCopy.configurations = configData as any;
+        // Update the product with configurations
+        editingProduct.value = {
+          ...selectedProductCopy,
+          configurations: configData as any,
+        };
       } catch (error) {
         console.error("Failed to load configurations:", error);
         toast.showError("Failed to load product configurations");
-        return;
+        // Close modal on error
+        editModalVisible.value = false;
+        editingProduct.value = null;
       } finally {
         configurationsLoading.value = false;
       }
     }
-
-    editingProduct.value = selectedProductCopy;
-    editModalMode.value = "add";
-    editModalVisible.value = true;
   } else {
     const payload = getPayload(selectedProductCopy, 1, []);
 
@@ -788,7 +789,7 @@ function onProductSaved(payload: any) {
 
 .project-dropdown {
   min-width: 200px;
-  
+
   :deep(.p-dropdown-label) {
     padding: 0.625rem 1rem;
     font-size: var(--font-size-body-s);
