@@ -12,6 +12,19 @@ export interface UpdateCartItemPayload {
   configurations?: CartConfiguration[];
 }
 
+function buildCartUrl(
+  path: string,
+  customerId: string,
+  projectId?: number | null,
+): string {
+  const params = new URLSearchParams();
+  params.set("customer_id", customerId);
+  if (projectId !== undefined && projectId !== null) {
+    params.set("project_id", projectId.toString());
+  }
+  return `${path}?${params.toString()}`;
+}
+
 export const useCart = () => {
   const api = useApi();
 
@@ -22,11 +35,9 @@ export const useCart = () => {
    * Get cart for a customer
    * Returns cart snapshot with totals and items (prices fetched fresh from EBMS)
    */
-  async function getCart(customerId: string): Promise<Cart> {
+  async function getCart(customerId: string, projectId?: number | null): Promise<Cart> {
     currentCustomerId = customerId;
-    return api.get<Cart>(
-      `/cart/?customer_id=${encodeURIComponent(customerId)}`,
-    );
+    return api.get<Cart>(buildCartUrl("/cart/", customerId, projectId));
   }
 
   /**
@@ -54,13 +65,14 @@ export const useCart = () => {
   async function addItem(
     payload: AddToCartPayload,
     customerId?: string,
+    projectId?: number | null,
   ): Promise<Cart> {
     const customerIdToUse = customerId ?? currentCustomerId;
     if (!customerIdToUse) {
       throw new Error("customer_id is required for cart operations");
     }
     return api.post<Cart>(
-      `/cart/?customer_id=${encodeURIComponent(customerIdToUse)}`,
+      buildCartUrl("/cart/", customerIdToUse, projectId),
       payload,
     );
   }
@@ -73,13 +85,14 @@ export const useCart = () => {
     itemId: number,
     payload: UpdateCartItemPayload,
     customerId?: string,
+    projectId?: number | null,
   ): Promise<Cart> {
     const customerIdToUse = customerId ?? currentCustomerId;
     if (!customerIdToUse) {
       throw new Error("customer_id is required for cart operations");
     }
     return api.patch<Cart>(
-      `/cart/${itemId}/?customer_id=${encodeURIComponent(customerIdToUse)}`,
+      buildCartUrl(`/cart/${itemId}/`, customerIdToUse, projectId),
       payload,
     );
   }
@@ -91,13 +104,14 @@ export const useCart = () => {
   async function deleteItem(
     itemId: number,
     customerId?: string,
+    projectId?: number | null,
   ): Promise<Cart> {
     const customerIdToUse = customerId ?? currentCustomerId;
     if (!customerIdToUse) {
       throw new Error("customer_id is required for cart operations");
     }
     return api.delete<Cart>(
-      `/cart/${itemId}/?customer_id=${encodeURIComponent(customerIdToUse)}`,
+      buildCartUrl(`/cart/${itemId}/`, customerIdToUse, projectId),
     );
   }
 
@@ -105,13 +119,13 @@ export const useCart = () => {
    * Flush cart (delete all items)
    * Requires { flush: true } in request body
    */
-  async function flushCart(customerId?: string): Promise<void> {
+  async function flushCart(customerId?: string, projectId?: number | null): Promise<void> {
     const customerIdToUse = customerId ?? currentCustomerId;
     if (!customerIdToUse) {
       throw new Error("customer_id is required for cart operations");
     }
     return api.delete(
-      `/cart/?customer_id=${encodeURIComponent(customerIdToUse)}`,
+      buildCartUrl("/cart/", customerIdToUse, projectId),
       { flush: true },
     );
   }

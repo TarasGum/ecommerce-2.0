@@ -92,7 +92,7 @@ const productsApi = useProducts();
 const active = ref<string>();
 
 /**
- * Initialize active tab on mount (no default selections - user must choose)
+ * Initialize default selections on mount
  */
 onMounted(() => {
   if (!props.configuration?.configurations?.length) return;
@@ -100,10 +100,22 @@ onMounted(() => {
   // Set first configuration as active tab
   active.value = props.configuration.configurations[0].name;
 
-  // NOTE: We intentionally do NOT auto-select default items anymore.
-  // Users must manually select configurations.
-  // The only exception is edit mode where saved selections are already marked as active.
-  // Required configurations (allownone: false) are enforced by hasUncheckedRequired in useConfigurations.
+  // Set default items as active ONLY if no item is already active (from saved selections)
+  props.configuration.configurations.forEach((config) => {
+    // Skip if any item is already active (saved selection exists)
+    const hasActiveItem = config.items.some((item) => item.active);
+    if (hasActiveItem) return;
+
+    // No saved selection, apply default
+    if (config.default) {
+      const defaultItem = config.items.find(
+        (item) => item.id === config.default,
+      );
+      if (defaultItem) {
+        defaultItem.active = true;
+      }
+    }
+  });
 });
 
 /**

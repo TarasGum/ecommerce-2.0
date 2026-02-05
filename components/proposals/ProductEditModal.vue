@@ -435,7 +435,7 @@ async function handleSave() {
         props.product.unit || (props.product as Product).def_unit || '',
         activeConfigurations.value as CartConfiguration[],
       );
-      await addItem(addPayload, props.customerId ?? undefined);
+      await addItem(addPayload, props.customerId ?? undefined, props.projectId);
       emit("save", addPayload);
     } else {
       // Edit mode - use cart item id and update payload
@@ -444,7 +444,7 @@ async function handleSave() {
         quantity: quantity.value,
         configurations: activeConfigurations.value as CartConfiguration[],
       };
-      await updateItem(cartItem.id, updatePayload, props.customerId ?? undefined);
+      await updateItem(cartItem.id, updatePayload, props.customerId ?? undefined, props.projectId);
       emit("save", updatePayload);
     }
 

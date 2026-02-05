@@ -648,9 +648,10 @@ async function loadFromUrlCustomer(customerId: string) {
   // Load cart first (most important for UX)
   cartLoading.value = true;
   try {
-    cart.value = await getCart(customerId);
-  } catch {
+    cart.value = await getCart(customerId, projectId);
+  } catch (error) {
     // Cart failed - customer ID is likely invalid, reset to clean state
+    toast.showError(error, "Failed to load cart for customer");
     resetToCleanState();
     await loadInitialCustomers();
     return;
@@ -706,17 +707,41 @@ watch(selectedCustomer, async (customer, oldCustomer) => {
   if (customer) {
     cartLoading.value = true;
     try {
-      cart.value = await getCart(customer.id);
+      cart.value = await getCart(customer.id, selectedProjectId.value);
     } catch (error) {
       console.error("Failed to load cart:", error);
       cart.value = null;
       cartError.value = "Failed to load cart";
+      toast.showError(error, "Failed to load cart");
     } finally {
       cartLoading.value = false;
     }
   } else {
     cart.value = null;
   }
+});
+
+// Clear customer and cart when project changes (superadmin only)
+watch(selectedProjectId, async (newProjectId, oldProjectId) => {
+  // Skip initial load (when oldProjectId is undefined/null and component is just mounting)
+  if (oldProjectId === undefined) return;
+  
+  // Only apply for superadmins who can switch projects
+  if (!isSuperAdmin.value) return;
+
+  // Clear all proposal data when project changes
+  selectedCustomer.value = null;
+  cart.value = null;
+  cartError.value = null;
+  productOptions.value = [];
+  productSearchQuery.value = "";
+  showProductResults.value = false;
+  
+  // Update URL to remove customer_id
+  updateCustomerInUrl(null);
+
+  // Reload customers list for the new project
+  await loadInitialCustomers();
 });
 
 // Clear page header when leaving
@@ -735,6 +760,7 @@ async function loadInitialCustomers() {
     customerOptions.value = response.results;
   } catch (error) {
     console.error("Failed to load customers:", error);
+    toast.showError(error, "Failed to load customers");
   } finally {
     customerSearchLoading.value = false;
   }
@@ -769,6 +795,7 @@ async function searchCustomers(event: { value: string }) {
     } catch (error) {
       console.error("Failed to search customers:", error);
       customerOptions.value = [];
+      toast.showError(error, "Failed to search customers");
     } finally {
       customerSearchLoading.value = false;
     }
@@ -809,6 +836,7 @@ const debouncedProductSearch = useDebounceFn(async (query: string) => {
     if (currentRequestId === productSearchRequestId) {
       console.error("Failed to search products:", error);
       productOptions.value = [];
+      toast.showError(error, "Failed to search products");
     }
   } finally {
     // Only update loading state if this is still the latest request
@@ -933,7 +961,7 @@ async function selectProduct(product: Product) {
     cartUpdating.value = true;
     configurationsLoading.value = true;
     try {
-      const updatedCart = await addItem(payload, selectedCustomer.value?.id);
+      const updatedCart = await addItem(payload, selectedCustomer.value?.id, selectedProjectId.value);
       cart.value = updatedCart;
       toast.showSuccess(`${selectedProductCopy.id} added to cart`);
     } catch (error) {
@@ -959,7 +987,7 @@ async function removeItem(itemId: number) {
     const removed = cart.value.items[index];
     cartUpdating.value = true;
     try {
-      const updatedCart = await deleteItem(itemId, selectedCustomer.value.id);
+      const updatedCart = await deleteItem(itemId, selectedCustomer.value.id, selectedProjectId.value);
       cart.value = updatedCart;
       toast.showSuccess(`${removed.product_id} removed from cart`);
     } catch (error) {
@@ -978,7 +1006,7 @@ async function clearAllItems() {
   clearingCart.value = true;
   cartUpdating.value = true;
   try {
-    await flushCart(selectedCustomer.value.id);
+    await flushCart(selectedCustomer.value.id, selectedProjectId.value);
     cart.value = { ...cart.value, items: [], total: 0, old_total: 0 };
     toast.showSuccess("All items cleared from cart");
   } catch (error) {
@@ -996,7 +1024,7 @@ async function retryLoadCart() {
   cartLoading.value = true;
   cartError.value = null;
   try {
-    cart.value = await getCart(selectedCustomer.value.id);
+    cart.value = await getCart(selectedCustomer.value.id, selectedProjectId.value);
   } catch (error) {
     console.error("Failed to load cart:", error);
     cartError.value = "Failed to load cart";
@@ -1012,9 +1040,10 @@ async function refreshCart() {
 
   cartUpdating.value = true;
   try {
-    cart.value = await getCart(selectedCustomer.value.id);
+    cart.value = await getCart(selectedCustomer.value.id, selectedProjectId.value);
   } catch (error) {
     console.error("Failed to refresh cart:", error);
+    toast.showError(error, "Failed to refresh cart");
   } finally {
     cartUpdating.value = false;
   }
