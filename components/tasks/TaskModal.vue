@@ -35,22 +35,6 @@
             <ErrorMessage name="title" class="p-error text-sm mt-1" />
           </div>
 
-          <!-- Description -->
-          <div class="flex flex-column mb-3">
-            <label for="description" class="field-label mb-2">Description</label>
-            <Field v-slot="{ field, errorMessage }" name="description">
-              <Textarea
-                id="description"
-                v-bind="field"
-                placeholder="Enter description"
-                rows="3"
-                class="w-full"
-                :class="{ 'p-invalid': errorMessage }"
-              />
-            </Field>
-            <ErrorMessage name="description" class="p-error text-sm mt-1" />
-          </div>
-
           <!-- Status with Inline Management -->
           <div ref="statusFieldRef" class="flex flex-column mb-3 status-field-wrapper">
             <div class="flex justify-content-between align-items-center mb-2">
@@ -433,6 +417,22 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Description (full width at bottom) -->
+      <div class="flex flex-column mt-3">
+        <label for="description" class="field-label mb-2">Description</label>
+        <Field v-slot="{ field, errorMessage }" name="description">
+          <Textarea
+            id="description"
+            v-bind="field"
+            placeholder="Enter description"
+            rows="5"
+            class="w-full"
+            :class="{ 'p-invalid': errorMessage }"
+          />
+        </Field>
+        <ErrorMessage name="description" class="p-error text-sm mt-1" />
       </div>
 
       <!-- Submit Button -->
