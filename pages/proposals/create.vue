@@ -155,38 +155,50 @@
                 @click="selectProduct(option)"
                 @mouseenter="highlightedIndex = index"
               >
-                <div class="product-option-row">
-                  <div class="product-option-main">
-                    <Tag severity="secondary" class="product-option-id">
-                      <span
-                        v-html="highlightMatch(option.id, productSearchQuery)"
-                      ></span>
-                    </Tag>
-                    <span
-                      class="product-option-name"
-                      v-html="
-                        highlightMatch(option.descr_1, productSearchQuery)
-                      "
-                    ></span>
-                  </div>
-                  <div class="product-option-meta">
-                    <PriceDisplay
-                      :price="option.price"
-                      :old-price="option.old_price"
-                      class="product-option-price"
+                <div class="product-option-content">
+                  <div class="product-option-photo">
+                    <img
+                      v-if="option.photo"
+                      :src="option.photo"
+                      :alt="option.descr_1"
                     />
-                    <Tag
-                      v-if="option.inactive"
-                      value="Inactive"
-                      severity="secondary"
-                      class="product-option-tag"
-                    />
+                    <div v-else class="product-option-photo-placeholder">
+                      <i class="pi pi-image"></i>
+                    </div>
                   </div>
-                </div>
-                <div
-                  v-if="option.product_specs?.length"
-                  class="product-option-specs"
-                >
+                  <div class="product-option-info">
+                    <div class="product-option-row">
+                      <div class="product-option-main">
+                        <Tag severity="secondary" class="product-option-id">
+                          <span
+                            v-html="highlightMatch(option.id, productSearchQuery)"
+                          ></span>
+                        </Tag>
+                        <span
+                          class="product-option-name"
+                          v-html="
+                            highlightMatch(option.descr_1, productSearchQuery)
+                          "
+                        ></span>
+                      </div>
+                      <div class="product-option-meta">
+                        <PriceDisplay
+                          :price="option.price"
+                          :old-price="option.old_price"
+                          class="product-option-price"
+                        />
+                        <Tag
+                          v-if="option.inactive"
+                          value="Inactive"
+                          severity="secondary"
+                          class="product-option-tag"
+                        />
+                      </div>
+                    </div>
+                    <div
+                      v-if="option.product_specs?.length"
+                      class="product-option-specs"
+                    >
                   <span
                     v-for="(spec, idx) in option.product_specs.slice(0, 3)"
                     :key="spec.descr"
@@ -209,6 +221,8 @@
                   >
                     +{{ option.product_specs.length - 3 }} more
                   </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -275,6 +289,31 @@
             dataKey="id"
             tableStyle="table-layout: fixed"
           >
+            <!-- Photo Column -->
+            <Column
+              header=""
+              :style="{ width: '52px', minWidth: '52px', padding: '0.5rem' }"
+            >
+              <template #body="{ data }">
+                <div
+                  v-if="cartLoading"
+                  class="skeleton"
+                  style="width: 40px; height: 40px; border-radius: 4px"
+                ></div>
+                <div v-else class="item-photo">
+                  <img
+                    v-if="data.photo"
+                    :src="data.photo"
+                    :alt="data.name"
+                    class="item-photo-img"
+                  />
+                  <div v-else class="item-photo-placeholder">
+                    <i class="pi pi-image"></i>
+                  </div>
+                </div>
+              </template>
+            </Column>
+
             <!-- Product ID Column -->
             <Column
               field="product_id"
@@ -1427,6 +1466,50 @@ async function onProductSaved(payload: any) {
     background-color: var(--color-neutral-200);
   }
 
+  &-content {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  &-photo {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    &-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-neutral-200);
+      color: var(--color-neutral-500);
+
+      i {
+        font-size: 16px;
+      }
+    }
+  }
+
+  &-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
   &-row {
     display: flex;
     justify-content: space-between;
@@ -1671,6 +1754,36 @@ async function onProductSaved(payload: any) {
   :deep(.description-column) {
     width: auto;
     min-width: 150px;
+  }
+}
+
+// Item Photo
+.item-photo {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  &-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-neutral-200);
+    color: var(--color-neutral-500);
+
+    i {
+      font-size: 16px;
+    }
   }
 }
 

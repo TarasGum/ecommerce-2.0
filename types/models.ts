@@ -436,6 +436,8 @@ export interface CartItem {
   amount: number; // quantity * price (computed server-side)
   max_count: number;
   ignore_count: boolean;
+  photo: string;
+  photos: string[];
   configurations: CartConfiguration[];
   created_at: string;
   updated_at: string;
