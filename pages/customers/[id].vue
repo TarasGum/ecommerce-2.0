@@ -41,6 +41,15 @@
       <p>Customer not found</p>
       <Button label="Back to Customers" @click="router.push('/customers')" />
     </div>
+
+    <!-- Edit Customer Modal -->
+    <CustomerModal
+      v-model:visible="showEditModal"
+      mode="edit"
+      :customer-id="customerId"
+      :customer="customer"
+      @success="onEditSuccess"
+    />
   </div>
 </template>
 
@@ -51,6 +60,7 @@ import { storeToRefs } from "pinia";
 import type { Customer } from "~/types";
 import CustomerInfoCard from "~/components/customers/CustomerInfoCard.vue";
 import CustomerOrdersTab from "~/components/customers/CustomerOrdersTab.vue";
+import CustomerModal from "~/components/customers/CustomerModal.vue";
 import { useProjectsStore } from "~/stores/projects";
 import { useUiStore } from "~/stores/ui";
 import { USER_ROLES } from "~/utils/constants";
@@ -78,6 +88,7 @@ const customerId = computed(() => route.params.id as string);
 const customer = ref<Customer | null>(null);
 const loading = ref(true); // Start with true to prevent empty state flash
 const activeTab = ref<'orders'>('orders');
+const showEditModal = ref(false);
 
 // Update page header with customer info
 watch(customer, (newCustomer) => {
@@ -145,7 +156,11 @@ async function loadCustomer() {
 }
 
 function handleEditCustomer() {
-  toast.showInfo("Coming Soon!");
+  showEditModal.value = true;
+}
+
+function onEditSuccess() {
+  loadCustomer();
 }
 </script>
 

@@ -78,26 +78,38 @@ export const useCustomers = () => {
   /**
    * Create a new customer
    * @param payload - customer creation data
+   * @param projectId - optional project ID (for superadmin)
    */
-  async function create(payload: CreateCustomerPayload): Promise<Customer> {
-    return api.post<Customer>("/data/customers/", payload);
+  async function create(payload: CreateCustomerPayload, projectId?: number): Promise<Customer> {
+    const url = projectId !== undefined
+      ? `/data/customers/?project_id=${projectId}`
+      : `/data/customers/`;
+    return api.post<Customer>(url, payload);
   }
 
   /**
    * Update a customer
    * @param customerId - customer ID
    * @param payload - fields to update
+   * @param projectId - optional project ID (for superadmin)
    */
-  async function update(customerId: string, payload: UpdateCustomerPayload): Promise<Customer> {
-    return api.patch<Customer>(`/data/customers/${customerId}/`, payload);
+  async function update(customerId: string, payload: UpdateCustomerPayload, projectId?: number): Promise<Customer> {
+    const url = projectId !== undefined
+      ? `/data/customers/${customerId}/?project_id=${projectId}`
+      : `/data/customers/${customerId}/`;
+    return api.patch<Customer>(url, payload);
   }
 
   /**
    * Delete a customer
    * @param customerId - customer ID
+   * @param projectId - optional project ID (for superadmin)
    */
-  async function remove(customerId: string): Promise<void> {
-    return api.delete(`/data/customers/${customerId}/`);
+  async function remove(customerId: string, projectId?: number): Promise<void> {
+    const url = projectId !== undefined
+      ? `/data/customers/${customerId}/?project_id=${projectId}`
+      : `/data/customers/${customerId}/`;
+    return api.delete(url);
   }
 
   return {

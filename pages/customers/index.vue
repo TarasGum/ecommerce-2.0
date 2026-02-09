@@ -145,27 +145,13 @@
 
 
     <!-- Create/Edit Customer Modal -->
-    <Dialog
+    <CustomerModal
       v-model:visible="showModal"
-      :modal="true"
-      :closable="true"
-      :draggable="false"
-      class="modal-md"
-    >
-      <template #header>
-        <h2 class="modal-title">{{ modalMode === 'create' ? 'Create New Customer' : 'Edit Customer' }}</h2>
-      </template>
-
-      <div class="modal-content">
-        <p>Customer creation/edit form coming soon!</p>
-        <p class="text-sm">Backend request body structure needed.</p>
-      </div>
-
-      <template #footer>
-        <Button label="Cancel" severity="secondary" @click="showModal = false" />
-        <Button label="Save" severity="primary" @click="showModal = false" />
-      </template>
-    </Dialog>
+      :mode="modalMode"
+      :customer-id="selectedCustomer?.id || null"
+      :customer="modalMode === 'edit' ? selectedCustomer : null"
+      @success="onModalSuccess"
+    />
   </div>
 </template>
 
@@ -178,8 +164,8 @@ import Paginator from "primevue/paginator";
 import Menu from "primevue/menu";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
-import Dialog from "primevue/dialog";
 import { until } from "@vueuse/core";
+import CustomerModal from "~/components/customers/CustomerModal.vue";
 import { storeToRefs } from "pinia";
 import type { Customer, PrimeVuePageEvent, PrimeVueRowEvent } from "~/types";
 import type { DataTableSortEvent } from "primevue/datatable";
@@ -229,6 +215,9 @@ const menuRef = ref();
 const selectedCustomer = ref<Customer | null>(null);
 const showModal = ref(false);
 const modalMode = ref<'create' | 'edit'>('create');
+
+// Request version counter to prevent stale responses from overwriting newer data
+const loadVersion = ref(0);
 
 // Computed
 const showLastOrderDate = computed(() => true); // Could be a setting
@@ -330,14 +319,26 @@ async function loadCustomers() {
     params.project_id = selectedProjectId.value;
   }
 
+  // Increment version to invalidate any in-flight requests
+  const currentVersion = ++loadVersion.value;
+  loading.value = true;
+
   await useApiCall({
     fn: () => customersApi.list(params),
     errorMessage: 'Failed to Load Customers',
-    loading,
     toast,
     onSuccess: (data) => {
-      customers.value = data.results;
-      totalRecords.value = data.count;
+      // Only apply results if this is still the latest request
+      if (currentVersion === loadVersion.value) {
+        customers.value = data.results;
+        totalRecords.value = data.count;
+      }
+    },
+    onFinally: () => {
+      // Only clear loading if this is still the latest request
+      if (currentVersion === loadVersion.value) {
+        loading.value = false;
+      }
     },
   });
 }
@@ -376,6 +377,10 @@ function openCreateModal() {
 function openEditModal() {
   modalMode.value = 'edit';
   showModal.value = true;
+}
+
+function onModalSuccess() {
+  loadCustomers();
 }
 
 // formatDate is now imported from ~/utils/formatters
@@ -453,8 +458,4 @@ function openEditModal() {
   margin: 0;
 }
 
-.text-sm {
-  font-size: var(--font-size-body-xs);
-  color: var(--color-text-tertiary);
-}
 </style>

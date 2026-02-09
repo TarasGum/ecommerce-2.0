@@ -52,9 +52,23 @@ export const useProducts = () => {
   /**
    * Fetch single product by autoid
    * @param autoid - product autoid
+   * @param customerId - optional customer ID for pricing
+   * @param projectId - optional project ID for filtering
    */
-  async function getByAutoid(autoid: string): Promise<Product> {
-    return api.get<Product>(`/data/products/${autoid}/`);
+  async function getByAutoid(autoid: string, customerId?: string, projectId?: number | null): Promise<Product> {
+    const queryParams = new URLSearchParams();
+
+    if (customerId) {
+      queryParams.set("customer_id", customerId);
+    }
+
+    if (projectId !== undefined && projectId !== null) {
+      queryParams.set("project_id", projectId.toString());
+    }
+
+    const query = queryParams.toString();
+    const url = `/data/products/${autoid}/${query ? `?${query}` : ''}`;
+    return api.get<Product>(url);
   }
 
   /**

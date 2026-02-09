@@ -1102,19 +1102,33 @@ async function openEditModal(product: CartItem) {
   editModalMode.value = "edit";
   editModalVisible.value = true;
 
-  // CartItem only has saved selections, need to fetch full configuration data
-  if (product.configurations?.length > 0 && selectedCustomer.value) {
+  const needsConfigurations = product.configurations?.length > 0 && selectedCustomer.value;
+  const needsPhotos = !product.photos?.length;
+
+  if (needsConfigurations || needsPhotos) {
     configurationsLoading.value = true;
 
     try {
-      const configData = await productsApi.getConfigurations(
-        product.product_autoid,
-        selectedCustomer.value.id,
-        selectedProjectId.value,
-      );
+      // Fetch configurations and product photos in parallel
+      const [configData, productData] = await Promise.all([
+        needsConfigurations
+          ? productsApi.getConfigurations(
+              product.product_autoid,
+              selectedCustomer.value!.id,
+              selectedProjectId.value,
+            )
+          : null,
+        needsPhotos
+          ? productsApi.getByAutoid(
+              product.product_autoid,
+              selectedCustomer.value?.id,
+              selectedProjectId.value,
+            )
+          : null,
+      ]);
 
       // Mark saved selections as active in the full configuration data
-      if (configData.configurations) {
+      if (configData?.configurations) {
         // Build map from group name to saved item ID (each group has one selection)
         const savedByGroup = new Map<string, string>();
         for (const config of product.configurations as any[]) {
@@ -1130,14 +1144,15 @@ async function openEditModal(product: CartItem) {
         }
       }
 
-      // Update product with full configuration structure
+      // Update product with full configuration structure and photos
       editingProduct.value = {
         ...product,
-        configurations: configData as any,
+        ...(configData ? { configurations: configData as any } : {}),
+        ...(productData?.photos?.length ? { photos: productData.photos } : {}),
       };
     } catch (error) {
-      console.error("Failed to load configurations:", error);
-      toast.showError("Failed to load product configurations");
+      console.error("Failed to load product data:", error);
+      toast.showError("Failed to load product data");
       editModalVisible.value = false;
       editingProduct.value = null;
     } finally {

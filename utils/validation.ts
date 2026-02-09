@@ -154,3 +154,39 @@ export const editProjectSchema = z.object({
 });
 
 export type EditProjectFormData = z.infer<typeof editProjectSchema>;
+
+// ==================== CUSTOMER SCHEMAS ====================
+
+// Create customer form schema
+export const createCustomerSchema = z.object({
+  l_name: z.string().min(1, "Customer name is required").max(200, "Name must be less than 200 characters"),
+  phone: z.string().optional(),
+  email: z.string().email("Please enter a valid email address").optional().or(z.literal('')),
+  address1: z.string().optional(),
+  address2: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zip: z.string().optional(),
+  country: z.string().optional(),
+  in_level: z.string().optional(),
+  inactive: z.boolean().optional(),
+});
+
+export type CreateCustomerFormData = z.infer<typeof createCustomerSchema>;
+
+// Edit customer form schema (same fields, name still required)
+export const editCustomerSchema = z.object({
+  l_name: z.string().min(1, "Customer name is required").max(200, "Name must be less than 200 characters"),
+  phone: z.string().optional(),
+  email: z.string().email("Please enter a valid email address").optional().or(z.literal('')),
+  address1: z.string().optional(),
+  address2: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zip: z.string().optional(),
+  country: z.string().optional(),
+  in_level: z.string().optional(),
+  inactive: z.boolean().optional(),
+});
+
+export type EditCustomerFormData = z.infer<typeof editCustomerSchema>;
