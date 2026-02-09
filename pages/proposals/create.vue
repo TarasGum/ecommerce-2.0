@@ -507,7 +507,7 @@
           label="Clear All"
           severity="secondary"
           outlined
-          :disabled="cartItems.length === 0 || cartUpdating || cartLoading"
+          :disabled="cartItems.length === 0 || cartUpdating || cartLoading || creatingProposal"
           :loading="clearingCart"
           @click="clearAllItems"
         />
@@ -519,8 +519,10 @@
             !selectedCustomer ||
             cartItems.length === 0 ||
             cartUpdating ||
-            cartLoading
+            cartLoading ||
+            creatingProposal
           "
+          :loading="creatingProposal"
           @click="createProposal"
         />
       </div>
@@ -570,7 +572,7 @@ const route = useRoute();
 const router = useRouter();
 const productsApi = useProducts();
 const customersApi = useCustomers();
-const { getCart, addItem, deleteItem, flushCart, buildAddPayload } = useCart();
+const { getCart, addItem, deleteItem, flushCart, buildAddPayload, submitProposal } = useCart();
 const toast = useToast();
 const auth = useAuth();
 
@@ -654,6 +656,9 @@ const editModalMode = ref<"add" | "edit">("add");
 
 // Clear cart state
 const clearingCart = ref(false);
+
+// Create proposal state
+const creatingProposal = ref(false);
 
 // Computed values
 const cartItems = computed(() => cart.value?.items ?? []);
@@ -1140,11 +1145,33 @@ async function refreshCart() {
   }
 }
 
-function createProposal() {
+async function createProposal() {
   // Validate customer is selected
   if (!selectedCustomer.value) {
     toast.showWarning("Please select a customer for this proposal");
     return;
+  }
+
+  if (cartItems.value.length === 0) {
+    toast.showWarning("Please add at least one product to the proposal");
+    return;
+  }
+
+  creatingProposal.value = true;
+  try {
+    const projectId = isSuperAdmin.value ? selectedProjectId.value : undefined;
+    await submitProposal(selectedCustomer.value.id, projectId);
+
+    // Cart is cleared server-side on success — reset local state
+    cart.value = { ...cart.value!, items: [], total: 0, old_total: 0 };
+
+    toast.showSuccess("Proposal created successfully");
+    router.push("/proposals");
+  } catch (error) {
+    console.error("Failed to create proposal:", error);
+    toast.showError(error, "Failed to create proposal");
+  } finally {
+    creatingProposal.value = false;
   }
 }
 

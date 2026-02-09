@@ -130,6 +130,23 @@ export const useCart = () => {
     );
   }
 
+  /**
+   * Submit cart as an ARQT proposal to the EBMS system.
+   * On success the cart is cleared server-side and the ARQT response is returned.
+   */
+  async function submitProposal(
+    customerId?: string,
+    projectId?: number | null,
+  ): Promise<any> {
+    const customerIdToUse = customerId ?? currentCustomerId;
+    if (!customerIdToUse) {
+      throw new Error("customer_id is required for cart operations");
+    }
+    return api.post<any>(
+      buildCartUrl("/cart/proposal/", customerIdToUse, projectId),
+    );
+  }
+
   return {
     getCart,
     buildAddPayload,
@@ -137,5 +154,6 @@ export const useCart = () => {
     updateItem,
     deleteItem,
     flushCart,
+    submitProposal,
   };
 };
