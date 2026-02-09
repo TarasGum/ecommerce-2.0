@@ -57,18 +57,30 @@ export const ORDER_STATUS = {
   UNPROCESSED: 'U',
   OPEN: 'O',
   CLOSED: 'X',
+  PAID: 'P',
+  VOIDED: 'V',
+  ON_HOLD: 'H',
+  ADJUSTED: 'A',
 } as const;
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   [ORDER_STATUS.UNPROCESSED]: 'Unprocessed',
   [ORDER_STATUS.OPEN]: 'Open',
   [ORDER_STATUS.CLOSED]: 'Closed',
+  [ORDER_STATUS.PAID]: 'Paid',
+  [ORDER_STATUS.VOIDED]: 'Voided',
+  [ORDER_STATUS.ON_HOLD]: 'On Hold',
+  [ORDER_STATUS.ADJUSTED]: 'Adjusted',
 } as const;
 
 export const ORDER_STATUS_SEVERITIES: Record<OrderStatus, string> = {
   [ORDER_STATUS.UNPROCESSED]: 'warning',
   [ORDER_STATUS.OPEN]: 'info',
   [ORDER_STATUS.CLOSED]: 'success',
+  [ORDER_STATUS.PAID]: 'success',
+  [ORDER_STATUS.VOIDED]: 'danger',
+  [ORDER_STATUS.ON_HOLD]: 'warning',
+  [ORDER_STATUS.ADJUSTED]: 'secondary',
 } as const;
 
 export type OrderStatus = typeof ORDER_STATUS[keyof typeof ORDER_STATUS];
@@ -80,6 +92,8 @@ export const PROPOSAL_STATUS = {
   LOST: 'L',
   CANCELLED: 'C',
   EXPIRED: 'E',
+  NEW: 'N',
+  ON_HOLD: 'H',
 } as const;
 
 export const PROPOSAL_STATUS_LABELS: Record<ProposalStatus, string> = {
@@ -88,6 +102,8 @@ export const PROPOSAL_STATUS_LABELS: Record<ProposalStatus, string> = {
   [PROPOSAL_STATUS.LOST]: 'Lost',
   [PROPOSAL_STATUS.CANCELLED]: 'Cancelled',
   [PROPOSAL_STATUS.EXPIRED]: 'Expired',
+  [PROPOSAL_STATUS.NEW]: 'New',
+  [PROPOSAL_STATUS.ON_HOLD]: 'On Hold',
 } as const;
 
 export const PROPOSAL_STATUS_SEVERITIES: Record<ProposalStatus, string> = {
@@ -96,6 +112,8 @@ export const PROPOSAL_STATUS_SEVERITIES: Record<ProposalStatus, string> = {
   [PROPOSAL_STATUS.LOST]: 'danger',
   [PROPOSAL_STATUS.CANCELLED]: 'secondary',
   [PROPOSAL_STATUS.EXPIRED]: 'warning',
+  [PROPOSAL_STATUS.NEW]: 'info',
+  [PROPOSAL_STATUS.ON_HOLD]: 'warning',
 } as const;
 
 export type ProposalStatus = typeof PROPOSAL_STATUS[keyof typeof PROPOSAL_STATUS];
