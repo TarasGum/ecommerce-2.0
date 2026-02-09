@@ -36,8 +36,7 @@
             filterPlaceholder="Type to search..."
             @filter="searchCustomers"
             showClear
-            :filterFields="['id', 'l_name', 'email']"
-            emptyFilterMessage="No customers found"
+            :filterFields="['id', 'l_name', 'email', '_q']"
           >
             <template #value="{ value, placeholder }">
               <div v-if="value" class="customer-value">
@@ -75,13 +74,45 @@
               </div>
             </template>
             <template #empty>
-              <div v-if="customerSearchLoading" class="customer-loading">
-                <i class="pi pi-spin pi-spinner"></i>
-                <span>Loading customers...</span>
+              <div v-if="customerSearchLoading" class="customer-skeleton-list">
+                <div
+                  v-for="i in 5"
+                  :key="i"
+                  class="customer-option-skeleton"
+                >
+                  <div class="customer-option-skeleton-main">
+                    <div class="skeleton skeleton-text" style="width: 70px"></div>
+                    <div class="skeleton skeleton-text" style="width: 140px"></div>
+                  </div>
+                  <div class="customer-option-skeleton-meta">
+                    <div class="skeleton skeleton-text" style="width: 120px"></div>
+                  </div>
+                </div>
               </div>
               <div v-else class="customer-empty">
                 <i class="pi pi-users"></i>
                 <span>Start typing to search customers</span>
+              </div>
+            </template>
+            <template #emptyfilter>
+              <div v-if="customerSearchLoading" class="customer-skeleton-list">
+                <div
+                  v-for="i in 5"
+                  :key="i"
+                  class="customer-option-skeleton"
+                >
+                  <div class="customer-option-skeleton-main">
+                    <div class="skeleton skeleton-text" style="width: 70px"></div>
+                    <div class="skeleton skeleton-text" style="width: 140px"></div>
+                  </div>
+                  <div class="customer-option-skeleton-meta">
+                    <div class="skeleton skeleton-text" style="width: 120px"></div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="customer-empty">
+                <i class="pi pi-search"></i>
+                <span>No customers found</span>
               </div>
             </template>
           </Dropdown>
@@ -807,6 +838,7 @@ async function loadInitialCustomers() {
 
 // Search customers with debounce
 let customerSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+let customerSearchRequestId = 0; // Track latest request to ignore stale responses
 
 async function searchCustomers(event: { value: string }) {
   const query = event.value?.trim() || "";
@@ -816,9 +848,16 @@ async function searchCustomers(event: { value: string }) {
     clearTimeout(customerSearchTimeout);
   }
 
+  // Set loading immediately and clear options to show skeletons right away
+  // (prevents PrimeVue's client-side filter from showing stale results during loading)
+  customerSearchLoading.value = true;
+  customerOptions.value = [];
+
   // Debounce search
   customerSearchTimeout = setTimeout(async () => {
-    customerSearchLoading.value = true;
+    // Track request ID to ignore stale responses
+    const currentRequestId = ++customerSearchRequestId;
+
     try {
       const params: any = { limit: 50 };
       if (selectedProjectId.value !== null) {
@@ -830,13 +869,26 @@ async function searchCustomers(event: { value: string }) {
       }
 
       const response = await customersApi.list(params);
-      customerOptions.value = response.results;
+
+      // Only update if this is still the latest request
+      if (currentRequestId === customerSearchRequestId) {
+        // Add _q field so PrimeVue's client-side filter always passes server results
+        // (server may match on fields outside filterFields like address/city)
+        customerOptions.value = query
+          ? response.results.map((c) => ({ ...c, _q: query }))
+          : response.results;
+      }
     } catch (error) {
-      console.error("Failed to search customers:", error);
-      customerOptions.value = [];
-      toast.showError(error, "Failed to search customers");
+      if (currentRequestId === customerSearchRequestId) {
+        console.error("Failed to search customers:", error);
+        customerOptions.value = [];
+        toast.showError(error, "Failed to search customers");
+      }
     } finally {
-      customerSearchLoading.value = false;
+      // Only update loading state if this is still the latest request
+      if (currentRequestId === customerSearchRequestId) {
+        customerSearchLoading.value = false;
+      }
     }
   }, 300);
 }
@@ -1367,6 +1419,37 @@ async function onProductSaved(payload: any) {
 
   i {
     font-size: 1.5rem;
+  }
+}
+
+// Customer Skeleton Loading
+// Negate the .p-dropdown-empty-message centering & padding
+.customer-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  margin: -1.5rem -1rem;
+  width: calc(100% + 2rem);
+  padding: 0.25rem; // Match .p-dropdown-items padding
+}
+
+.customer-option-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  // Match .p-dropdown-item (0.375rem 0.75rem) + .customer-option (0.5rem 0)
+  padding: 0.875rem 0.75rem;
+  border-radius: var(--radius-sm);
+
+  &-main {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &-meta {
+    display: flex;
+    align-items: center;
   }
 }
 
