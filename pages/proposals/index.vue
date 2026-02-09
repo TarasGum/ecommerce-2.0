@@ -4,8 +4,14 @@
     <!-- Header -->
     <div class="flex justify-content-between align-items-center mb-3">
       <h1 class="page-title">Proposals</h1>
+      <Button
+        label="Create Proposal"
+        icon="pi pi-plus"
+        severity="success"
+        size="small"
+        @click="navigateTo('/proposals/create')"
+      />
     </div>
-
     <!-- Status Filter Tabs -->
     <div class="tabs-container">
       <div class="flex tabs">
