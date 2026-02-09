@@ -143,8 +143,8 @@ export interface OrderItem {
 export interface Customer {
   id: string; // customer ID (natural key)
   l_name: string; // customer name/company
-  phone?: string;
-  email?: string;
+  contact_1?: string; // phone
+  contact_3?: string; // email
   address1?: string;
   address2?: string;
   city?: string;
@@ -158,8 +158,8 @@ export interface Customer {
 
 export interface CreateCustomerPayload {
   l_name: string;
-  phone?: string;
-  email?: string;
+  contact_1?: string;
+  contact_3?: string;
   address1?: string;
   address2?: string;
   city?: string;
@@ -172,8 +172,8 @@ export interface CreateCustomerPayload {
 
 export interface UpdateCustomerPayload {
   l_name?: string;
-  phone?: string;
-  email?: string;
+  contact_1?: string;
+  contact_3?: string;
   address1?: string;
   address2?: string;
   city?: string;

@@ -19,14 +19,14 @@
         <h3 class="info-card-title">{{ truncatedName }}</h3>
         
         <div class="flex flex-column gap-3 stagger-in">
-        <div v-if="customer.phone" class="flex flex-column gap-1">
+        <div v-if="customer.contact_1" class="flex flex-column gap-1">
           <span class="info-label">Phone</span>
-          <span class="info-value">{{ customer.phone }}</span>
+          <span class="info-value">{{ customer.contact_1 }}</span>
         </div>
 
-        <div v-if="customer.email" class="flex flex-column gap-1">
+        <div v-if="customer.contact_3" class="flex flex-column gap-1">
           <span class="info-label">Email</span>
-          <span class="info-value">{{ customer.email }}</span>
+          <span class="info-value">{{ customer.contact_3 }}</span>
         </div>
 
         <div v-if="hasAddress" class="flex flex-column gap-1">

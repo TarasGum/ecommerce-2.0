@@ -107,7 +107,51 @@
         <ErrorMessage name="address2" class="p-error text-sm mt-1" />
       </div>
 
-      <!-- City, State, Zip -->
+      <!-- Country & State -->
+      <div class="flex gap-3 mb-4">
+        <div class="flex flex-column flex-1">
+          <label for="country" class="field-label mb-2">Country</label>
+          <Field v-slot="{ field, errorMessage }" name="country">
+            <Dropdown
+              id="country"
+              :modelValue="field.value"
+              @update:modelValue="(val) => { field.onChange(val); onCountryChange(val); }"
+              :options="countryOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select country"
+              filter
+              showClear
+              :loading="loadingCountries"
+              class="w-full"
+              :class="{ 'p-invalid': errorMessage }"
+            />
+          </Field>
+          <ErrorMessage name="country" class="p-error text-sm mt-1" />
+        </div>
+        <div class="flex flex-column flex-1">
+          <label for="state" class="field-label mb-2">State / Province</label>
+          <Field v-slot="{ field, errorMessage }" name="state">
+            <Dropdown
+              id="state"
+              :modelValue="field.value"
+              @update:modelValue="field.onChange"
+              :options="stateOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select state"
+              filter
+              showClear
+              :disabled="stateOptions.length === 0"
+              class="w-full"
+              :class="{ 'p-invalid': errorMessage }"
+            />
+          </Field>
+          <ErrorMessage name="state" class="p-error text-sm mt-1" />
+        </div>
+      </div>
+
+      <!-- City & Zip -->
       <div class="flex gap-3 mb-4">
         <div class="flex flex-column flex-1">
           <label for="city" class="field-label mb-2">City</label>
@@ -122,20 +166,7 @@
           </Field>
           <ErrorMessage name="city" class="p-error text-sm mt-1" />
         </div>
-        <div class="flex flex-column" style="width: 120px;">
-          <label for="state" class="field-label mb-2">State</label>
-          <Field v-slot="{ field, errorMessage }" name="state">
-            <InputText
-              id="state"
-              v-bind="field"
-              placeholder="State"
-              class="w-full"
-              :class="{ 'p-invalid': errorMessage }"
-            />
-          </Field>
-          <ErrorMessage name="state" class="p-error text-sm mt-1" />
-        </div>
-        <div class="flex flex-column" style="width: 120px;">
+        <div class="flex flex-column" style="width: 140px;">
           <label for="zip" class="field-label mb-2">Zip</label>
           <Field v-slot="{ field, errorMessage }" name="zip">
             <InputText
@@ -148,21 +179,6 @@
           </Field>
           <ErrorMessage name="zip" class="p-error text-sm mt-1" />
         </div>
-      </div>
-
-      <!-- Country -->
-      <div class="flex flex-column mb-4">
-        <label for="country" class="field-label mb-2">Country</label>
-        <Field v-slot="{ field, errorMessage }" name="country">
-          <InputText
-            id="country"
-            v-bind="field"
-            placeholder="Country"
-            class="w-full"
-            :class="{ 'p-invalid': errorMessage }"
-          />
-        </Field>
-        <ErrorMessage name="country" class="p-error text-sm mt-1" />
       </div>
 
       <!-- Other Section -->
@@ -231,6 +247,7 @@ import { ValidationError } from "~/utils/errors";
 import { USER_ROLES } from "~/utils/constants";
 import { useProjectsStore } from "~/stores/projects";
 import type { Customer, CreateCustomerPayload, UpdateCustomerPayload } from "~/types/models";
+import type { CountryEntry } from "~/composables/useCustomers";
 
 const props = withDefaults(
   defineProps<{
@@ -269,8 +286,28 @@ const isSuperAdmin = computed(() => auth.user.value?.role === USER_ROLES.SUPERAD
 
 const loading = ref(false);
 const loadingCustomer = ref(false);
+const loadingCountries = ref(false);
 const customerData = ref<Customer | null>(null);
 const formKey = ref(0);
+const countries = ref<CountryEntry[]>([]);
+const selectedCountry = ref<string>("");
+
+// Country & state dropdown options
+const countryOptions = computed(() =>
+  countries.value.map((c) => ({ label: c.country, value: c.country }))
+);
+
+const stateOptions = computed(() => {
+  if (!selectedCountry.value) return [];
+  const entry = countries.value.find((c) => c.country === selectedCountry.value);
+  if (!entry || entry.states.length === 0) return [];
+  return entry.states.map((s) => ({ label: s.name, value: s.code }));
+});
+
+// Called when user picks a different country
+function onCountryChange(newCountry: string) {
+  selectedCountry.value = newCountry || "";
+}
 
 // Customer type options
 const customerTypeOptions = [
@@ -288,22 +325,30 @@ const statusOptions = [
 watch(
   () => props.visible,
   async (visible) => {
-    if (visible && props.mode === "edit") {
-      if (props.customer) {
-        // Use pre-loaded customer data
-        customerData.value = props.customer;
+    if (visible) {
+      // Always fetch countries when modal opens
+      fetchCountries();
+
+      if (props.mode === "edit") {
+        if (props.customer) {
+          // Use pre-loaded customer data
+          customerData.value = props.customer;
+          selectedCountry.value = props.customer.country || "";
+          formKey.value++;
+        } else if (props.customerId) {
+          // Fetch customer data
+          await fetchCustomerData(props.customerId);
+        }
+      } else {
+        // Reset for create mode
+        customerData.value = null;
+        selectedCountry.value = "";
         formKey.value++;
-      } else if (props.customerId) {
-        // Fetch customer data
-        await fetchCustomerData(props.customerId);
       }
-    } else if (visible && props.mode === "create") {
-      // Reset for create mode
-      customerData.value = null;
-      formKey.value++;
-    } else if (!visible) {
+    } else {
       // Reset when modal closes
       customerData.value = null;
+      selectedCountry.value = "";
     }
   }
 );
@@ -316,10 +361,27 @@ async function fetchCustomerData(id: string) {
     toast,
     onSuccess: (data) => {
       customerData.value = data;
+      selectedCountry.value = data.country || "";
       formKey.value++;
     },
     onError: () => {
       isVisible.value = false;
+    },
+  });
+}
+
+async function fetchCountries() {
+  const projectId = isSuperAdmin.value && selectedProjectId.value !== null
+    ? selectedProjectId.value
+    : undefined;
+
+  await useApiCall({
+    fn: () => customersApi.getCountries(projectId),
+    errorMessage: 'Failed to Load Countries',
+    loading: loadingCountries,
+    toast,
+    onSuccess: (data) => {
+      countries.value = data;
     },
   });
 }
@@ -330,8 +392,8 @@ const initialFormValues = computed(() => {
     const c = customerData.value;
     return {
       l_name: c.l_name || "",
-      phone: c.phone || "",
-      email: c.email || "",
+      phone: c.contact_1 || "",
+      email: c.contact_3 || "",
       address1: c.address1 || "",
       address2: c.address2 || "",
       city: c.city || "",
@@ -376,8 +438,8 @@ async function handleSubmit(
     };
 
     // Add optional fields only if they have values
-    if (values.phone) payload.phone = values.phone;
-    if (values.email) payload.email = values.email;
+    if (values.phone) payload.contact_1 = values.phone;
+    if (values.email) payload.contact_3 = values.email;
     if (values.address1) payload.address1 = values.address1;
     if (values.address2) payload.address2 = values.address2;
     if (values.city) payload.city = values.city;
@@ -419,8 +481,8 @@ async function handleSubmit(
 
     // Check for changes
     if (values.l_name !== (c.l_name || "")) payload.l_name = values.l_name;
-    if (values.phone !== (c.phone || "")) payload.phone = values.phone;
-    if (values.email !== (c.email || "")) payload.email = values.email;
+    if (values.phone !== (c.contact_1 || "")) payload.contact_1 = values.phone;
+    if (values.email !== (c.contact_3 || "")) payload.contact_3 = values.email;
     if (values.address1 !== (c.address1 || "")) payload.address1 = values.address1;
     if (values.address2 !== (c.address2 || "")) payload.address2 = values.address2;
     if (values.city !== (c.city || "")) payload.city = values.city;

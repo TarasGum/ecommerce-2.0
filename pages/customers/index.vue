@@ -67,12 +67,26 @@
         <!-- Selection Column -->
         <Column selectionMode="multiple" :style="{ width: '50px', minWidth: '50px', maxWidth: '50px' }" />
 
+        <!-- ID Column -->
+        <Column
+          field="id"
+          header="ID"
+          sortable
+          :style="{ width: '120px', minWidth: '100px', maxWidth: '150px' }"
+          :pt="{ sort: { class: 'cursor-pointer' } }"
+        >
+          <template #body="{ data }">
+            <div v-if="loading" class="skeleton skeleton-text" style="width: 80px;"></div>
+            <span v-else class="cell-code">{{ data.id || '—' }}</span>
+          </template>
+        </Column>
+
         <!-- Customer Column (sortable) -->
         <Column
           field="l_name"
           header="Customer"
           sortable
-          :style="{ width: 'calc(60% - 78px)', minWidth: '200px' }"
+          :style="{ width: 'calc(60% - 198px)', minWidth: '200px' }"
           :pt="{ sort: { class: 'cursor-pointer' } }"
         >
           <template #body="{ data }">

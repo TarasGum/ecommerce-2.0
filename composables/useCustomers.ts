@@ -23,6 +23,17 @@ export interface CustomersListResponse {
   results: Customer[];
 }
 
+export interface CountryState {
+  name: string;
+  code: string;
+}
+
+export interface CountryEntry {
+  country: string;
+  code: string;
+  states: CountryState[];
+}
+
 export const useCustomers = () => {
   const api = useApi();
 
@@ -112,11 +123,23 @@ export const useCustomers = () => {
     return api.delete(url);
   }
 
+  /**
+   * Fetch countries and states list
+   * @param projectId - optional project ID (for superadmin)
+   */
+  async function getCountries(projectId?: number): Promise<CountryEntry[]> {
+    const url = projectId !== undefined
+      ? `/data/countries/?project_id=${projectId}`
+      : `/data/countries/`;
+    return api.get<CountryEntry[]>(url);
+  }
+
   return {
     list,
     getById,
     create,
     update,
     remove,
+    getCountries,
   };
 };
