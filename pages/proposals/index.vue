@@ -4,13 +4,6 @@
     <!-- Header -->
     <div class="flex justify-content-between align-items-center mb-3">
       <h1 class="page-title">Proposals</h1>
-      <Button
-        label="Create Proposal"
-        icon="pi pi-plus"
-        severity="success"
-        size="small"
-        @click="router.push('/proposals/create')"
-      />
     </div>
 
     <!-- Status Filter Tabs -->
@@ -42,10 +35,15 @@
     <!-- Proposals Table Card -->
     <div class="table-card">
       <!-- Empty State -->
-      <div v-if="!loading && proposals.length === 0" class="flex flex-column align-items-center justify-content-center gap-3 empty-state">
+      <div
+        v-if="!loading && proposals.length === 0"
+        class="flex flex-column align-items-center justify-content-center gap-3 empty-state"
+      >
         <i class="pi pi-inbox"></i>
         <p class="empty-state-text">
-          {{ search ? 'No proposals match your search' : getEmptyStateMessage() }}
+          {{
+            search ? "No proposals match your search" : getEmptyStateMessage()
+          }}
         </p>
         <Button
           v-if="search"
@@ -82,7 +80,11 @@
           <template #body="slotProps">
             <Button
               v-if="!loading"
-              :icon="expandedRows[slotProps.data.autoid] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+              :icon="
+                expandedRows[slotProps.data.autoid]
+                  ? 'pi pi-chevron-down'
+                  : 'pi pi-chevron-right'
+              "
               text
               rounded
               size="small"
@@ -93,7 +95,10 @@
         </Column>
 
         <!-- Selection Column -->
-        <Column selectionMode="multiple" :style="{ width: '50px', minWidth: '50px' }" />
+        <Column
+          selectionMode="multiple"
+          :style="{ width: '50px', minWidth: '50px' }"
+        />
 
         <!-- Quote Column -->
         <Column
@@ -106,7 +111,11 @@
           }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 100px;"></div>
+            <div
+              v-if="loading"
+              class="skeleton skeleton-text"
+              style="width: 100px"
+            ></div>
             <span v-else class="cell-code">{{ formatQuote(data.quote) }}</span>
           </template>
         </Column>
@@ -123,7 +132,11 @@
         >
           <template #body="{ data }">
             <div v-if="loading" class="skeleton skeleton-button"></div>
-            <Tag v-else :value="getProposalStatusLabel(data.status)" :severity="getProposalStatusSeverity(data.status)" />
+            <Tag
+              v-else
+              :value="getProposalStatusLabel(data.status)"
+              :severity="getProposalStatusSeverity(data.status)"
+            />
           </template>
         </Column>
 
@@ -138,8 +151,12 @@
           }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 140px;"></div>
-            <span v-else class="customer-name">{{ data.b_name || '—' }}</span>
+            <div
+              v-if="loading"
+              class="skeleton skeleton-text"
+              style="width: 140px"
+            ></div>
+            <span v-else class="customer-name">{{ data.b_name || "—" }}</span>
           </template>
         </Column>
 
@@ -154,8 +171,12 @@
           }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 90px;"></div>
-              <span v-else class="cell-date">{{ formatDate(data.qt_date) }}</span>
+            <div
+              v-if="loading"
+              class="skeleton skeleton-text"
+              style="width: 90px"
+            ></div>
+            <span v-else class="cell-date">{{ formatDate(data.qt_date) }}</span>
           </template>
         </Column>
 
@@ -170,14 +191,20 @@
           }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 80px;"></div>
-              <span v-else class="cell-amount">{{ formatCurrency(data.total) }}</span>
+            <div
+              v-if="loading"
+              class="skeleton skeleton-text"
+              style="width: 80px"
+            ></div>
+            <span v-else class="cell-amount">{{
+              formatCurrency(data.total)
+            }}</span>
           </template>
         </Column>
 
         <!-- Actions Column -->
-        <Column 
-          header="Actions" 
+        <Column
+          header="Actions"
           :style="{ width: '70px', minWidth: '70px', textAlign: 'center' }"
           :pt="{ headerContent: { style: 'justify-content: center' } }"
         >
@@ -200,58 +227,101 @@
           <div class="proposal-expansion">
             <div class="flex flex-column gap-3 expansion-content">
               <!-- Proposal Summary Info -->
-              <div class="flex justify-content-between align-items-center flex-wrap gap-3 expansion-header">
+              <div
+                class="flex justify-content-between align-items-center flex-wrap gap-3 expansion-header"
+              >
                 <h4 class="expansion-title">Proposal Items</h4>
                 <div class="flex gap-4 flex-wrap">
                   <span class="flex gap-2 align-items-center">
                     <span class="meta-label">Customer ID:</span>
-                    <span class="meta-value">{{ data.b_id || '—' }}</span>
+                    <span class="meta-value">{{ data.b_id || "—" }}</span>
                   </span>
                   <span class="flex gap-2 align-items-center">
                     <span class="meta-label">Subtotal:</span>
-                    <span class="meta-value">{{ formatCurrency(data.subtotal) }}</span>
+                    <span class="meta-value">{{
+                      formatCurrency(data.subtotal)
+                    }}</span>
                   </span>
                   <span class="flex gap-2 align-items-center">
                     <span class="meta-label">Tax:</span>
-                    <span class="meta-value">{{ formatCurrency(data.tax) }}</span>
+                    <span class="meta-value">{{
+                      formatCurrency(data.tax)
+                    }}</span>
                   </span>
                 </div>
               </div>
 
               <!-- Loading State -->
-              <div v-if="loadingItems[data.autoid]" class="flex align-items-center justify-content-center gap-2 items-loading">
-                <ProgressSpinner style="width: 30px; height: 30px;" />
+              <div
+                v-if="loadingItems[data.autoid]"
+                class="flex align-items-center justify-content-center gap-2 items-loading"
+              >
+                <ProgressSpinner style="width: 30px; height: 30px" />
                 <span class="loading-text">Loading items...</span>
               </div>
 
               <!-- Items Table -->
-              <div v-else-if="proposalItemsMap[data.autoid] && proposalItemsMap[data.autoid].length > 0" class="items-table-wrapper">
-                <DataTable :value="proposalItemsMap[data.autoid]" class="expansion-items-table">
-                  <Column field="inven" header="Item Code" :style="{ width: '15%' }">
+              <div
+                v-else-if="
+                  proposalItemsMap[data.autoid] &&
+                  proposalItemsMap[data.autoid].length > 0
+                "
+                class="items-table-wrapper"
+              >
+                <DataTable
+                  :value="proposalItemsMap[data.autoid]"
+                  class="expansion-items-table"
+                >
+                  <Column
+                    field="inven"
+                    header="Item Code"
+                    :style="{ width: '15%' }"
+                  >
                     <template #body="{ data: item }">
-                      <span class="item-code">{{ item.inven || '—' }}</span>
+                      <span class="item-code">{{ item.inven || "—" }}</span>
                     </template>
                   </Column>
-                  <Column field="descr" header="Description" :style="{ width: '45%' }">
+                  <Column
+                    field="descr"
+                    header="Description"
+                    :style="{ width: '45%' }"
+                  >
                     <template #body="{ data: item }">
-                      <span class="item-description">{{ item.descr || '—' }}</span>
+                      <span class="item-description">{{
+                        item.descr || "—"
+                      }}</span>
                     </template>
                   </Column>
-                  <Column field="quan" header="Quantity" :style="{ width: '15%' }">
+                  <Column
+                    field="quan"
+                    header="Quantity"
+                    :style="{ width: '15%' }"
+                  >
                     <template #body="{ data: item }">
-                      <span class="item-quantity">{{ formatQuantity(item.quan) }}</span>
+                      <span class="item-quantity">{{
+                        formatQuantity(item.quan)
+                      }}</span>
                     </template>
                   </Column>
-                  <Column field="amount" header="Amount" :style="{ width: '15%' }">
+                  <Column
+                    field="amount"
+                    header="Amount"
+                    :style="{ width: '15%' }"
+                  >
                     <template #body="{ data: item }">
-                      <span class="item-amount">{{ formatCurrency(item.amount) }}</span>
+                      <span class="item-amount">{{
+                        formatCurrency(item.amount)
+                      }}</span>
                     </template>
                   </Column>
                 </DataTable>
               </div>
 
               <!-- No Items Message -->
-              <div v-else class="flex flex-column align-items-center justify-content-center gap-2 no-items">
+              <div
+                v-else
+                class="flex flex-column align-items-center justify-content-center gap-2 no-items"
+              >
                 <i class="pi pi-inbox"></i>
                 <span>No items found for this proposal</span>
               </div>
@@ -261,13 +331,16 @@
       </DataTable>
 
       <!-- Pagination -->
-      <div class="flex align-items-center justify-content-between pagination-container">
+      <div
+        class="flex align-items-center justify-content-between pagination-container"
+      >
         <div class="flex justify-content-start align-items-center flex-1">
           <span v-if="!loading && totalRecords > 0" class="results-text">
-            {{ paginationRange.start }}–{{ paginationRange.end }} of {{ paginationRange.total.toLocaleString() }}
+            {{ paginationRange.start }}–{{ paginationRange.end }} of
+            {{ paginationRange.total.toLocaleString() }}
           </span>
         </div>
-        
+
         <Paginator
           v-if="showPagination"
           :rows="pageSize"
@@ -278,7 +351,7 @@
           :pageLinkSize="9"
           class="custom-paginator"
         />
-        
+
         <div class="flex justify-content-end flex-1"></div>
       </div>
     </div>
@@ -305,31 +378,36 @@ import type { Proposal, ProposalItem, PrimeVuePageEvent } from "~/types";
 import type { DataTableSortEvent } from "primevue/datatable";
 import { formatDate, formatCurrency, formatQuantity } from "~/utils/formatters";
 import { useProjectsStore } from "~/stores/projects";
-import { 
-  PAGINATION_DEFAULTS, 
+import {
+  PAGINATION_DEFAULTS,
   DEBOUNCE_MS,
   PROPOSAL_STATUS,
   PROPOSAL_STATUS_LABELS,
-  getProposalStatusLabel, 
+  getProposalStatusLabel,
   getProposalStatusSeverity,
   USER_ROLES,
-  type ProposalStatus
+  type ProposalStatus,
 } from "~/utils/constants";
 
 definePageMeta({
   middleware: "auth",
 });
 
-const router = useRouter();
 const proposalsApi = useProposals();
 const toast = useToast();
 const auth = useAuth();
 
 // Store management
 const projectsStore = useProjectsStore();
-const { selectedProjectId, projects, loading: projectsLoading } = storeToRefs(projectsStore);
+const {
+  selectedProjectId,
+  projects,
+  loading: projectsLoading,
+} = storeToRefs(projectsStore);
 
-const isSuperAdmin = computed(() => auth.user.value?.role === USER_ROLES.SUPERADMIN);
+const isSuperAdmin = computed(
+  () => auth.user.value?.role === USER_ROLES.SUPERADMIN,
+);
 
 // URL-based state management
 const { page, pageSize, offset, setPage, resetPage } = useUrlPagination({
@@ -337,16 +415,16 @@ const { page, pageSize, offset, setPage, resetPage } = useUrlPagination({
 });
 
 const { searchInput, search, clearSearch } = useUrlSearch({
-  param: 'quote',
+  param: "quote",
   debounce: DEBOUNCE_MS.SEARCH_LONG,
 });
 
 const { filters, setFilter } = useUrlFilters<{
-  status: ProposalStatus | '';
+  status: ProposalStatus | "";
 }>({
   status: {
-    param: 'status',
-    defaultValue: '', // Empty for "All Proposals"
+    param: "status",
+    defaultValue: "", // Empty for "All Proposals"
   },
 });
 
@@ -357,7 +435,7 @@ const {
   handlePrimeVueSort,
 } = useUrlSort({
   useCombinedFormat: true,
-  combinedParam: 'ordering',
+  combinedParam: "ordering",
 });
 
 // Local UI state (not in URL)
@@ -376,23 +454,23 @@ const currentAbortController = ref<AbortController | null>(null);
 
 // Status tabs configuration
 const statusTabs = [
-  { 
-    label: PROPOSAL_STATUS_LABELS[PROPOSAL_STATUS.OPEN], 
-    value: PROPOSAL_STATUS.OPEN 
+  {
+    label: PROPOSAL_STATUS_LABELS[PROPOSAL_STATUS.OPEN],
+    value: PROPOSAL_STATUS.OPEN,
   },
-  { 
-    label: PROPOSAL_STATUS_LABELS[PROPOSAL_STATUS.ACCEPTED], 
-    value: PROPOSAL_STATUS.ACCEPTED 
+  {
+    label: PROPOSAL_STATUS_LABELS[PROPOSAL_STATUS.ACCEPTED],
+    value: PROPOSAL_STATUS.ACCEPTED,
   },
-  { 
-    label: PROPOSAL_STATUS_LABELS[PROPOSAL_STATUS.LOST], 
-    value: PROPOSAL_STATUS.LOST 
+  {
+    label: PROPOSAL_STATUS_LABELS[PROPOSAL_STATUS.LOST],
+    value: PROPOSAL_STATUS.LOST,
   },
-  { 
-    label: PROPOSAL_STATUS_LABELS[PROPOSAL_STATUS.EXPIRED], 
-    value: PROPOSAL_STATUS.EXPIRED 
+  {
+    label: PROPOSAL_STATUS_LABELS[PROPOSAL_STATUS.EXPIRED],
+    value: PROPOSAL_STATUS.EXPIRED,
   },
-  { label: 'All Proposals', value: '' },
+  { label: "All Proposals", value: "" },
 ];
 
 // Computed properties
@@ -411,14 +489,14 @@ const paginationRange = computed(() => {
 const skeletonRows = computed(() => {
   return Array.from({ length: Math.min(pageSize.value, 10) }, (_, i) => ({
     autoid: `skeleton-${i}`,
-    b_id: '',
-    quote: '',
-    b_name: '',
+    b_id: "",
+    quote: "",
+    b_name: "",
     qt_date: null,
-    status: 'O' as const,
-    tax: '',
-    subtotal: '',
-    total: '',
+    status: "O" as const,
+    tax: "",
+    subtotal: "",
+    total: "",
   }));
 });
 
@@ -440,7 +518,6 @@ const menuItems = computed(() => [
   },
 ]);
 
-
 // Track if we're initializing default filter to prevent race condition
 const route = useRoute();
 
@@ -448,7 +525,8 @@ const route = useRoute();
 const autoidFilter = computed(() => route.query.autoid as string | undefined);
 
 // Only initialize status filter if no autoid filter is present
-const shouldInitializeFilter = !route.query.autoid && (!route.query.status || route.query.status === '');
+const shouldInitializeFilter =
+  !route.query.autoid && (!route.query.status || route.query.status === "");
 const isInitializing = ref(shouldInitializeFilter);
 
 // Track if initial data load is ready (projects loaded for superadmin)
@@ -458,10 +536,10 @@ const isReadyToLoad = ref(false);
 const effectiveStatus = computed(() => {
   // If autoid filter is present, show "All Proposals" tab as active
   if (autoidFilter.value) {
-    return '';
+    return "";
   }
   // Only override during the brief initialization phase
-  if (isInitializing.value && filters.value.status === '') {
+  if (isInitializing.value && filters.value.status === "") {
     return PROPOSAL_STATUS.OPEN;
   }
   return filters.value.status;
@@ -469,7 +547,7 @@ const effectiveStatus = computed(() => {
 
 // Initialize status filter if not present in URL (and no autoid filter)
 if (shouldInitializeFilter) {
-  setFilter('status', PROPOSAL_STATUS.OPEN as ProposalStatus | '');
+  setFilter("status", PROPOSAL_STATUS.OPEN as ProposalStatus | "");
 }
 
 // Load proposals on mount
@@ -478,17 +556,24 @@ onMounted(async () => {
   if (isSuperAdmin.value && projectsLoading.value) {
     await until(projectsLoading).toBe(false);
   }
-  
+
   // Mark as ready to load - watcher can now make API calls
   isReadyToLoad.value = true;
-  
+
   // Always call loadProposals from onMounted - we're now ready
   loadProposals();
 });
 
 // Watch for URL state changes and reload proposals
 watch(
-  [page, pageSize, search, () => filters.value.status, sortOrdering, autoidFilter],
+  [
+    page,
+    pageSize,
+    search,
+    () => filters.value.status,
+    sortOrdering,
+    autoidFilter,
+  ],
   () => {
     // Mark initialization as complete once the watcher fires
     if (isInitializing.value) {
@@ -499,47 +584,45 @@ watch(
     if (isReadyToLoad.value) {
       loadProposals();
     }
-  }
+  },
 );
 
 // Watch for search/filter changes and reset to first page
-watch(
-  [search, () => filters.value.status],
-  (newVals, oldVals) => {
-    // Only reset if values actually changed (not initial load)
-    if (oldVals && (oldVals[0] !== newVals[0] || oldVals[1] !== newVals[1])) {
-      resetPage();
-    }
+watch([search, () => filters.value.status], (newVals, oldVals) => {
+  // Only reset if values actually changed (not initial load)
+  if (oldVals && (oldVals[0] !== newVals[0] || oldVals[1] !== newVals[1])) {
+    resetPage();
   }
-);
+});
 
 // Watch for project changes and reset to first page
-watch(
-  selectedProjectId,
-  (newVal, oldVal) => {
-    // Only reset if this is an actual change, not initial load (oldVal will be null or undefined on first load)
-    if (oldVal !== undefined && oldVal !== null) {
-      resetPage();
-      loadProposals();
-    }
+watch(selectedProjectId, (newVal, oldVal) => {
+  // Only reset if this is an actual change, not initial load (oldVal will be null or undefined on first load)
+  if (oldVal !== undefined && oldVal !== null) {
+    resetPage();
+    loadProposals();
   }
-);
+});
 
 // Watch for row expansion and load items
-watch(expandedRows, async (newExpandedRows, oldExpandedRows) => {
-  // Find newly expanded row autoids
-  const newAutoids = Object.keys(newExpandedRows).filter(
-    autoid => newExpandedRows[autoid] && !oldExpandedRows[autoid]
-  );
+watch(
+  expandedRows,
+  async (newExpandedRows, oldExpandedRows) => {
+    // Find newly expanded row autoids
+    const newAutoids = Object.keys(newExpandedRows).filter(
+      (autoid) => newExpandedRows[autoid] && !oldExpandedRows[autoid],
+    );
 
-  // Load items for newly expanded rows
-  for (const autoid of newAutoids) {
-    const proposal = proposals.value.find(p => p.autoid === autoid);
-    if (proposal) {
-      await loadProposalItems(proposal);
+    // Load items for newly expanded rows
+    for (const autoid of newAutoids) {
+      const proposal = proposals.value.find((p) => p.autoid === autoid);
+      if (proposal) {
+        await loadProposalItems(proposal);
+      }
     }
-  }
-}, { deep: true });
+  },
+  { deep: true },
+);
 
 async function loadProposals() {
   // Cancel any in-flight request to prevent race conditions
@@ -586,7 +669,7 @@ async function loadProposals() {
 
   try {
     const data = await proposalsApi.list(params, abortController.signal);
-    
+
     // Only update data if this request wasn't aborted
     if (!abortController.signal.aborted) {
       proposals.value = data.results;
@@ -597,13 +680,13 @@ async function loadProposals() {
     // Only handle errors if this request wasn't aborted
     if (!abortController.signal.aborted) {
       // Check for abort error (can be DOMException with name 'AbortError' or Error)
-      const isAbortError = 
-        error?.name === 'AbortError' || 
+      const isAbortError =
+        error?.name === "AbortError" ||
         error?.code === DOMException.ABORT_ERR ||
-        error?.message?.includes('aborted');
-      
+        error?.message?.includes("aborted");
+
       if (!isAbortError) {
-        toast.showError(error, 'Failed to Load Proposals');
+        toast.showError(error, "Failed to Load Proposals");
       }
       loading.value = false;
     }
@@ -623,17 +706,18 @@ function toggleMenu(event: Event, proposal: Proposal) {
 
 function getEmptyStateMessage(): string {
   if (!filters.value.status) {
-    return 'No proposals found';
+    return "No proposals found";
   }
-  
-  const statusLabel = PROPOSAL_STATUS_LABELS[filters.value.status as ProposalStatus];
+
+  const statusLabel =
+    PROPOSAL_STATUS_LABELS[filters.value.status as ProposalStatus];
   return `No ${statusLabel.toLowerCase()} proposals`;
 }
 
 function toggleExpand(proposal: Proposal) {
   const autoid = proposal.autoid;
   const isExpanded = expandedRows.value[autoid];
-  
+
   if (isExpanded) {
     // Collapse
     const newExpandedRows = { ...expandedRows.value };
@@ -672,7 +756,7 @@ async function loadProposalItems(proposal: Proposal) {
 
   await useApiCall({
     fn: () => proposalsApi.getByAutoid(proposal.autoid),
-    errorMessage: 'Failed to Load Proposal Items',
+    errorMessage: "Failed to Load Proposal Items",
     loading: itemLoading,
     toast,
     onSuccess: (data) => {
@@ -698,7 +782,7 @@ async function loadProposalItems(proposal: Proposal) {
 
 // Keep formatQuote as it's custom logic specific to this page
 function formatQuote(quote: string): string {
-  return quote?.trim() || '—';
+  return quote?.trim() || "—";
 }
 </script>
 
@@ -892,7 +976,7 @@ function formatQuote(quote: string): string {
 }
 
 .item-code {
-  font-family: 'Monaco', 'Courier New', monospace;
+  font-family: "Monaco", "Courier New", monospace;
   font-size: var(--font-size-body-xs);
   color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);

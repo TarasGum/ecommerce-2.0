@@ -4,6 +4,7 @@
 import type { LoginResponse, User } from "~/types/models";
 import { COOKIE_CONFIG } from "~/utils/constants";
 import { useAuthStore } from "~/stores/auth";
+import { useProjectsStore } from "~/stores/projects";
 
 export const useAuth = () => {
   const authStore = useAuthStore();
@@ -40,6 +41,14 @@ export const useAuth = () => {
     // Persist tokens in cookies
     accessCookie.value = response.access;
     refreshCookie.value = response.refresh;
+
+    // Load projects for superadmin users
+    if (response.user.role === "superadmin") {
+      const projectsStore = useProjectsStore();
+      projectsStore.loadProjects().catch(() => {
+        // Silently fail - errors shown via toast in store
+      });
+    }
 
     // Redirect to home
     await router.push("/");

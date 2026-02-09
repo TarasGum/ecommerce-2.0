@@ -35,10 +35,13 @@
     <!-- Orders Table Card -->
     <div class="table-card">
       <!-- Empty State -->
-      <div v-if="!loading && orders.length === 0" class="flex flex-column align-items-center justify-content-center gap-3 empty-state">
+      <div
+        v-if="!loading && orders.length === 0"
+        class="flex flex-column align-items-center justify-content-center gap-3 empty-state"
+      >
         <i class="pi pi-inbox"></i>
         <p class="empty-state-text">
-          {{ search ? 'No orders match your search' : getEmptyStateMessage() }}
+          {{ search ? "No orders match your search" : getEmptyStateMessage() }}
         </p>
         <Button
           v-if="search"
@@ -75,7 +78,11 @@
           <template #body="slotProps">
             <Button
               v-if="!loading"
-              :icon="expandedRows[slotProps.data.autoid] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+              :icon="
+                expandedRows[slotProps.data.autoid]
+                  ? 'pi pi-chevron-down'
+                  : 'pi pi-chevron-right'
+              "
               text
               rounded
               size="small"
@@ -86,7 +93,10 @@
         </Column>
 
         <!-- Selection Column -->
-        <Column selectionMode="multiple" :style="{ width: '50px', minWidth: '50px' }" />
+        <Column
+          selectionMode="multiple"
+          :style="{ width: '50px', minWidth: '50px' }"
+        />
 
         <!-- Invoice Column -->
         <Column
@@ -99,8 +109,14 @@
           }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 100px;"></div>
-            <span v-else class="cell-code">{{ formatInvoice(data.invoice) }}</span>
+            <div
+              v-if="loading"
+              class="skeleton skeleton-text"
+              style="width: 100px"
+            ></div>
+            <span v-else class="cell-code">{{
+              formatInvoice(data.invoice)
+            }}</span>
           </template>
         </Column>
 
@@ -116,7 +132,11 @@
         >
           <template #body="{ data }">
             <div v-if="loading" class="skeleton skeleton-button"></div>
-            <Tag v-else :value="getOrderStatusLabel(data.status)" :severity="getOrderStatusSeverity(data.status)" />
+            <Tag
+              v-else
+              :value="getOrderStatusLabel(data.status)"
+              :severity="getOrderStatusSeverity(data.status)"
+            />
           </template>
         </Column>
 
@@ -131,8 +151,12 @@
           }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 140px;"></div>
-            <span v-else class="customer-name">{{ data.name || '—' }}</span>
+            <div
+              v-if="loading"
+              class="skeleton skeleton-text"
+              style="width: 140px"
+            ></div>
+            <span v-else class="customer-name">{{ data.name || "—" }}</span>
           </template>
         </Column>
 
@@ -147,8 +171,14 @@
           }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 90px;"></div>
-              <span v-else class="cell-date">{{ formatDate(data.inv_date) }}</span>
+            <div
+              v-if="loading"
+              class="skeleton skeleton-text"
+              style="width: 90px"
+            ></div>
+            <span v-else class="cell-date">{{
+              formatDate(data.inv_date)
+            }}</span>
           </template>
         </Column>
 
@@ -163,8 +193,14 @@
           }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 90px;"></div>
-              <span v-else class="cell-date">{{ formatDate(data.due_date) }}</span>
+            <div
+              v-if="loading"
+              class="skeleton skeleton-text"
+              style="width: 90px"
+            ></div>
+            <span v-else class="cell-date">{{
+              formatDate(data.due_date)
+            }}</span>
           </template>
         </Column>
 
@@ -179,14 +215,20 @@
           }"
         >
           <template #body="{ data }">
-            <div v-if="loading" class="skeleton skeleton-text" style="width: 80px;"></div>
-              <span v-else class="cell-amount">{{ formatCurrency(data.total) }}</span>
+            <div
+              v-if="loading"
+              class="skeleton skeleton-text"
+              style="width: 80px"
+            ></div>
+            <span v-else class="cell-amount">{{
+              formatCurrency(data.total)
+            }}</span>
           </template>
         </Column>
 
         <!-- Actions Column -->
-        <Column 
-          header="Actions" 
+        <Column
+          header="Actions"
           :style="{ width: '70px', minWidth: '70px', textAlign: 'center' }"
           :pt="{ headerContent: { style: 'justify-content: center' } }"
         >
@@ -209,67 +251,118 @@
           <div class="order-expansion">
             <div class="flex flex-column gap-3 expansion-content">
               <!-- Order Summary Info -->
-              <div class="flex justify-content-between align-items-center flex-wrap gap-3 expansion-header">
+              <div
+                class="flex justify-content-between align-items-center flex-wrap gap-3 expansion-header"
+              >
                 <h4 class="expansion-title">Order Items</h4>
                 <div class="flex gap-4 flex-wrap">
                   <span class="flex gap-2 align-items-center">
                     <span class="meta-label">Customer ID:</span>
-                    <span class="meta-value">{{ data.id || '—' }}</span>
+                    <span class="meta-value">{{ data.id || "—" }}</span>
                   </span>
                   <span class="flex gap-2 align-items-center">
                     <span class="meta-label">Subtotal:</span>
-                    <span class="meta-value">{{ formatCurrency(data.subtotal) }}</span>
+                    <span class="meta-value">{{
+                      formatCurrency(data.subtotal)
+                    }}</span>
                   </span>
                   <span class="flex gap-2 align-items-center">
                     <span class="meta-label">Tax:</span>
-                    <span class="meta-value">{{ formatCurrency(data.tax) }}</span>
+                    <span class="meta-value">{{
+                      formatCurrency(data.tax)
+                    }}</span>
                   </span>
                   <span class="flex gap-2 align-items-center">
                     <span class="meta-label">Balance:</span>
-                    <span class="meta-value">{{ formatCurrency(data.balance) }}</span>
+                    <span class="meta-value">{{
+                      formatCurrency(data.balance)
+                    }}</span>
                   </span>
                 </div>
               </div>
 
               <!-- Loading State -->
-              <div v-if="loadingItems[data.autoid]" class="flex align-items-center justify-content-center gap-2 items-loading">
-                <ProgressSpinner style="width: 30px; height: 30px;" />
+              <div
+                v-if="loadingItems[data.autoid]"
+                class="flex align-items-center justify-content-center gap-2 items-loading"
+              >
+                <ProgressSpinner style="width: 30px; height: 30px" />
                 <span class="loading-text">Loading items...</span>
               </div>
 
               <!-- Items Table -->
-              <div v-else-if="orderItemsMap[data.autoid] && orderItemsMap[data.autoid].length > 0" class="items-table-wrapper">
-                <DataTable :value="orderItemsMap[data.autoid]" class="expansion-items-table">
-                  <Column field="inven" header="Item Code" :style="{ width: '15%' }">
+              <div
+                v-else-if="
+                  orderItemsMap[data.autoid] &&
+                  orderItemsMap[data.autoid].length > 0
+                "
+                class="items-table-wrapper"
+              >
+                <DataTable
+                  :value="orderItemsMap[data.autoid]"
+                  class="expansion-items-table"
+                >
+                  <Column
+                    field="inven"
+                    header="Item Code"
+                    :style="{ width: '15%' }"
+                  >
                     <template #body="{ data: item }">
-                      <span class="item-code">{{ item.inven || '—' }}</span>
+                      <span class="item-code">{{ item.inven || "—" }}</span>
                     </template>
                   </Column>
-                  <Column field="descr" header="Description" :style="{ width: '45%' }">
+                  <Column
+                    field="descr"
+                    header="Description"
+                    :style="{ width: '45%' }"
+                  >
                     <template #body="{ data: item }">
-                      <span class="item-description">{{ item.descr || '—' }}</span>
+                      <span class="item-description">{{
+                        item.descr || "—"
+                      }}</span>
                     </template>
                   </Column>
-                  <Column field="quan" header="Quantity" :style="{ width: '12%' }">
+                  <Column
+                    field="quan"
+                    header="Quantity"
+                    :style="{ width: '12%' }"
+                  >
                     <template #body="{ data: item }">
-                      <span class="item-quantity">{{ formatQuantity(item.quan) }}</span>
+                      <span class="item-quantity">{{
+                        formatQuantity(item.quan)
+                      }}</span>
                     </template>
                   </Column>
-                  <Column field="price" header="Price" :style="{ width: '14%' }">
+                  <Column
+                    field="price"
+                    header="Price"
+                    :style="{ width: '14%' }"
+                  >
                     <template #body="{ data: item }">
-                      <span class="item-price">{{ formatCurrency(item.price) }}</span>
+                      <span class="item-price">{{
+                        formatCurrency(item.price)
+                      }}</span>
                     </template>
                   </Column>
-                  <Column field="so_amount" header="Amount" :style="{ width: '14%' }">
+                  <Column
+                    field="so_amount"
+                    header="Amount"
+                    :style="{ width: '14%' }"
+                  >
                     <template #body="{ data: item }">
-                      <span class="item-amount">{{ formatCurrency(item.so_amount) }}</span>
+                      <span class="item-amount">{{
+                        formatCurrency(item.so_amount)
+                      }}</span>
                     </template>
                   </Column>
                 </DataTable>
               </div>
 
               <!-- No Items Message -->
-              <div v-else class="flex flex-column align-items-center justify-content-center gap-2 no-items">
+              <div
+                v-else
+                class="flex flex-column align-items-center justify-content-center gap-2 no-items"
+              >
                 <i class="pi pi-inbox"></i>
                 <span>No items found for this order</span>
               </div>
@@ -279,13 +372,16 @@
       </DataTable>
 
       <!-- Pagination -->
-      <div class="flex align-items-center justify-content-between pagination-container">
+      <div
+        class="flex align-items-center justify-content-between pagination-container"
+      >
         <div class="flex justify-content-start align-items-center flex-1">
           <span v-if="!loading && totalRecords > 0" class="results-text">
-            {{ paginationRange.start }}–{{ paginationRange.end }} of {{ paginationRange.total.toLocaleString() }}
+            {{ paginationRange.start }}–{{ paginationRange.end }} of
+            {{ paginationRange.total.toLocaleString() }}
           </span>
         </div>
-        
+
         <Paginator
           v-if="showPagination"
           :rows="pageSize"
@@ -296,7 +392,7 @@
           :pageLinkSize="9"
           class="custom-paginator"
         />
-        
+
         <div class="flex justify-content-end flex-1"></div>
       </div>
     </div>
@@ -323,15 +419,15 @@ import type { Order, OrderItem, PrimeVuePageEvent } from "~/types";
 import type { DataTableSortEvent } from "primevue/datatable";
 import { formatDate, formatCurrency, formatQuantity } from "~/utils/formatters";
 import { useProjectsStore } from "~/stores/projects";
-import { 
-  PAGINATION_DEFAULTS, 
+import {
+  PAGINATION_DEFAULTS,
   DEBOUNCE_MS,
   ORDER_STATUS,
   ORDER_STATUS_LABELS,
-  getOrderStatusLabel, 
+  getOrderStatusLabel,
   getOrderStatusSeverity,
   USER_ROLES,
-  type OrderStatus
+  type OrderStatus,
 } from "~/utils/constants";
 
 definePageMeta({
@@ -345,9 +441,15 @@ const auth = useAuth();
 
 // Store management
 const projectsStore = useProjectsStore();
-const { selectedProjectId, projects, loading: projectsLoading } = storeToRefs(projectsStore);
+const {
+  selectedProjectId,
+  projects,
+  loading: projectsLoading,
+} = storeToRefs(projectsStore);
 
-const isSuperAdmin = computed(() => auth.user.value?.role === USER_ROLES.SUPERADMIN);
+const isSuperAdmin = computed(
+  () => auth.user.value?.role === USER_ROLES.SUPERADMIN,
+);
 
 // URL-based state management
 const { page, pageSize, offset, setPage, resetPage } = useUrlPagination({
@@ -355,16 +457,16 @@ const { page, pageSize, offset, setPage, resetPage } = useUrlPagination({
 });
 
 const { searchInput, search, clearSearch } = useUrlSearch({
-  param: 'invoice',
+  param: "invoice",
   debounce: DEBOUNCE_MS.SEARCH_LONG,
 });
 
 const { filters, setFilter } = useUrlFilters<{
-  status: OrderStatus | '';
+  status: OrderStatus | "";
 }>({
   status: {
-    param: 'status',
-    defaultValue: '', // Empty for "All Orders"
+    param: "status",
+    defaultValue: "", // Empty for "All Orders"
   },
 });
 
@@ -375,7 +477,7 @@ const {
   handlePrimeVueSort,
 } = useUrlSort({
   useCombinedFormat: true,
-  combinedParam: 'ordering',
+  combinedParam: "ordering",
 });
 
 // Local UI state (not in URL)
@@ -394,19 +496,19 @@ const currentAbortController = ref<AbortController | null>(null);
 
 // Status tabs configuration
 const statusTabs = [
-  { 
-    label: ORDER_STATUS_LABELS[ORDER_STATUS.UNPROCESSED], 
-    value: ORDER_STATUS.UNPROCESSED 
+  {
+    label: ORDER_STATUS_LABELS[ORDER_STATUS.UNPROCESSED],
+    value: ORDER_STATUS.UNPROCESSED,
   },
-  { 
-    label: ORDER_STATUS_LABELS[ORDER_STATUS.OPEN], 
-    value: ORDER_STATUS.OPEN 
+  {
+    label: ORDER_STATUS_LABELS[ORDER_STATUS.OPEN],
+    value: ORDER_STATUS.OPEN,
   },
-  { 
-    label: ORDER_STATUS_LABELS[ORDER_STATUS.CLOSED], 
-    value: ORDER_STATUS.CLOSED 
+  {
+    label: ORDER_STATUS_LABELS[ORDER_STATUS.CLOSED],
+    value: ORDER_STATUS.CLOSED,
   },
-  { label: 'All Orders', value: '' },
+  { label: "All Orders", value: "" },
 ];
 
 // Computed properties
@@ -425,16 +527,16 @@ const paginationRange = computed(() => {
 const skeletonRows = computed(() => {
   return Array.from({ length: Math.min(pageSize.value, 10) }, (_, i) => ({
     autoid: `skeleton-${i}`,
-    id: '',
-    invoice: '',
-    name: '',
+    id: "",
+    invoice: "",
+    name: "",
     inv_date: null,
     due_date: null,
-    status: 'U' as const,
-    tax: '',
-    subtotal: '',
-    total: '',
-    balance: '',
+    status: "U" as const,
+    tax: "",
+    subtotal: "",
+    total: "",
+    balance: "",
   }));
 });
 
@@ -456,7 +558,6 @@ const menuItems = computed(() => [
   },
 ]);
 
-
 // Track if we're initializing default filter to prevent race condition
 const route = useRoute();
 
@@ -464,7 +565,8 @@ const route = useRoute();
 const autoidFilter = computed(() => route.query.autoid as string | undefined);
 
 // Only initialize status filter if no autoid filter is present
-const shouldInitializeFilter = !route.query.autoid && (!route.query.status || route.query.status === '');
+const shouldInitializeFilter =
+  !route.query.autoid && (!route.query.status || route.query.status === "");
 const isInitializing = ref(shouldInitializeFilter);
 
 // Track if initial data load is ready (projects loaded for superadmin)
@@ -474,10 +576,10 @@ const isReadyToLoad = ref(false);
 const effectiveStatus = computed(() => {
   // If autoid filter is present, show "All Orders" tab as active
   if (autoidFilter.value) {
-    return '';
+    return "";
   }
   // Only override during the brief initialization phase
-  if (isInitializing.value && filters.value.status === '') {
+  if (isInitializing.value && filters.value.status === "") {
     return ORDER_STATUS.UNPROCESSED;
   }
   return filters.value.status;
@@ -485,7 +587,7 @@ const effectiveStatus = computed(() => {
 
 // Initialize status filter if not present in URL (and no autoid filter)
 if (shouldInitializeFilter) {
-  setFilter('status', ORDER_STATUS.UNPROCESSED as OrderStatus | '');
+  setFilter("status", ORDER_STATUS.UNPROCESSED as OrderStatus | "");
 }
 
 // Load orders on mount
@@ -494,17 +596,24 @@ onMounted(async () => {
   if (isSuperAdmin.value && projectsLoading.value) {
     await until(projectsLoading).toBe(false);
   }
-  
+
   // Mark as ready to load - watcher can now make API calls
   isReadyToLoad.value = true;
-  
+
   // Always call loadOrders from onMounted - we're now ready
   loadOrders();
 });
 
 // Watch for URL state changes and reload orders
 watch(
-  [page, pageSize, search, () => filters.value.status, sortOrdering, autoidFilter],
+  [
+    page,
+    pageSize,
+    search,
+    () => filters.value.status,
+    sortOrdering,
+    autoidFilter,
+  ],
   () => {
     // Mark initialization as complete once the watcher fires
     if (isInitializing.value) {
@@ -515,47 +624,45 @@ watch(
     if (isReadyToLoad.value) {
       loadOrders();
     }
-  }
+  },
 );
 
 // Watch for search/filter changes and reset to first page
-watch(
-  [search, () => filters.value.status],
-  (newVals, oldVals) => {
-    // Only reset if values actually changed (not initial load)
-    if (oldVals && (oldVals[0] !== newVals[0] || oldVals[1] !== newVals[1])) {
-      resetPage();
-    }
+watch([search, () => filters.value.status], (newVals, oldVals) => {
+  // Only reset if values actually changed (not initial load)
+  if (oldVals && (oldVals[0] !== newVals[0] || oldVals[1] !== newVals[1])) {
+    resetPage();
   }
-);
+});
 
 // Watch for project changes and reset to first page
-watch(
-  selectedProjectId,
-  (newVal, oldVal) => {
-    // Only reset if this is an actual change, not initial load (oldVal will be null or undefined on first load)
-    if (oldVal !== undefined && oldVal !== null) {
-      resetPage();
-      loadOrders();
-    }
+watch(selectedProjectId, (newVal, oldVal) => {
+  // Only reset if this is an actual change, not initial load (oldVal will be null or undefined on first load)
+  if (oldVal !== undefined && oldVal !== null) {
+    resetPage();
+    loadOrders();
   }
-);
+});
 
 // Watch for row expansion and load items
-watch(expandedRows, async (newExpandedRows, oldExpandedRows) => {
-  // Find newly expanded row autoids
-  const newAutoids = Object.keys(newExpandedRows).filter(
-    autoid => newExpandedRows[autoid] && !oldExpandedRows[autoid]
-  );
+watch(
+  expandedRows,
+  async (newExpandedRows, oldExpandedRows) => {
+    // Find newly expanded row autoids
+    const newAutoids = Object.keys(newExpandedRows).filter(
+      (autoid) => newExpandedRows[autoid] && !oldExpandedRows[autoid],
+    );
 
-  // Load items for newly expanded rows
-  for (const autoid of newAutoids) {
-    const order = orders.value.find(o => o.autoid === autoid);
-    if (order) {
-      await loadOrderItems(order);
+    // Load items for newly expanded rows
+    for (const autoid of newAutoids) {
+      const order = orders.value.find((o) => o.autoid === autoid);
+      if (order) {
+        await loadOrderItems(order);
+      }
     }
-  }
-}, { deep: true });
+  },
+  { deep: true },
+);
 
 async function loadOrders() {
   // Cancel any in-flight request to prevent race conditions
@@ -602,7 +709,7 @@ async function loadOrders() {
 
   try {
     const data = await ordersApi.list(params, abortController.signal);
-    
+
     // Only update data if this request wasn't aborted
     if (!abortController.signal.aborted) {
       orders.value = data.results;
@@ -613,13 +720,13 @@ async function loadOrders() {
     // Only handle errors if this request wasn't aborted
     if (!abortController.signal.aborted) {
       // Check for abort error (can be DOMException with name 'AbortError' or Error)
-      const isAbortError = 
-        error?.name === 'AbortError' || 
+      const isAbortError =
+        error?.name === "AbortError" ||
         error?.code === DOMException.ABORT_ERR ||
-        error?.message?.includes('aborted');
-      
+        error?.message?.includes("aborted");
+
       if (!isAbortError) {
-        toast.showError(error, 'Failed to Load Orders');
+        toast.showError(error, "Failed to Load Orders");
       }
       loading.value = false;
     }
@@ -639,9 +746,9 @@ function toggleMenu(event: Event, order: Order) {
 
 function getEmptyStateMessage(): string {
   if (!filters.value.status) {
-    return 'No orders found';
+    return "No orders found";
   }
-  
+
   const statusLabel = ORDER_STATUS_LABELS[filters.value.status as OrderStatus];
   return `No ${statusLabel.toLowerCase()} orders`;
 }
@@ -649,7 +756,7 @@ function getEmptyStateMessage(): string {
 function toggleExpand(order: Order) {
   const autoid = order.autoid;
   const isExpanded = expandedRows.value[autoid];
-  
+
   if (isExpanded) {
     // Collapse
     const newExpandedRows = { ...expandedRows.value };
@@ -688,7 +795,7 @@ async function loadOrderItems(order: Order) {
 
   await useApiCall({
     fn: () => ordersApi.getDetailsByInvoice(order.invoice.trim()),
-    errorMessage: 'Failed to Load Order Items',
+    errorMessage: "Failed to Load Order Items",
     loading: itemLoading,
     toast,
     onSuccess: (data) => {
@@ -714,7 +821,7 @@ async function loadOrderItems(order: Order) {
 
 // Keep formatInvoice as it's custom logic specific to this page
 function formatInvoice(invoice: string): string {
-  return invoice?.trim() || '—';
+  return invoice?.trim() || "—";
 }
 </script>
 
@@ -909,7 +1016,7 @@ function formatInvoice(invoice: string): string {
 }
 
 .item-code {
-  font-family: 'Monaco', 'Courier New', monospace;
+  font-family: "Monaco", "Courier New", monospace;
   font-size: var(--font-size-body-xs);
   color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);
