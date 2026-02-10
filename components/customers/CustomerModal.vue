@@ -198,6 +198,7 @@
               optionValue="value"
               placeholder="Select type"
               showClear
+              :loading="loadingPriceLevels"
               class="w-full"
               :class="{ 'p-invalid': errorMessage }"
             />
@@ -309,11 +310,9 @@ function onCountryChange(newCountry: string) {
   selectedCountry.value = newCountry || "";
 }
 
-// Customer type options
-const customerTypeOptions = [
-  { label: "Wholesale", value: "Wholesale" },
-  { label: "Retail", value: "Retail" },
-];
+// Customer type options (fetched from API)
+const customerTypeOptions = ref<{ label: string; value: string }[]>([]);
+const loadingPriceLevels = ref(false);
 
 // Status options
 const statusOptions = [
@@ -326,8 +325,9 @@ watch(
   () => props.visible,
   async (visible) => {
     if (visible) {
-      // Always fetch countries when modal opens
+      // Always fetch countries and price levels when modal opens
       fetchCountries();
+      fetchPriceLevels();
 
       if (props.mode === "edit") {
         if (props.customer) {
@@ -382,6 +382,22 @@ async function fetchCountries() {
     toast,
     onSuccess: (data) => {
       countries.value = data;
+    },
+  });
+}
+
+async function fetchPriceLevels() {
+  const projectId = isSuperAdmin.value && selectedProjectId.value !== null
+    ? selectedProjectId.value
+    : undefined;
+
+  await useApiCall({
+    fn: () => customersApi.getPriceLevels(projectId),
+    errorMessage: 'Failed to Load Price Levels',
+    loading: loadingPriceLevels,
+    toast,
+    onSuccess: (data) => {
+      customerTypeOptions.value = data.map((level) => ({ label: level, value: level }));
     },
   });
 }

@@ -134,6 +134,17 @@ export const useCustomers = () => {
     return api.get<CountryEntry[]>(url);
   }
 
+  /**
+   * Fetch price levels (customer types)
+   * @param projectId - optional project ID (for superadmin)
+   */
+  async function getPriceLevels(projectId?: number): Promise<string[]> {
+    const url = projectId !== undefined
+      ? `/data/price-levels/?project_id=${projectId}`
+      : `/data/price-levels/`;
+    return api.get<string[]>(url);
+  }
+
   return {
     list,
     getById,
@@ -141,5 +152,6 @@ export const useCustomers = () => {
     update,
     remove,
     getCountries,
+    getPriceLevels,
   };
 };

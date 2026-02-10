@@ -75,17 +75,22 @@
             </template>
             <template #empty>
               <div v-if="customerSearchLoading" class="customer-skeleton-list">
-                <div
-                  v-for="i in 5"
-                  :key="i"
-                  class="customer-option-skeleton"
-                >
+                <div v-for="i in 5" :key="i" class="customer-option-skeleton">
                   <div class="customer-option-skeleton-main">
-                    <div class="skeleton skeleton-text" style="width: 70px"></div>
-                    <div class="skeleton skeleton-text" style="width: 140px"></div>
+                    <div
+                      class="skeleton skeleton-text"
+                      style="width: 70px"
+                    ></div>
+                    <div
+                      class="skeleton skeleton-text"
+                      style="width: 140px"
+                    ></div>
                   </div>
                   <div class="customer-option-skeleton-meta">
-                    <div class="skeleton skeleton-text" style="width: 120px"></div>
+                    <div
+                      class="skeleton skeleton-text"
+                      style="width: 120px"
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -96,17 +101,22 @@
             </template>
             <template #emptyfilter>
               <div v-if="customerSearchLoading" class="customer-skeleton-list">
-                <div
-                  v-for="i in 5"
-                  :key="i"
-                  class="customer-option-skeleton"
-                >
+                <div v-for="i in 5" :key="i" class="customer-option-skeleton">
                   <div class="customer-option-skeleton-main">
-                    <div class="skeleton skeleton-text" style="width: 70px"></div>
-                    <div class="skeleton skeleton-text" style="width: 140px"></div>
+                    <div
+                      class="skeleton skeleton-text"
+                      style="width: 70px"
+                    ></div>
+                    <div
+                      class="skeleton skeleton-text"
+                      style="width: 140px"
+                    ></div>
                   </div>
                   <div class="customer-option-skeleton-meta">
-                    <div class="skeleton skeleton-text" style="width: 120px"></div>
+                    <div
+                      class="skeleton skeleton-text"
+                      style="width: 120px"
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -202,7 +212,9 @@
                       <div class="product-option-main">
                         <Tag severity="secondary" class="product-option-id">
                           <span
-                            v-html="highlightMatch(option.id, productSearchQuery)"
+                            v-html="
+                              highlightMatch(option.id, productSearchQuery)
+                            "
                           ></span>
                         </Tag>
                         <span
@@ -230,28 +242,28 @@
                       v-if="option.product_specs?.length"
                       class="product-option-specs"
                     >
-                  <span
-                    v-for="(spec, idx) in option.product_specs.slice(0, 3)"
-                    :key="spec.descr"
-                    class="product-option-spec"
-                  >
-                    <span class="spec-label">{{ spec.descr }}:</span>
-                    <span class="spec-value">{{ spec.info }}</span>
-                    <span
-                      v-if="
-                        Number(idx) <
-                        option.product_specs.slice(0, 3).length - 1
-                      "
-                      class="spec-separator"
-                      >·</span
-                    >
-                  </span>
-                  <span
-                    v-if="option.product_specs.length > 3"
-                    class="product-option-specs-more"
-                  >
-                    +{{ option.product_specs.length - 3 }} more
-                  </span>
+                      <span
+                        v-for="(spec, idx) in option.product_specs.slice(0, 3)"
+                        :key="spec.descr"
+                        class="product-option-spec"
+                      >
+                        <span class="spec-label">{{ spec.descr }}:</span>
+                        <span class="spec-value">{{ spec.info }}</span>
+                        <span
+                          v-if="
+                            Number(idx) <
+                            option.product_specs.slice(0, 3).length - 1
+                          "
+                          class="spec-separator"
+                          >·</span
+                        >
+                      </span>
+                      <span
+                        v-if="option.product_specs.length > 3"
+                        class="product-option-specs-more"
+                      >
+                        +{{ option.product_specs.length - 3 }} more
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -362,7 +374,11 @@
             </Column>
 
             <!-- Description Column -->
-            <Column field="name" header="Description" class="description-column">
+            <Column
+              field="name"
+              header="Description"
+              class="description-column"
+            >
               <template #body="{ data }">
                 <div
                   v-if="cartLoading"
@@ -376,7 +392,11 @@
             </Column>
 
             <!-- Quantity Column -->
-            <Column field="quantity" header="Qty" :style="{ width: '140px', minWidth: '120px' }">
+            <Column
+              field="quantity"
+              header="Qty"
+              :style="{ width: '140px', minWidth: '120px' }"
+            >
               <template #body="{ data }">
                 <div
                   v-if="cartLoading"
@@ -394,7 +414,12 @@
             </Column>
 
             <!-- Unit Price Column -->
-            <Column field="price" header="Unit Price" :style="{ width: '100px', minWidth: '90px' }" class="hide-on-mobile">
+            <Column
+              field="price"
+              header="Unit Price"
+              :style="{ width: '100px', minWidth: '90px' }"
+              class="hide-on-mobile"
+            >
               <template #body="{ data }">
                 <div
                   v-if="cartLoading"
@@ -408,7 +433,10 @@
             </Column>
 
             <!-- Line Total Column -->
-            <Column header="Total" :style="{ width: '100px', minWidth: '90px' }">
+            <Column
+              header="Total"
+              :style="{ width: '100px', minWidth: '90px' }"
+            >
               <template #body="{ data }">
                 <div
                   v-if="cartLoading"
@@ -422,10 +450,15 @@
             </Column>
 
             <!-- Actions Column -->
-            <Column :style="{ width: '80px', minWidth: '80px', textAlign: 'center' }">
+            <Column
+              :style="{ width: '80px', minWidth: '80px', textAlign: 'center' }"
+            >
               <template #body="{ data }">
                 <div v-if="cartLoading" class="skeleton skeleton-circle"></div>
-                <div v-else class="flex gap-1 justify-content-center item-actions">
+                <div
+                  v-else
+                  class="flex gap-1 justify-content-center item-actions"
+                >
                   <Button
                     icon="pi pi-pencil"
                     text
@@ -507,7 +540,12 @@
           label="Clear All"
           severity="secondary"
           outlined
-          :disabled="cartItems.length === 0 || cartUpdating || cartLoading || creatingProposal"
+          :disabled="
+            cartItems.length === 0 ||
+            cartUpdating ||
+            cartLoading ||
+            creatingProposal
+          "
           :loading="clearingCart"
           @click="clearAllItems"
         />
@@ -572,7 +610,14 @@ const route = useRoute();
 const router = useRouter();
 const productsApi = useProducts();
 const customersApi = useCustomers();
-const { getCart, addItem, deleteItem, flushCart, buildAddPayload, submitProposal } = useCart();
+const {
+  getCart,
+  addItem,
+  deleteItem,
+  flushCart,
+  buildAddPayload,
+  submitProposal,
+} = useCart();
 const toast = useToast();
 const auth = useAuth();
 
@@ -800,7 +845,7 @@ watch(selectedCustomer, async (customer, oldCustomer) => {
 watch(selectedProjectId, async (newProjectId, oldProjectId) => {
   // Skip initial load (when oldProjectId is undefined/null and component is just mounting)
   if (oldProjectId === undefined) return;
-  
+
   // Only apply for superadmins who can switch projects
   if (!isSuperAdmin.value) return;
 
@@ -811,7 +856,7 @@ watch(selectedProjectId, async (newProjectId, oldProjectId) => {
   productOptions.value = [];
   productSearchQuery.value = "";
   showProductResults.value = false;
-  
+
   // Update URL to remove customer_id
   updateCustomerInUrl(null);
 
@@ -1057,7 +1102,11 @@ async function selectProduct(product: Product) {
     cartUpdating.value = true;
     configurationsLoading.value = true;
     try {
-      const updatedCart = await addItem(payload, selectedCustomer.value?.id, selectedProjectId.value);
+      const updatedCart = await addItem(
+        payload,
+        selectedCustomer.value?.id,
+        selectedProjectId.value,
+      );
       cart.value = updatedCart;
       toast.showSuccess(`${selectedProductCopy.id} added to cart`);
     } catch (error) {
@@ -1083,7 +1132,11 @@ async function removeItem(itemId: number) {
     const removed = cart.value.items[index];
     cartUpdating.value = true;
     try {
-      const updatedCart = await deleteItem(itemId, selectedCustomer.value.id, selectedProjectId.value);
+      const updatedCart = await deleteItem(
+        itemId,
+        selectedCustomer.value.id,
+        selectedProjectId.value,
+      );
       cart.value = updatedCart;
       toast.showSuccess(`${removed.product_id} removed from cart`);
     } catch (error) {
@@ -1120,7 +1173,10 @@ async function retryLoadCart() {
   cartLoading.value = true;
   cartError.value = null;
   try {
-    cart.value = await getCart(selectedCustomer.value.id, selectedProjectId.value);
+    cart.value = await getCart(
+      selectedCustomer.value.id,
+      selectedProjectId.value,
+    );
   } catch (error) {
     console.error("Failed to load cart:", error);
     cartError.value = "Failed to load cart";
@@ -1136,7 +1192,10 @@ async function refreshCart() {
 
   cartUpdating.value = true;
   try {
-    cart.value = await getCart(selectedCustomer.value.id, selectedProjectId.value);
+    cart.value = await getCart(
+      selectedCustomer.value.id,
+      selectedProjectId.value,
+    );
   } catch (error) {
     console.error("Failed to refresh cart:", error);
     toast.showError(error, "Failed to refresh cart");
@@ -1181,7 +1240,8 @@ async function openEditModal(product: CartItem) {
   editModalMode.value = "edit";
   editModalVisible.value = true;
 
-  const needsConfigurations = product.configurations?.length > 0 && selectedCustomer.value;
+  const needsConfigurations =
+    product.configurations?.length > 0 && selectedCustomer.value;
   const needsPhotos = !product.photos?.length;
 
   if (needsConfigurations || needsPhotos) {
@@ -2081,7 +2141,7 @@ async function onProductSaved(payload: any) {
 
   .item-actions {
     gap: 0;
-    
+
     :deep(.p-button) {
       width: 28px;
       height: 28px;
