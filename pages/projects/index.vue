@@ -101,6 +101,7 @@
 
         <!-- Frontend Health Column -->
         <Column
+          v-if="showHealthColumns"
           header="Frontend"
           :style="{ width: '75px', minWidth: '75px', textAlign: 'center' }"
           :pt="{ headerContent: { style: 'justify-content: center' } }"
@@ -124,6 +125,7 @@
 
         <!-- Backend Health Column -->
         <Column
+          v-if="showHealthColumns"
           header="Backend"
           :style="{ width: '75px', minWidth: '75px', textAlign: 'center' }"
           :pt="{ headerContent: { style: 'justify-content: center' } }"
@@ -147,6 +149,7 @@
 
         <!-- EBMS Health Column -->
         <Column
+          v-if="showHealthColumns"
           header="EBMS"
           :style="{ width: '65px', minWidth: '65px', textAlign: 'center' }"
           :pt="{ headerContent: { style: 'justify-content: center' } }"
@@ -170,6 +173,7 @@
 
         <!-- Database Sync Health Column -->
         <Column
+          v-if="showHealthColumns"
           header="Database"
           :style="{ width: '80px', minWidth: '80px', textAlign: 'center' }"
           :pt="{ headerContent: { style: 'justify-content: center' } }"
@@ -193,6 +197,7 @@
 
         <!-- Overall Status Column -->
         <Column
+          v-if="showHealthColumns"
           header="Status"
           :style="{ width: '100px', minWidth: '100px', textAlign: 'center' }"
           :pt="{ headerContent: { style: 'justify-content: center' } }"
@@ -391,6 +396,23 @@ const selectedProject = ref<Project | null>(null);
 // Health status
 const healthMap = ref<Map<number, ProjectHealth>>(new Map());
 const healthLoading = ref(false);
+
+// Responsive: hide health columns on narrow screens
+const windowWidth = ref(1400);
+const showHealthColumns = computed(() => windowWidth.value >= 1400);
+
+function updateWindowWidth() {
+  windowWidth.value = window.innerWidth;
+}
+
+onMounted(() => {
+  windowWidth.value = window.innerWidth;
+  window.addEventListener('resize', updateWindowWidth);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateWindowWidth);
+});
 
 // Computed properties
 const showPagination = computed(() => totalRecords.value > pageSize.value);

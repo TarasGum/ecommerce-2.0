@@ -173,25 +173,32 @@ const isSuperAdmin = computed(() => auth.user.value?.role === USER_ROLES.SUPERAD
 
 // ===== Health Status =====
 const projectsApi = useProjects();
+const toast = useToast();
 const healthData = ref<ProjectHealth | null>(null);
 const healthLoading = ref(false);
+const healthError = ref(false);
 
-// Show health row when user is authenticated
+// Show health row when user is authenticated and no error
 // For superadmins: only when a project is selected
 // For non-superadmins: always
 const showHealthRow = computed(() => {
   if (!auth.user.value) return false;
+  if (healthError.value) return false;
   if (isSuperAdmin.value) return selectedProjectId.value !== null;
   return true;
 });
 
 async function fetchHealth() {
   healthLoading.value = true;
+  healthError.value = false;
+  healthData.value = null;
   try {
     const projectId = isSuperAdmin.value ? selectedProjectId.value : undefined;
     healthData.value = await projectsApi.getHealth(projectId);
-  } catch {
+  } catch (error) {
     healthData.value = null;
+    healthError.value = true;
+    toast.showError(error, 'Health Check');
   } finally {
     healthLoading.value = false;
   }
@@ -257,7 +264,8 @@ onMounted(() => {
 
 // Refetch when selected project changes (superadmin switches project)
 watch(selectedProjectId, () => {
-  if (showHealthRow.value) {
+  healthError.value = false; // Reset error so row shows again for new project
+  if (selectedProjectId.value !== null || !isSuperAdmin.value) {
     fetchHealth();
   }
 });
