@@ -147,6 +147,23 @@ export const useCart = () => {
     );
   }
 
+  /**
+   * Submit cart as an order to the EBMS system.
+   * On success the cart is cleared server-side and the order response is returned.
+   */
+  async function submitOrder(
+    customerId?: string,
+    projectId?: number | null,
+  ): Promise<any> {
+    const customerIdToUse = customerId ?? currentCustomerId;
+    if (!customerIdToUse) {
+      throw new Error("customer_id is required for cart operations");
+    }
+    return api.post<any>(
+      buildCartUrl("/cart/order/", customerIdToUse, projectId),
+    );
+  }
+
   return {
     getCart,
     buildAddPayload,
@@ -155,5 +172,6 @@ export const useCart = () => {
     deleteItem,
     flushCart,
     submitProposal,
+    submitOrder,
   };
 };

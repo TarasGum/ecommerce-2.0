@@ -1,9 +1,9 @@
-<!-- pages/proposals/create.vue -->
+<!-- pages/create.vue -->
 <template>
   <div class="page-wrapper proposal-create-page">
     <!-- Header -->
     <div class="flex justify-content-between align-items-center mb-3">
-      <h1 class="page-title">Create New Proposal</h1>
+      <h1 class="page-title">Create New</h1>
     </div>
 
     <!-- Proposal Card -->
@@ -534,7 +534,7 @@
           label="Cancel"
           severity="secondary"
           text
-          @click="router.push('/proposals')"
+          @click="router.back()"
         />
         <Button
           label="Clear All"
@@ -544,7 +544,8 @@
             cartItems.length === 0 ||
             cartUpdating ||
             cartLoading ||
-            creatingProposal
+            creatingProposal ||
+            creatingOrder
           "
           :loading="clearingCart"
           @click="clearAllItems"
@@ -558,10 +559,26 @@
             cartItems.length === 0 ||
             cartUpdating ||
             cartLoading ||
-            creatingProposal
+            creatingProposal ||
+            creatingOrder
           "
           :loading="creatingProposal"
           @click="createProposal"
+        />
+        <Button
+          label="Create Order"
+          severity="secondary"
+          icon="pi pi-check"
+          :disabled="
+            !selectedCustomer ||
+            cartItems.length === 0 ||
+            cartUpdating ||
+            cartLoading ||
+            creatingProposal ||
+            creatingOrder
+          "
+          :loading="creatingOrder"
+          @click="createOrder"
         />
       </div>
     </div>
@@ -617,6 +634,7 @@ const {
   flushCart,
   buildAddPayload,
   submitProposal,
+  submitOrder,
 } = useCart();
 const toast = useToast();
 const auth = useAuth();
@@ -702,8 +720,9 @@ const editModalMode = ref<"add" | "edit">("add");
 // Clear cart state
 const clearingCart = ref(false);
 
-// Create proposal state
+// Create proposal/order state
 const creatingProposal = ref(false);
+const creatingOrder = ref(false);
 
 // Computed values
 const cartItems = computed(() => cart.value?.items ?? []);
@@ -718,9 +737,8 @@ const hasDiscount = computed(() => {
 onMounted(async () => {
   // Set page header with back button
   uiStore.setPageHeader({
-    title: "Proposals / New",
+    title: "Create New",
     showBack: true,
-    backPath: "/proposals",
   });
 
   // Wait for projects to load if user is superadmin
@@ -1231,6 +1249,36 @@ async function createProposal() {
     toast.showError(error, "Failed to create proposal");
   } finally {
     creatingProposal.value = false;
+  }
+}
+
+async function createOrder() {
+  // Validate customer is selected
+  if (!selectedCustomer.value) {
+    toast.showWarning("Please select a customer for this order");
+    return;
+  }
+
+  if (cartItems.value.length === 0) {
+    toast.showWarning("Please add at least one product to the order");
+    return;
+  }
+
+  creatingOrder.value = true;
+  try {
+    const projectId = isSuperAdmin.value ? selectedProjectId.value : undefined;
+    await submitOrder(selectedCustomer.value.id, projectId);
+
+    // Cart is cleared server-side on success — reset local state
+    cart.value = { ...cart.value!, items: [], total: 0, old_total: 0 };
+
+    toast.showSuccess("Order created successfully");
+    router.push("/orders");
+  } catch (error) {
+    console.error("Failed to create order:", error);
+    toast.showError(error, "Failed to create order");
+  } finally {
+    creatingOrder.value = false;
   }
 }
 

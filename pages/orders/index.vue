@@ -4,6 +4,13 @@
     <!-- Header -->
     <div class="flex justify-content-between align-items-center mb-3">
       <h1 class="page-title">Orders</h1>
+      <Button
+        label="Create Order"
+        icon="pi pi-plus"
+        severity="success"
+        size="small"
+        @click="navigateTo('/create')"
+      />
     </div>
 
     <!-- Status Filter Tabs -->
@@ -794,7 +801,7 @@ async function loadOrderItems(order: Order) {
   };
 
   await useApiCall({
-    fn: () => ordersApi.getDetailsByInvoice(order.invoice.trim()),
+    fn: () => ordersApi.getDetailsByInvoice(order.invoice.trim(), selectedProjectId.value),
     errorMessage: "Failed to Load Order Items",
     loading: itemLoading,
     toast,

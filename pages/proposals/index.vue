@@ -9,7 +9,7 @@
         icon="pi pi-plus"
         severity="success"
         size="small"
-        @click="navigateTo('/proposals/create')"
+        @click="navigateTo('/create')"
       />
     </div>
     <!-- Status Filter Tabs -->

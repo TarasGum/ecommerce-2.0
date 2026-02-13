@@ -131,9 +131,11 @@ import Tag from "primevue/tag";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import ProgressSpinner from "primevue/progressspinner";
+import { storeToRefs } from "pinia";
 import type { Order, OrderItem } from "~/types/models";
 import { formatDate, formatCurrency, formatQuantity } from "~/utils/formatters";
 import { getOrderStatusLabel, getOrderStatusSeverity } from "~/utils/constants";
+import { useProjectsStore } from "~/stores/projects";
 
 const props = withDefaults(
   defineProps<{
@@ -153,6 +155,7 @@ const emit = defineEmits<{
 
 const ordersApi = useOrders();
 const toast = useToast();
+const { selectedProjectId } = storeToRefs(useProjectsStore());
 
 const isVisible = computed({
   get: () => props.visible,
@@ -187,7 +190,7 @@ async function loadOrderItems(order: Order) {
   // Otherwise fetch items by invoice
   loadingItems.value = true;
   try {
-    const response = await ordersApi.getDetailsByInvoice(order.invoice.trim());
+    const response = await ordersApi.getDetailsByInvoice(order.invoice.trim(), selectedProjectId.value);
     orderItems.value = response.items || [];
   } catch (error) {
     console.error("Failed to load order items:", error);

@@ -69,9 +69,16 @@ export const useOrders = () => {
   /**
    * Fetch order details (line items) by invoice number
    * @param invoice - order invoice number
+   * @param projectId - optional project ID (for superadmin)
    */
-  async function getDetailsByInvoice(invoice: string): Promise<{ items: OrderItem[] }> {
-    return api.get<{ items: OrderItem[] }>(`/data/orders/${invoice}/details/`);
+  async function getDetailsByInvoice(invoice: string, projectId?: number | null): Promise<{ items: OrderItem[] }> {
+    const queryParams = new URLSearchParams();
+    if (projectId !== undefined && projectId !== null) {
+      queryParams.set("project_id", projectId.toString());
+    }
+    const query = queryParams.toString();
+    const url = `/data/orders/${invoice}/details/${query ? `?${query}` : ""}`;
+    return api.get<{ items: OrderItem[] }>(url);
   }
 
   return {

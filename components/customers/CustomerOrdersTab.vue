@@ -502,7 +502,7 @@ async function loadOrderItems(order: Order) {
   };
 
   await useApiCall({
-    fn: () => ordersApi.getDetailsByInvoice(order.invoice.trim()),
+    fn: () => ordersApi.getDetailsByInvoice(order.invoice.trim(), selectedProjectId.value),
     errorMessage: 'Failed to Load Order Items',
     loading: itemLoading,
     toast,
