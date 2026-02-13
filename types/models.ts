@@ -54,6 +54,48 @@ export interface CreateProjectPayload {
   s3_secret_key?: string;
 }
 
+// Project health status (SuperAdmin only)
+export interface ProjectHealth {
+  id: number;
+  name: string;
+  description: string;
+  is_enabled: boolean;
+  customer: number;
+  customer_name: string;
+  domain_control: string;
+  third_party_email: string;
+  website_url: string;
+  website_status: 'healthy' | 'unhealthy';
+  website_last_checked: string;
+  website_response_ms: number;
+  website_error: string;
+  backend_api_url: string;
+  backend_status: 'healthy' | 'unhealthy';
+  backend_last_checked: string;
+  backend_response_ms: number;
+  backend_error: string;
+  db_alias: string;
+  db_type: string;
+  db_name: string;
+  db_host: string;
+  db_port: number;
+  db_user: string;
+  api_url: string;
+  api_login: string;
+  has_ebms_config: boolean;
+  ebms_status: 'healthy' | 'unhealthy';
+  ebms_last_checked: string;
+  ebms_response_ms: number;
+  ebms_error: string;
+  has_sync_config: boolean;
+  sync_status: 'healthy' | 'unhealthy';
+  sync_last_checked: string;
+  sync_response_ms: number;
+  sync_error: string;
+  overall_status: 'healthy' | 'unhealthy';
+  check_count: number;
+}
+
 // Project update payload
 export interface UpdateProjectPayload {
   name?: string;

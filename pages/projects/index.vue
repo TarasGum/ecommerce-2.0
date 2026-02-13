@@ -56,7 +56,7 @@
           field="name"
           header="Project Name"
           sortable
-          :style="{ width: '25%', minWidth: '180px' }"
+          :style="{ width: '18%', minWidth: '160px' }"
           :pt="{
             sort: { class: 'cursor-pointer' },
           }"
@@ -70,9 +70,9 @@
         <!-- Database Type Column (sortable) -->
         <Column
           field="db_type"
-          header="Database"
+          header="DB Type"
           sortable
-          :style="{ width: '15%', minWidth: '120px' }"
+          :style="{ width: '100px', minWidth: '100px' }"
           :pt="{
             sort: { class: 'cursor-pointer' },
           }"
@@ -87,7 +87,7 @@
         <Column
           field="db_host"
           header="Host"
-          :style="{ width: '20%', minWidth: '150px' }"
+          :style="{ width: '14%', minWidth: '130px' }"
         >
           <template #body="{ data }">
             <div v-if="loading" class="skeleton skeleton-text" style="width: 130px;"></div>
@@ -99,12 +99,128 @@
           </template>
         </Column>
 
+        <!-- Frontend Health Column -->
+        <Column
+          header="Frontend"
+          :style="{ width: '75px', minWidth: '75px', textAlign: 'center' }"
+          :pt="{ headerContent: { style: 'justify-content: center' } }"
+        >
+          <template #body="{ data }">
+            <div v-if="loading" class="flex justify-content-center">
+              <div class="skeleton skeleton-circle" style="width: 12px; height: 12px;"></div>
+            </div>
+            <div v-else class="flex justify-content-center">
+              <span
+                v-if="getServiceStatus(data.id, 'website') !== null"
+                v-tooltip="{ value: getServiceTooltip(data.id, 'website'), escape: false }"
+                class="health-dot"
+                :class="getServiceStatus(data.id, 'website') === 'healthy' ? 'dot-healthy' : 'dot-unhealthy'"
+              ></span>
+              <div v-else-if="healthLoading" class="skeleton skeleton-circle" style="width: 12px; height: 12px;"></div>
+              <span v-else class="cell-secondary">—</span>
+            </div>
+          </template>
+        </Column>
+
+        <!-- Backend Health Column -->
+        <Column
+          header="Backend"
+          :style="{ width: '75px', minWidth: '75px', textAlign: 'center' }"
+          :pt="{ headerContent: { style: 'justify-content: center' } }"
+        >
+          <template #body="{ data }">
+            <div v-if="loading" class="flex justify-content-center">
+              <div class="skeleton skeleton-circle" style="width: 12px; height: 12px;"></div>
+            </div>
+            <div v-else class="flex justify-content-center">
+              <span
+                v-if="getServiceStatus(data.id, 'backend') !== null"
+                v-tooltip="{ value: getServiceTooltip(data.id, 'backend'), escape: false }"
+                class="health-dot"
+                :class="getServiceStatus(data.id, 'backend') === 'healthy' ? 'dot-healthy' : 'dot-unhealthy'"
+              ></span>
+              <div v-else-if="healthLoading" class="skeleton skeleton-circle" style="width: 12px; height: 12px;"></div>
+              <span v-else class="cell-secondary">—</span>
+            </div>
+          </template>
+        </Column>
+
+        <!-- EBMS Health Column -->
+        <Column
+          header="EBMS"
+          :style="{ width: '65px', minWidth: '65px', textAlign: 'center' }"
+          :pt="{ headerContent: { style: 'justify-content: center' } }"
+        >
+          <template #body="{ data }">
+            <div v-if="loading" class="flex justify-content-center">
+              <div class="skeleton skeleton-circle" style="width: 12px; height: 12px;"></div>
+            </div>
+            <div v-else class="flex justify-content-center">
+              <span
+                v-if="getServiceStatus(data.id, 'ebms') !== null"
+                v-tooltip="{ value: getServiceTooltip(data.id, 'ebms'), escape: false }"
+                class="health-dot"
+                :class="getServiceStatus(data.id, 'ebms') === 'healthy' ? 'dot-healthy' : 'dot-unhealthy'"
+              ></span>
+              <div v-else-if="healthLoading" class="skeleton skeleton-circle" style="width: 12px; height: 12px;"></div>
+              <span v-else class="cell-secondary">—</span>
+            </div>
+          </template>
+        </Column>
+
+        <!-- Database Sync Health Column -->
+        <Column
+          header="Database"
+          :style="{ width: '80px', minWidth: '80px', textAlign: 'center' }"
+          :pt="{ headerContent: { style: 'justify-content: center' } }"
+        >
+          <template #body="{ data }">
+            <div v-if="loading" class="flex justify-content-center">
+              <div class="skeleton skeleton-circle" style="width: 12px; height: 12px;"></div>
+            </div>
+            <div v-else class="flex justify-content-center">
+              <span
+                v-if="getServiceStatus(data.id, 'sync') !== null"
+                v-tooltip="{ value: getServiceTooltip(data.id, 'sync'), escape: false }"
+                class="health-dot"
+                :class="getServiceStatus(data.id, 'sync') === 'healthy' ? 'dot-healthy' : 'dot-unhealthy'"
+              ></span>
+              <div v-else-if="healthLoading" class="skeleton skeleton-circle" style="width: 12px; height: 12px;"></div>
+              <span v-else class="cell-secondary">—</span>
+            </div>
+          </template>
+        </Column>
+
+        <!-- Overall Status Column -->
+        <Column
+          header="Status"
+          :style="{ width: '100px', minWidth: '100px', textAlign: 'center' }"
+          :pt="{ headerContent: { style: 'justify-content: center' } }"
+        >
+          <template #body="{ data }">
+            <div v-if="loading" class="flex justify-content-center">
+              <div class="skeleton skeleton-badge" style="width: 70px;"></div>
+            </div>
+            <div v-else class="flex justify-content-center">
+              <span
+                v-if="getProjectHealth(data.id)"
+                class="status-badge"
+                :class="getProjectHealth(data.id)!.overall_status === 'healthy' ? 'badge-healthy' : 'badge-unhealthy'"
+              >
+                {{ getProjectHealth(data.id)!.overall_status }}
+              </span>
+              <div v-else-if="healthLoading" class="skeleton skeleton-badge" style="width: 70px;"></div>
+              <span v-else class="cell-secondary">—</span>
+            </div>
+          </template>
+        </Column>
+
         <!-- User Count Column (sortable) -->
         <Column
           field="user_count"
           header="Users"
           sortable
-          :style="{ width: '10%', minWidth: '80px' }"
+          :style="{ width: '70px', minWidth: '70px' }"
           :pt="{
             sort: { class: 'cursor-pointer' },
           }"
@@ -120,7 +236,7 @@
           field="created_at"
           header="Created"
           sortable
-          :style="{ width: '15%', minWidth: '120px' }"
+          :style="{ width: '110px', minWidth: '100px' }"
           :pt="{
             sort: { class: 'cursor-pointer' },
           }"
@@ -212,10 +328,10 @@ import InputIcon from "primevue/inputicon";
 import Ripple from "primevue/ripple";
 import Tooltip from "primevue/tooltip";
 import ProjectModal from "~/components/projects/ProjectModal.vue";
-import type { Project, PrimeVuePageEvent } from "~/types";
+import type { Project, ProjectHealth, PrimeVuePageEvent } from "~/types";
 import type { DataTableSortEvent } from "primevue/datatable";
 import { PAGINATION_DEFAULTS, USER_ROLES } from "~/utils/constants";
-import { formatDate } from "~/utils/formatters";
+import { formatDate, formatHealthDateTime, formatResponseTime } from "~/utils/formatters";
 import { useConfirm } from "primevue/useconfirm";
 
 // Register directives
@@ -272,6 +388,10 @@ const editingProjectId = ref<number | null>(null);
 const menuRef = ref();
 const selectedProject = ref<Project | null>(null);
 
+// Health status
+const healthMap = ref<Map<number, ProjectHealth>>(new Map());
+const healthLoading = ref(false);
+
 // Computed properties
 const showPagination = computed(() => totalRecords.value > pageSize.value);
 
@@ -325,6 +445,107 @@ watch(
   }
 );
 
+// ===== Health Status =====
+async function fetchHealthData() {
+  if (projects.value.length === 0) return;
+
+  healthLoading.value = true;
+  try {
+    const results = await Promise.all(
+      projects.value.map((project) =>
+        projectsApi
+          .getHealth(project.id)
+          .then((health) => ({ projectId: project.id, health }))
+          .catch(() => ({ projectId: project.id, health: null as ProjectHealth | null }))
+      )
+    );
+
+    const newMap = new Map<number, ProjectHealth>();
+    results.forEach(({ projectId, health }) => {
+      if (health) {
+        newMap.set(projectId, health);
+      }
+    });
+    healthMap.value = newMap;
+  } finally {
+    healthLoading.value = false;
+  }
+}
+
+function getProjectHealth(projectId: number): ProjectHealth | undefined {
+  return healthMap.value.get(projectId);
+}
+
+function getServiceTooltip(
+  projectId: number,
+  service: 'website' | 'backend' | 'ebms' | 'sync'
+): string {
+  const health = getProjectHealth(projectId);
+  if (!health) return '';
+
+  let status: string;
+  let responseMs: number;
+  let lastChecked: string;
+  let error: string;
+
+  switch (service) {
+    case 'website':
+      status = health.website_status;
+      responseMs = health.website_response_ms;
+      lastChecked = health.website_last_checked;
+      error = health.website_error;
+      break;
+    case 'backend':
+      status = health.backend_status;
+      responseMs = health.backend_response_ms;
+      lastChecked = health.backend_last_checked;
+      error = health.backend_error;
+      break;
+    case 'ebms':
+      status = health.ebms_status;
+      responseMs = health.ebms_response_ms;
+      lastChecked = health.ebms_last_checked;
+      error = health.ebms_error;
+      break;
+    case 'sync':
+      status = health.sync_status;
+      responseMs = health.sync_response_ms;
+      lastChecked = health.sync_last_checked;
+      error = health.sync_error;
+      break;
+  }
+
+  const isHealthy = status === 'healthy';
+  const titleColor = isHealthy ? '#16a34a' : '#ef4444';
+  const title = isHealthy ? 'Healthy' : 'Error';
+  const detail = isHealthy
+    ? `Response: ${formatResponseTime(responseMs)}`
+    : (error || 'Unknown error');
+  const checked = formatHealthDateTime(lastChecked);
+  const checkedColor = isHealthy ? '#6b7280' : '#ef4444';
+
+  return `<div style="text-align: center; line-height: 1.6; padding: 2px 0;">
+    <div style="color: ${titleColor}; font-weight: 600;">${title}</div>
+    <div>${detail}</div>
+    <div style="color: ${checkedColor}; font-size: 0.85em;">Checked: ${checked}</div>
+  </div>`;
+}
+
+function getServiceStatus(
+  projectId: number,
+  service: 'website' | 'backend' | 'ebms' | 'sync'
+): 'healthy' | 'unhealthy' | null {
+  const health = getProjectHealth(projectId);
+  if (!health) return null;
+
+  switch (service) {
+    case 'website': return health.website_status;
+    case 'backend': return health.backend_status;
+    case 'ebms': return health.has_ebms_config ? health.ebms_status : null;
+    case 'sync': return health.has_sync_config ? health.sync_status : null;
+  }
+}
+
 async function loadProjects() {
   // Don't load if not superadmin
   if (!isSuperAdmin.value) return;
@@ -352,6 +573,8 @@ async function loadProjects() {
     onSuccess: (data) => {
       projects.value = data.results;
       totalRecords.value = data.count;
+      // Fetch health data for all loaded projects
+      fetchHealthData();
     },
   });
 }
@@ -451,8 +674,8 @@ async function deleteProject(projectId: number) {
 .projects-page {
   padding: 1.5rem 1.5rem;
   min-height: 100vh;
-  max-width: 1400px;
-  min-width: 700px;
+  max-width: 1600px;
+  min-width: 900px;
   margin: 0 auto;
 }
 
@@ -530,5 +753,58 @@ async function deleteProject(projectId: number) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Health status dots */
+.health-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.health-dot:hover {
+  transform: scale(1.3);
+}
+
+.dot-healthy {
+  background-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.dot-healthy:hover {
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.25);
+}
+
+.dot-unhealthy {
+  background-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.dot-unhealthy:hover {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+}
+
+/* Overall status badge */
+.status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 1rem;
+  font-size: var(--font-size-body-xs);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.badge-healthy {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.badge-unhealthy {
+  background-color: #fee2e2;
+  color: #ef4444;
 }
 </style>

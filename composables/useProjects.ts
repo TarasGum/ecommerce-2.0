@@ -3,6 +3,7 @@
 
 import type {
   Project,
+  ProjectHealth,
   PaginatedResponse,
   CreateProjectPayload,
   UpdateProjectPayload,
@@ -85,6 +86,18 @@ export const useProjects = () => {
     return api.delete(`/projects/${id}/`);
   }
 
+  /**
+   * Fetch health status for a project
+   * SuperAdmin must pass projectId; non-superadmins omit it (backend resolves from token)
+   * @param projectId - project ID (optional)
+   */
+  async function getHealth(projectId?: number | null): Promise<ProjectHealth> {
+    const url = projectId
+      ? `/projects/my-health/?project_id=${projectId}`
+      : `/projects/my-health/`;
+    return api.get<ProjectHealth>(url);
+  }
+
   return {
     list,
     get,
@@ -92,5 +105,6 @@ export const useProjects = () => {
     update,
     patch,
     remove,
+    getHealth,
   };
 };

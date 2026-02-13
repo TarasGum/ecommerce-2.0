@@ -155,6 +155,54 @@ export function formatPercentage(
 }
 
 /**
+ * Format ISO date to DD.MM.YYYY, HH:MM:SS
+ * @param date - ISO date string
+ * @param fallback - Fallback string when date is invalid
+ * @returns Formatted date-time string
+ * 
+ * @example
+ * formatHealthDateTime('2026-02-13T10:08:39.000Z') // '13.02.2026, 12:08:39'
+ */
+export function formatHealthDateTime(
+  date: string | null | undefined,
+  fallback: string = '—'
+): string {
+  if (!date) return fallback;
+
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return fallback;
+
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
+
+    return `${day}.${month}.${year}, ${hours}:${minutes}:${seconds}`;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Format response time in ms to human-readable string
+ * @param ms - Response time in milliseconds
+ * @returns Formatted string like "651ms" or "2.6s"
+ * 
+ * @example
+ * formatResponseTime(651)    // '651ms'
+ * formatResponseTime(2587)   // '2.6s'
+ * formatResponseTime(102414) // '102.4s'
+ */
+export function formatResponseTime(ms: number | null | undefined): string {
+  if (ms === null || ms === undefined) return '—';
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(1)}s`;
+}
+
+/**
  * Format phone number (US format)
  * @param phone - Phone number string
  * @returns Formatted phone number or original if invalid
